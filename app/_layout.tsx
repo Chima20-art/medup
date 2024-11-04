@@ -3,7 +3,8 @@ import {ClerkProvider, ClerkLoaded} from '@clerk/clerk-expo'
 import {Slot} from "expo-router"
 import {useColorScheme} from 'react-native'
 import {DarkTheme, DefaultTheme, ThemeProvider} from "@react-navigation/native"
-import "./global.css";
+import "../global.css";
+
 
 const tokenCache = {
     async getToken(key: string) {

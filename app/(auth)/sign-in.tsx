@@ -12,7 +12,6 @@ import {
     Animated,
     Dimensions,
 } from 'react-native'
-import Logo from "@/app/components/Logo";
 
 export default function Page() {
     const { signIn, setActive, isLoaded } = useSignIn()
@@ -64,7 +63,6 @@ export default function Page() {
                         headerShown: false,
                     }}
                 />
-                <Logo></Logo>
                 <Text style={styles.subtitle}>Se connecter</Text>
                 <TextInput
                     autoCapitalize="none"
