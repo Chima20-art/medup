@@ -44,7 +44,7 @@ export default function RootLayout() {
 
     return (
         <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <ThemeProvider value={colorScheme === 'dark' ? DefaultTheme : DefaultTheme}>
                 <ClerkLoaded>
                     <Slot/>
                 </ClerkLoaded>

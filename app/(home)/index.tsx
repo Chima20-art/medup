@@ -14,7 +14,7 @@ export default function Page() {
     }, [user, router]);
 
     return (
-        <View className={`flex-1 ${colorScheme === 'dark' ? 'bg-black' : 'bg-white'}`}>
+        <View className={`flex-1 ${colorScheme === 'dark' ? 'bg-white' : 'bg-white'}`}>
             <View className="w-full h-2/5 justify-center items-center">
                 <Image
                     source={require('@/assets/images/Logo.png')}
