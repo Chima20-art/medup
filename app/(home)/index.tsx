@@ -34,14 +34,14 @@ export default function Page() {
                 </View>
 
                 <SignedOut>
-                    <View className="space-y-3">
+                    <View className="flex flex-col gap-y-4 w-[90%] mx-auto">
                         <Link href="/sign-up" asChild>
-                            <Pressable className="bg-primary py-4 rounded-full items-center">
+                            <Pressable className="bg-primary py-4 rounded-xl items-center">
                                 <Text className="text-secondary font-medium text-lg">Create a new user</Text>
                             </Pressable>
                         </Link>
                         <Link href="/sign-in" asChild>
-                            <Pressable className="bg-primary py-4 rounded-full items-center">
+                            <Pressable className="bg-primary py-4 rounded-xl items-center">
                                 <Text className="text-secondary font-medium text-lg">Log in as an existing user</Text>
                             </Pressable>
                         </Link>
