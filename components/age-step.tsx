@@ -1,22 +1,16 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
 
 export default function DateOfBirthStep({ selectedAge, onAgeChange, onContinue }: any) {
     const ages = Array.from({ length: 100 }, (_, i) => i + 1);
 
     return (
-        <View className="flex-1 bg-white">
+        <View className="flex-1">
             {/* Header */}
             <View className="h-16 flex-row items-center justify-center px-5">
-                <TouchableOpacity
-                    className="absolute left-4 top-5"
-                    onPress={() => {/* Handle back */}}
-                >
-                    <ChevronLeft size={24} color="#E91E63" />
-                </TouchableOpacity>
+
                 <View className="flex-row space-x-1">
-                    {[1, 2, 3, 4].map((step) => (
+                    {[1, 2, 3, 4,5].map((step) => (
                         <View
                             key={step}
                             className={`h-1 w-5 rounded-full ${
@@ -43,7 +37,7 @@ export default function DateOfBirthStep({ selectedAge, onAgeChange, onContinue }
                             showsVerticalScrollIndicator={false}
                             className="px-4"
                             contentContainerStyle={{
-                                paddingVertical: 120
+                                paddingVertical: 12
                             }}
                         >
                             {ages.map((age) => (

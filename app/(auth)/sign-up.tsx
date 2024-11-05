@@ -16,6 +16,9 @@ import { router, Link } from "expo-router"
 import { ChevronLeft } from 'lucide-react-native'
 import DateOfBirthStep from "@/components/age-step";
 import NameStep from "@/components/name-step";
+import EmailStep from "@/components/email-step";
+import PhoneStep from "@/components/phone-step";
+import PasswordStep from "@/components/pasword-step";
 
 export default function SignUpScreen() {
     const { isLoaded, signUp, setActive } = useSignUp()
@@ -24,7 +27,7 @@ export default function SignUpScreen() {
     // Form state
     const [firstName, setFirstName] = React.useState('')
     const [lastName, setLastName] = React.useState('')
-    const [age, setAge] = React.useState(30)
+    const [age, setAge] = React.useState(18)
     const [emailAddress, setEmailAddress] = React.useState('')
     const [phoneNumber, setPhoneNumber] = React.useState('')
     const [password, setPassword] = React.useState('')
@@ -42,8 +45,6 @@ export default function SignUpScreen() {
             await signUp.create({
                 emailAddress,
                 password,
-                firstName,
-                lastName,
             })
             await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
             setPendingVerification(true)
@@ -75,25 +76,39 @@ export default function SignUpScreen() {
     const renderStepContent = () => {
         if (pendingVerification) {
             return (
-                <View style={styles.formContainer}>
-                    <TextInput
-                        style={styles.input}
-                        value={code}
-                        placeholder="Code de vérification"
-                        onChangeText={setCode}
-                        keyboardType="number-pad"
-                        placeholderTextColor="#999"
-                    />
+                <View className="flex-1 px-6">
+
+                    {/* Title in French */}
+                    <Text className="text-2xl font-bold text-center mt-8 mb-2">
+                        Code de vérification
+                    </Text>
+
+                    {/* Name Input */}
+                    <View className="flex-1">
+                        <TextInput
+                            className="w-full h-12 border-b border-gray-300 px-2 text-center" // added text-center to center placeholder
+                            value={code}
+                            onChangeText={setCode}
+                            placeholder="Code de vérification" // placeholder in French
+                            placeholderTextColor="#9CA3AF"
+                        />
+                    </View>
+
+                    {/* Continue Button in French */}
                     <TouchableOpacity
-                        style={styles.button}
+                        className="w-full h-14 bg-[#E91E63] rounded-full items-center justify-center mb-8"
                         onPress={onPressVerify}
                         disabled={isVerifying}
                     >
-                        <Text style={styles.buttonText}>
-                            {isVerifying ? "Vérification..." : "Vérifier l'email"}
+                        <Text className="text-white text-lg font-semibold">
+                            <Text style={styles.buttonText}>
+                                            {isVerifying ? "Vérification..." : "Vérifier l'email"}
+                            </Text>
                         </Text>
                     </TouchableOpacity>
                 </View>
+
+
             )
         }
 
@@ -112,57 +127,17 @@ export default function SignUpScreen() {
                 )
             case 3:
                 return (
-                    <View style={styles.formContainer}>
-                        <Text style={styles.stepTitle}>Contact</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={emailAddress}
-                            placeholder="Email"
-                            onChangeText={setEmailAddress}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            placeholderTextColor="#999"
-                        />
-                        <TextInput
-                            style={styles.input}
-                            value={phoneNumber}
-                            placeholder="Numéro de téléphone"
-                            onChangeText={setPhoneNumber}
-                            keyboardType="phone-pad"
-                            placeholderTextColor="#999"
-                        />
-                        <TouchableOpacity
-                            style={styles.button}
-                            onPress={() => setStep(4)}
-                            disabled={!emailAddress || !phoneNumber}
-                        >
-                            <Text style={styles.buttonText}>Continuer</Text>
-                        </TouchableOpacity>
-                    </View>
+                    <EmailStep emailAddress={emailAddress} onEmailChange={setEmailAddress} onContinue={() => setStep(4)}/>
                 )
-            case 4:
+                case 4:
                 return (
-                    <View style={styles.formContainer}>
-                        <Text style={styles.stepTitle}>Mot de passe</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={password}
-                            placeholder="Mot de passe"
-                            onChangeText={setPassword}
-                            secureTextEntry
-                            placeholderTextColor="#999"
-                        />
-                        <TouchableOpacity
-                            style={styles.button}
-                            onPress={onSignUpPress}
-                            disabled={isSigningUp || !password}
-                        >
-                            <Text style={styles.buttonText}>
-                                {isSigningUp ? "Inscription..." : "S'inscrire"}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
+                    <PhoneStep phoneNumber={phoneNumber} onPhoneChange={setPhoneNumber} onContinue={() => setStep(5)}/>
                 )
+            case 5:
+                return (
+                    <PasswordStep  password={password} onPasswordChange={setPassword} onContinue={() => onSignUpPress()}/>
+
+                        )
         }
     }
 
@@ -182,13 +157,11 @@ export default function SignUpScreen() {
                 )}
                 <Image
                     source={require('@/assets/images/Logo.png')}
-                    className="h-28"
+                    className="h-32 mt-16 mx-auto"
                     resizeMode="contain"
                 />
 
-                <Text style={styles.subtitle}>
-                    {pendingVerification ? "Vérifiez votre email" : ""}
-                </Text>
+
                 {renderStepContent()}
                 {!pendingVerification && (
                     <View style={styles.footer}>
