@@ -2,11 +2,13 @@ import { SignedIn, SignedOut, useUser } from '@clerk/clerk-expo'
 import { Link, router } from 'expo-router'
 import { Text, View, Image, TouchableOpacity, useColorScheme } from 'react-native'
 import { useEffect, useState } from "react"
+import {useTheme} from "@react-navigation/native";
 
 export default function Page() {
     const { user } = useUser();
     const colorScheme = useColorScheme();
     const [isMounted, setIsMounted] = useState(false);
+    const { colors } = useTheme()
 
     useEffect(() => {
         setIsMounted(true);
@@ -41,15 +43,15 @@ export default function Page() {
                 <SignedOut>
                     <View className="flex flex-col gap-y-4 w-full mb-10">
                         <Link href="/sign-up" asChild>
-                            <TouchableOpacity className="w-full h-14 bg-[#E91E63] rounded-full items-center justify-center">
+                            <TouchableOpacity style={{ backgroundColor: colors.primary }} className="w-full h-14 rounded-full items-center justify-center">
                                 <Text className="text-white text-lg font-semibold">
                                     Créer un nouveau compte
                                 </Text>
                             </TouchableOpacity>
                         </Link>
                         <Link href="/sign-in" asChild>
-                            <TouchableOpacity className="w-full h-14 bg-white border border-[#E91E63] rounded-full items-center justify-center">
-                                <Text className="text-[#E91E63] text-lg font-semibold">
+                            <TouchableOpacity className="w-full h-14 bg-white border border-[#000] rounded-full items-center justify-center">
+                                <Text  style={{ color: colors.primary }} className="text-lg font-semibold">
                                     Se connecter
                                 </Text>
                             </TouchableOpacity>
