@@ -20,7 +20,7 @@ export default function Page() {
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            className="flex-1 "
+            className="flex-1"
         >
             <Image
                 source={require('@/assets/images/Logo.png')}
