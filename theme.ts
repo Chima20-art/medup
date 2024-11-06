@@ -8,7 +8,7 @@ export const LightTheme: Theme = {
         primary: '#E91E63',
         background: '#f0f2f5',
         text: '#333',
-        border: '#E91E63',
+        border: '#afacac',
         card: '#FFFFFF',
     },
 };
@@ -19,7 +19,7 @@ export const DarkkTheme: Theme = {
         ...DarkTheme.colors,
         primary: '#E91E63',
         background: '#1A1A1A',
-        text: '#F0F0F0',
+        text: '#535353',
         border: '#afacac',
         card: '#2A2A2A',
     },
