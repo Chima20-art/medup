@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity } from 'react-native'
 import { Check, X } from 'lucide-react-native'
+import { useTheme } from '@react-navigation/native'
 
 interface EmailStepProps {
     emailAddress: string
@@ -13,6 +14,7 @@ export default function EmailStep({
                                       onEmailChange,
                                       onContinue
                                   }: EmailStepProps) {
+    const { colors } = useTheme()
     const [isValid, setIsValid] = useState(false)
 
     const validateEmail = (email: string) => {
@@ -26,34 +28,33 @@ export default function EmailStep({
 
     return (
         <View className="flex-1 px-6">
-            {/* Header */}
             <View className="h-16 flex-row items-center justify-center px-5">
-                <View className="flex-row space-x-1">
-                    {[1, 2, 3, 4, 5].map((step) => (
+                <View className="flex flex-row gap-x-0.5">
+                    {[1, 2, 3, 4, 5, 6].map((step) => (
                         <View
                             key={step}
-                            className={`h-1 w-5 rounded-full ${
-                                step <= 3 ? 'bg-[#E91E63]' : 'bg-gray-200'
-                            }`}
+                            className={`h-1 w-10 rounded-full`}
+                            style={{
+                                backgroundColor: step <= 3 ? colors.primary : colors.border
+                            }}
                         />
                     ))}
                 </View>
             </View>
 
-            {/* Title in French */}
-            <Text className="text-2xl font-bold text-center mt-8 mb-2">
+            <Text className="text-2xl font-bold text-center mt-8 mb-2" style={{ color: colors.text }}>
                 Écrivez votre adresse e-mail
             </Text>
 
-            {/* Email Input */}
             <View className="flex-1 mt-4">
                 <View className="flex-row items-center border-b border-gray-300">
                     <TextInput
                         className="flex-1 h-12 px-2 text-center text-lg"
+                        style={{ color: colors.text }}
                         value={emailAddress}
                         onChangeText={onEmailChange}
                         placeholder="exemple@email.com"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor={colors.border}
                         keyboardType="email-address"
                         autoCapitalize="none"
                         autoCorrect={false}
@@ -68,24 +69,21 @@ export default function EmailStep({
                         </View>
                     )}
                 </View>
-                <Text className="text-sm text-gray-500 mt-2 text-center">
+                <Text className="text-sm mt-2 text-center" style={{ color: colors.text }}>
                     Nous utiliserons cette adresse pour vous envoyer des informations importantes
                 </Text>
             </View>
 
-            {/* Continue Button in French */}
             <TouchableOpacity
-                className={`w-full h-14 rounded-full items-center justify-center mb-8 ${
-                    isValid ? 'bg-[#E91E63]' : 'bg-gray-300'
-                }`}
+                className={`w-full h-14 rounded-full items-center justify-center mb-4`}
+                style={{ backgroundColor: isValid ? colors.primary : colors.border }}
                 onPress={onContinue}
                 disabled={!isValid}
             >
-                <Text className="text-white text-lg font-semibold">
+                <Text className="text-lg font-semibold" style={{ color: colors.background }}>
                     Continuer
                 </Text>
             </TouchableOpacity>
-
         </View>
     )
 }

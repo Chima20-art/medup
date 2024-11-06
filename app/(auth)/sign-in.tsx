@@ -1,25 +1,13 @@
 import React from 'react'
-import { useSignIn } from '@clerk/clerk-expo'
-import { Link, router, Stack } from 'expo-router'
-import {
-    View,
-    TouchableOpacity,
-    StyleSheet,
-    TextInput,
-    Text,
-    KeyboardAvoidingView,
-    Platform,
-    Animated,
-    Dimensions,
-} from 'react-native'
+import {View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, Animated, Image} from 'react-native'
+import { Link, Stack } from 'expo-router'
+import SignInForm from "@/components/SignInForm";
+import {useTheme} from "@react-navigation/native";
+
 
 export default function Page() {
-    const { signIn, setActive, isLoaded } = useSignIn()
-    const [emailAddress, setEmailAddress] = React.useState('')
-    const [password, setPassword] = React.useState('')
-    const [isSigningIn, setIsSigningIn] = React.useState(false)
-
     const fadeAnim = React.useRef(new Animated.Value(0)).current
+    const { colors } = useTheme()
 
     React.useEffect(() => {
         Animated.timing(fadeAnim, {
@@ -29,71 +17,29 @@ export default function Page() {
         }).start()
     }, [])
 
-    const onSignInPress = React.useCallback(async () => {
-        if (!isLoaded) return
-        setIsSigningIn(true)
-        try {
-            const signInAttempt = await signIn.create({
-                identifier: emailAddress,
-                password,
-            })
-
-            if (signInAttempt.status === 'complete') {
-                await setActive({ session: signInAttempt.createdSessionId })
-                router.replace('/dashboard')
-            } else {
-                console.error(JSON.stringify(signInAttempt, null, 2))
-            }
-        } catch (err: any) {
-            console.error(JSON.stringify(err, null, 2))
-        } finally {
-            setIsSigningIn(false)
-        }
-    }, [isLoaded, emailAddress, password])
-
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.container}
+            className="flex-1 "
         >
-            <Animated.View style={[styles.innerContainer, { opacity: fadeAnim }]}>
+            <Image
+                source={require('@/assets/images/Logo.png')}
+                className="h-32 mt-16 mx-auto"
+                resizeMode="contain"
+            />
+            <Animated.View className="flex-1 justify-center items-center p-5" style={{ opacity: fadeAnim }}>
                 <Stack.Screen
                     options={{
                         title: 'Sign In',
                         headerShown: false,
                     }}
                 />
-                <Text style={styles.subtitle}>Se connecter</Text>
-                <TextInput
-                    autoCapitalize="none"
-                    value={emailAddress}
-                    placeholder="Email"
-                    onChangeText={setEmailAddress}
-                    style={styles.input}
-                    placeholderTextColor="#999"
-                />
-                <TextInput
-                    value={password}
-                    placeholder="Password"
-                    secureTextEntry={true}
-                    onChangeText={setPassword}
-                    style={styles.input}
-                    placeholderTextColor="#999"
-                />
-                <TouchableOpacity
-                    onPress={onSignInPress}
-                    style={styles.button}
-                    disabled={isSigningIn}
-                >
-                    <Text style={styles.buttonText}>
-                        {isSigningIn ? 'Signing In...' : 'Sign In'}
-                    </Text>
-                </TouchableOpacity>
-                <View style={styles.footer}>
-                    <Text style={styles.footerText}>Don't have an account?</Text>
+                <SignInForm />
+                <View className="flex-row justify-center mt-5 mb-0">
+                    <Text style={{ color: colors.text }}>Vous n'avez pas de compte ?</Text>
                     <Link href="/sign-up" asChild>
                         <TouchableOpacity>
-                            <Text style={styles.link}>Sign up</Text>
+                            <Text className="ml-1 font-bold" style={{ color: colors.primary }}>S'inscrire</Text>
                         </TouchableOpacity>
                     </Link>
                 </View>
@@ -101,83 +47,3 @@ export default function Page() {
         </KeyboardAvoidingView>
     )
 }
-
-const { width } = Dimensions.get('window')
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f0f2f5',
-    },
-    innerContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 10,
-    },
-    subtitle: {
-        fontSize: 16,
-        color: '#666',
-        marginBottom: 30,
-    },
-    input: {
-        width: width * 0.85,
-        height: 50,
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        marginBottom: 15,
-        paddingHorizontal: 15,
-        fontSize: 16,
-        color: '#333',
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    button: {
-        width: width * 0.85,
-        height: 50,
-        backgroundColor: '#4a90e2',
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 10,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    buttonText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    footer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginTop: 20,
-    },
-    footerText: {
-        fontSize: 14,
-        color: '#666',
-    },
-    link: {
-        marginLeft: 5,
-        color: '#4a90e2',
-        fontWeight: 'bold',
-    },
-})

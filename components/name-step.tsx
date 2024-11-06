@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, Text, TextInput, TouchableOpacity } from 'react-native'
 import { UserCircle2 } from 'lucide-react-native'
+import { useTheme } from '@react-navigation/native'
 
 interface NameStepProps {
     name: string
@@ -13,50 +14,49 @@ export default function NameStep({
                                      onNameChange,
                                      onContinue
                                  }: NameStepProps) {
+    const { colors } = useTheme()
+
     return (
         <View className="flex-1 px-6">
-            {/* Header */}
             <View className="h-16 flex-row items-center justify-center px-5">
-
-                <View className="flex-row space-x-1">
-                    {[1, 2, 3, 4, 5].map((step) => (
+                <View className="flex flex-row gap-x-0.5">
+                    {[1, 2, 3, 4, 5, 6].map((step) => (
                         <View
                             key={step}
-                            className={`h-1 w-5 rounded-full ${
-                                step <= 1 ? 'bg-[#E91E63]' : 'bg-gray-200'
-                            }`}
+                            className={`h-1 w-10 rounded-full`}
+                            style={{
+                                backgroundColor: step <= 1 ? colors.primary : colors.border
+                            }}
                         />
                     ))}
                 </View>
             </View>
 
-            {/* Title in French */}
-            <Text className="text-2xl font-bold text-center mt-8 mb-2">
-                Écrivez votre nom
+            <Text className="text-2xl font-bold text-center mt-8 mb-2" style={{ color: colors.text }}>
+                Écrivez votre nom d'utilisateur
             </Text>
 
-            {/* Name Input */}
             <View className="flex-1">
                 <TextInput
-                    className="w-full h-12 border-b border-gray-300 px-2 text-center" // added text-center to center placeholder
+                    className="w-full h-12 border-b px-2 text-center text-lg"
+                    style={{ borderBottomColor: colors.border, color: colors.text }}
                     value={name}
                     onChangeText={onNameChange}
-                    placeholder="Entrez votre nom ou surnom" // placeholder in French
-                    placeholderTextColor="#9CA3AF"
+                    placeholder="Entrez votre nom ou surnom"
+                    placeholderTextColor={colors.text}
                 />
             </View>
 
-            {/* Continue Button in French */}
             <TouchableOpacity
-                className="w-full h-14 bg-[#E91E63] rounded-full items-center justify-center mb-8"
+                className="w-full h-14 rounded-full items-center justify-center mb-4"
+                style={{ backgroundColor: name.trim() ? colors.primary : colors.border }}
                 onPress={onContinue}
                 disabled={!name.trim()}
             >
-                <Text className="text-white text-lg font-semibold">
+                <Text className="text-lg font-semibold" style={{ color: colors.background }}>
                     Continuer
                 </Text>
             </TouchableOpacity>
         </View>
-
     )
 }

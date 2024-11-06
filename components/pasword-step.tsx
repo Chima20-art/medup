@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity } from 'react-native'
 import { Check, X, Eye, EyeOff } from 'lucide-react-native'
+import { useTheme } from '@react-navigation/native'
 
 interface PasswordStepProps {
     password: string
@@ -13,6 +14,7 @@ export default function PasswordStep({
                                          onPasswordChange,
                                          onContinue
                                      }: PasswordStepProps) {
+    const { colors } = useTheme()
     const [confirmPassword, setConfirmPassword] = useState('')
     const [isPasswordValid, setIsPasswordValid] = useState(false)
     const [doPasswordsMatch, setDoPasswordsMatch] = useState(false)
@@ -32,19 +34,20 @@ export default function PasswordStep({
     return (
         <View className="flex-1 px-6">
             <View className="h-16 flex-row items-center justify-center px-5">
-                <View className="flex-row space-x-1">
-                    {[1, 2, 3, 4, 5].map((step) => (
+                <View className="flex flex-row gap-x-0.5">
+                    {[1, 2, 3, 4, 5, 6].map((step) => (
                         <View
                             key={step}
-                            className={`h-1 w-5 rounded-full ${
-                                step <= 5 ? 'bg-[#E91E63]' : 'bg-gray-200'
-                            }`}
+                            className={`h-1 w-10 rounded-full`}
+                            style={{
+                                backgroundColor: step <= 5 ? colors.primary : colors.border
+                            }}
                         />
                     ))}
                 </View>
             </View>
 
-            <Text className="text-2xl font-bold text-center mt-8 mb-2">
+            <Text className="text-2xl font-bold text-center mt-8 mb-2" style={{ color: colors.text }}>
                 Créez votre mot de passe
             </Text>
 
@@ -52,16 +55,17 @@ export default function PasswordStep({
                 <View className="flex-row items-center border-b border-gray-300 mb-4">
                     <TextInput
                         className="flex-1 h-12 px-2 text-lg"
+                        style={{ color: colors.text }}
                         value={password}
                         onChangeText={onPasswordChange}
                         placeholder="Votre mot de passe"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor={colors.border}
                         secureTextEntry={!showPassword}
                         autoCapitalize="none"
                         autoCorrect={false}
                     />
                     <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className="px-2">
-                        {showPassword ? <EyeOff color="#9CA3AF" size={24} /> : <Eye color="#9CA3AF" size={24} />}
+                        {showPassword ? <EyeOff color={colors.text} size={24} /> : <Eye color={colors.text} size={24} />}
                     </TouchableOpacity>
                     {password.length > 0 && (
                         <View className="ml-2">
@@ -77,16 +81,17 @@ export default function PasswordStep({
                 <View className="flex-row items-center border-b border-gray-300">
                     <TextInput
                         className="flex-1 h-12 px-2 text-lg"
+                        style={{ color: colors.text }}
                         value={confirmPassword}
                         onChangeText={setConfirmPassword}
                         placeholder="Confirmez votre mot de passe"
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor={colors.border}
                         secureTextEntry={!showConfirmPassword}
                         autoCapitalize="none"
                         autoCorrect={false}
                     />
                     <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} className="px-2">
-                        {showConfirmPassword ? <EyeOff color="#9CA3AF" size={24} /> : <Eye color="#9CA3AF" size={24} />}
+                        {showConfirmPassword ? <EyeOff color={colors.text} size={24} /> : <Eye color={colors.text} size={24} />}
                     </TouchableOpacity>
                     {confirmPassword.length > 0 && (
                         <View className="ml-2">
@@ -99,19 +104,18 @@ export default function PasswordStep({
                     )}
                 </View>
 
-                <Text className="text-sm text-gray-500 mt-4 text-center">
+                <Text className="text-sm mt-4 text-center" style={{ color: colors.text }}>
                     Le mot de passe doit contenir au moins 8 caractères, incluant des lettres et des chiffres.
                 </Text>
             </View>
 
             <TouchableOpacity
-                className={`w-full h-14 rounded-full items-center justify-center mb-8 ${
-                    isPasswordValid && doPasswordsMatch ? 'bg-[#E91E63]' : 'bg-gray-300'
-                }`}
+                className={`w-full h-14 rounded-full items-center justify-center mb-4`}
+                style={{ backgroundColor: isPasswordValid && doPasswordsMatch ? colors.primary : colors.border }}
                 onPress={onContinue}
                 disabled={!isPasswordValid || !doPasswordsMatch}
             >
-                <Text className="text-white text-lg font-semibold">
+                <Text className="text-lg font-semibold" style={{ color: colors.background }}>
                     Continuer
                 </Text>
             </TouchableOpacity>

@@ -2,8 +2,10 @@ import * as SecureStore from 'expo-secure-store'
 import {ClerkProvider, ClerkLoaded} from '@clerk/clerk-expo'
 import {Slot} from "expo-router"
 import {useColorScheme} from 'react-native'
-import {DarkTheme, DefaultTheme, ThemeProvider} from "@react-navigation/native"
+import {ThemeProvider} from "@react-navigation/native"
+
 import "../global.css";
+import {DarkkTheme, LightTheme} from "@/theme";
 
 
 const tokenCache = {
@@ -44,7 +46,7 @@ export default function RootLayout() {
 
     return (
         <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-            <ThemeProvider value={colorScheme === 'dark' ? DefaultTheme : DefaultTheme}>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkkTheme : LightTheme}>
                 <ClerkLoaded>
                     <Slot/>
                 </ClerkLoaded>
