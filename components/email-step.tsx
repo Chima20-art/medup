@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, TextInput, TouchableOpacity } from 'react-native'
+import {View, Text, TextInput, TouchableOpacity, Image} from 'react-native'
 import { Check, X } from 'lucide-react-native'
 import { useTheme } from '@react-navigation/native'
+import Signup2 from "@/assets/images/signup-2.svg";
+import Signup1 from "@/assets/images/signup-1.svg";
 
 interface EmailStepProps {
     emailAddress: string
@@ -27,7 +29,12 @@ export default function EmailStep({
     }, [emailAddress])
 
     return (
-        <View className="flex-1 px-6">
+        <View className="flex-1 px-6 pt-16">
+            <View style={{ marginHorizontal: 'auto' }}> {/* Adjust spacing here */}
+                <Signup2
+                    width={250} height={250}
+                />
+            </View>
             <View className="h-16 flex-row items-center justify-center px-5">
                 <View className="flex flex-row gap-x-0.5">
                     {[1, 2, 3, 4, 5, 6].map((step) => (
@@ -35,7 +42,7 @@ export default function EmailStep({
                             key={step}
                             className={`h-1 w-10 rounded-full`}
                             style={{
-                                backgroundColor: step <= 3 ? colors.primary : colors.border
+                                backgroundColor: step <= 2 ? colors.primary : colors.border
                             }}
                         />
                     ))}
@@ -43,7 +50,7 @@ export default function EmailStep({
             </View>
 
             <Text className="text-2xl font-bold text-center mt-8 mb-2" style={{ color: colors.text }}>
-                Écrivez votre adresse e-mail
+                Nous vons enverrons un code de vérification par Mail
             </Text>
 
             <View className="flex-1 mt-4">

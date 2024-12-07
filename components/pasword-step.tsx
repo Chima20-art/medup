@@ -40,7 +40,7 @@ export default function PasswordStep({
                             key={step}
                             className={`h-1 w-10 rounded-full`}
                             style={{
-                                backgroundColor: step <= 5 ? colors.primary : colors.border
+                                backgroundColor: step <= 6 ? colors.primary : colors.border
                             }}
                         />
                     ))}

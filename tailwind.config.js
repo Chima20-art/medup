@@ -7,8 +7,12 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: '#000000', // Replace with your desired primary color
+        primary: '#3D509B', // Replace with your desired primary color
         secondary: '#ffffff', // Replace with your desired secondary color
+      },
+      fontFamily: {
+        sans: ["Poppins_400Regular", "sans-serif"],
+        bold: ["Poppins_700Bold", "sans-serif"],
       },
     },
   },

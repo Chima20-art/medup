@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, TextInput, TouchableOpacity } from 'react-native'
+import {View, Text, TextInput, TouchableOpacity, Image} from 'react-native'
 import { Check, X } from 'lucide-react-native'
 import { useTheme } from '@react-navigation/native'
+import Signup3 from "@/assets/images/signup-3.svg";
 
 interface PhoneStepProps {
     phoneNumber: string
@@ -46,7 +47,13 @@ export default function PhoneStep({
     }
 
     return (
-        <View className="flex-1 px-6">
+        <View className="flex-1 pt-16">
+
+            <View style={{ marginHorizontal: 'auto' }}> {/* Adjust spacing here */}
+                <Signup3
+                    width={250} height={250}
+                />
+            </View>
             <View className="h-16 flex-row items-center justify-center px-5">
                 <View className="flex flex-row gap-x-0.5">
                     {[1, 2, 3, 4, 5, 6].map((step) => (
@@ -54,18 +61,18 @@ export default function PhoneStep({
                             key={step}
                             className={`h-1 w-10 rounded-full`}
                             style={{
-                                backgroundColor: step <= 4 ? colors.primary : colors.border
+                                backgroundColor: step <= 3 ? colors.primary : colors.border
                             }}
                         />
                     ))}
                 </View>
             </View>
 
-            <Text className="text-2xl font-bold text-center mt-8 mb-2" style={{ color: colors.text }}>
+            <Text className="text-3xl font-bold text-center mt-8 mb-2 w-full" style={{ color: colors.text }}>
                 Écrivez votre numéro de téléphone
             </Text>
 
-            <View className="flex-1 mt-4">
+            <View className="flex-1 mt-4 px-2">
                 <View className="flex-row items-center border-b border-gray-300">
                     <Text className="text-lg mr-2" style={{ color: colors.text }}>+212</Text>
                     <TextInput
@@ -87,9 +94,7 @@ export default function PhoneStep({
                         </View>
                     )}
                 </View>
-                <Text className="text-sm mt-2 text-center" style={{ color: colors.text }}>
-                    Nous vous enverrons un code de vérification par SMS
-                </Text>
+
             </View>
 
             <TouchableOpacity

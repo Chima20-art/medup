@@ -1,13 +1,40 @@
-import React from 'react'
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
-import { useTheme } from '@react-navigation/native'
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Platform, Image } from 'react-native';
+import { useTheme } from '@react-navigation/native';
+import Signup5 from "@/assets/images/signup-5.svg";
 
-export default function DateOfBirthStep({ selectedAge, onAgeChange, onContinue }: any) {
-    const { colors } = useTheme()
-    const ages = Array.from({ length: 100 }, (_, i) => i + 1)
+import DateTimePicker, {DateTimePickerEvent} from "@react-native-community/datetimepicker";
+
+export default function DateOfBirthStep({ onContinue }: { onContinue: (date: Date) => void }) {
+    const { colors } = useTheme();
+    const [date, setDate] = useState(new Date());
+    const [showPicker, setShowPicker] = useState(false);
+
+    const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+        setShowPicker(false); // Hide the picker after selecting a date
+        if (selectedDate) {
+            setDate(selectedDate);
+        }
+    };
+
+    const openPicker = () => {
+        setShowPicker(true);
+    };
+
+    const onChange = (event:any, selectedDate: any) => {
+        const currentDate = selectedDate;
+        setShowPicker(false);
+        setDate(currentDate);
+    };
 
     return (
-        <View className="flex-1">
+        <View className="flex-1 pt-16">
+
+            <View style={{ marginHorizontal: 'auto' }}> {/* Adjust spacing here */}
+                <Signup5
+                    width={250} height={250}
+                />
+            </View>
             <View className="h-16 flex-row items-center justify-center px-5">
                 <View className="flex flex-row gap-x-0.5">
                     {[1, 2, 3, 4, 5, 6].map((step) => (
@@ -15,61 +42,33 @@ export default function DateOfBirthStep({ selectedAge, onAgeChange, onContinue }
                             key={step}
                             className={`h-1 w-10 rounded-full`}
                             style={{
-                                backgroundColor: step <= 2 ? colors.primary : colors.border
+                                backgroundColor: step <= 5 ? colors.primary : colors.border,
                             }}
                         />
                     ))}
                 </View>
             </View>
 
-            <View className="flex-1 px-6">
-                <Text className="text-3xl font-bold text-center mt-6 mb-4" style={{ color: colors.text }}>
-                    Quel âge avez-vous ?
-                </Text>
-                <Text className="text-center text-base leading-relaxed mb-8 px-4" style={{ color: colors.text }}>
-                    Connaître votre âge nous permet de suivre votre santé plus précisément, car les valeurs de référence pour les analyses en dépendent
+            <View className="flex-1 px-2">
+                <Text className="text-2xl font-bold text-center mt-6 " style={{ color: colors.text }}>
+                    Quelle est votre date de naissance ?
                 </Text>
 
-                <View className="flex-1 items-center justify-center">
-                    <View className="h-[300px]">
-                        <ScrollView
-                            showsVerticalScrollIndicator={false}
-                            className="px-4"
-                            contentContainerStyle={{
-                                paddingVertical: 12
-                            }}
-                        >
-                            {ages.map((age) => (
-                                <TouchableOpacity
-                                    key={age}
-                                    onPress={() => onAgeChange(age)}
-                                    className={`h-12 justify-center items-center`}
-                                    style={{
-                                        backgroundColor: selectedAge === age ? colors.card : 'transparent'
-                                    }}
-                                >
-                                    <Text
-                                        className={`${
-                                            selectedAge === age
-                                                ? 'text-2xl font-bold'
-                                                : 'text-lg'
-                                        }`}
-                                        style={{
-                                            color: selectedAge === age ? colors.text : colors.border
-                                        }}
-                                    >
-                                        {age}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
-                    </View>
+                <View className="flex-1 items-center justify-center ">
+
+                        <DateTimePicker
+                            value={date}
+                            display="spinner"
+                            mode='date'
+                            textColor="black"
+                        />
+
                 </View>
 
                 <TouchableOpacity
                     className="w-full h-14 rounded-full items-center justify-center mb-4"
                     style={{ backgroundColor: colors.primary }}
-                    onPress={onContinue}
+                    onPress={() => onContinue(date)}
                 >
                     <Text className="text-lg font-semibold" style={{ color: colors.background }}>
                         Continuer
@@ -77,5 +76,5 @@ export default function DateOfBirthStep({ selectedAge, onAgeChange, onContinue }
                 </TouchableOpacity>
             </View>
         </View>
-    )
+    );
 }

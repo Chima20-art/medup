@@ -6,6 +6,9 @@ import {ThemeProvider} from "@react-navigation/native"
 
 import "../global.css";
 import {DarkkTheme, LightTheme} from "@/theme";
+import {useFonts} from "expo-font";
+import { TailwindProvider } from 'tailwindcss-react-native';
+
 
 
 const tokenCache = {
@@ -41,15 +44,18 @@ if (!publishableKey) {
     )
 }
 
+
 export default function RootLayout() {
     const colorScheme = useColorScheme()
 
     return (
         <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
             <ThemeProvider value={colorScheme === 'dark' ? LightTheme : LightTheme}>
-                <ClerkLoaded>
-                    <Slot/>
-                </ClerkLoaded>
+                <TailwindProvider>
+                    <ClerkLoaded>
+                        <Slot/>
+                    </ClerkLoaded>
+                </TailwindProvider>
             </ThemeProvider>
         </ClerkProvider>
     )
