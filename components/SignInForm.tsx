@@ -37,9 +37,9 @@ export default function SignInForm() {
     return (
         <View className="space-y-4">
             <View>
-                <Text className="text-sm mb-2" style={{ color: colors.text }}>E-mail</Text>
+                <Text className="font-sans mb-2" style={{ color: colors.text }}>E-mail</Text>
                 <TextInput
-                    className="bg-gray-50 p-4 rounded-lg"
+                    className="bg-gray-100 p-5 rounded-lg mb-4"
                     style={{ color: colors.text }}
                     value={emailAddress}
                     onChangeText={setEmailAddress}
@@ -52,10 +52,10 @@ export default function SignInForm() {
             </View>
 
             <View>
-                <Text className="text-sm mb-2" style={{ color: colors.text }}>Password</Text>
-                <View className="flex-row items-center bg-gray-50 rounded-lg">
+                <Text className="font-sans mb-2" style={{ color: colors.text }}>Password</Text>
+                <View className="flex-row items-center bg-gray-100 rounded-lg">
                     <TextInput
-                        className="flex-1 p-4"
+                        className="flex-1 p-5"
                         style={{ color: colors.text }}
                         value={password}
                         onChangeText={setPassword}
@@ -72,7 +72,7 @@ export default function SignInForm() {
             </View>
 
             <TouchableOpacity
-                className="bg-[#4A55A2] py-3 rounded-lg mt-16 w-[70%] mx-auto"
+                className="bg-primary py-4 rounded-lg mt-16 w-full mx-auto"
                 onPress={onSignInPress}
                 disabled={isSigningIn}
             >

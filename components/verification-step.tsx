@@ -1,22 +1,54 @@
 import React, { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, Image } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { useTheme } from '@react-navigation/native'
 import Signup3 from "@/assets/images/signup-3.svg"
 
 interface VerificationStepProps {
     code: string
     onCodeChange: (value: string) => void
-    onVerify: () => void
+    onVerify: () => Promise<boolean>
     isVerifying: boolean
+    resendCode: () => Promise<void>
 }
 
 export default function VerificationStep({
                                              code,
                                              onCodeChange,
                                              onVerify,
-                                             isVerifying
+                                             isVerifying,
+                                             resendCode
                                          }: VerificationStepProps) {
     const { colors } = useTheme()
+    const [error, setError] = useState<string | null>(null)
+    const [isResending, setIsResending] = useState(false)
+
+    const handleVerify = async () => {
+        setError(null)
+        try {
+            const success = await onVerify()
+            if (!success) {
+                setError("Verification failed. Please try again.")
+            }
+        } catch (err: any) {
+            if (err.errors?.[0]?.code === "verification_already_verified") {
+                setError("This email has already been verified.")
+            } else {
+                setError(err.message || "An error occurred during verification.")
+            }
+        }
+    }
+
+    const handleResendCode = async () => {
+        setIsResending(true)
+        setError(null)
+        try {
+            await resendCode()
+        } catch (err: any) {
+            setError("Failed to resend code. Please try again.")
+        } finally {
+            setIsResending(false)
+        }
+    }
 
     return (
         <View className="flex-1 px-6">
@@ -58,21 +90,33 @@ export default function VerificationStep({
                 />
             </View>
 
+            {error && (
+                <Text className="text-red-500 text-center mb-2">{error}</Text>
+            )}
+
             <TouchableOpacity
                 className="w-full h-14 rounded-full items-center justify-center mb-4"
                 style={{ backgroundColor: colors.primary }}
-                onPress={onVerify}
-                disabled={isVerifying}
+                onPress={handleVerify}
+                disabled={isVerifying || code.length !== 6}
             >
-                <Text className="text-lg font-semibold" style={{ color: colors.card }}>
-                    {isVerifying ? "Vérification..." : "Vérifier l'email"}
-                </Text>
+                {isVerifying ? (
+                    <ActivityIndicator color={colors.card} />
+                ) : (
+                    <Text className="text-lg font-semibold" style={{ color: colors.card }}>
+                        Vérifier l'email
+                    </Text>
+                )}
             </TouchableOpacity>
 
-            <TouchableOpacity>
-                <Text className="text-center" style={{ color: colors.primary }}>
-                    Renvoyer le code
-                </Text>
+            <TouchableOpacity onPress={handleResendCode} disabled={isResending}>
+                {isResending ? (
+                    <ActivityIndicator color={colors.primary} />
+                ) : (
+                    <Text className="text-center" style={{ color: colors.primary }}>
+                        Renvoyer le code
+                    </Text>
+                )}
             </TouchableOpacity>
         </View>
     )

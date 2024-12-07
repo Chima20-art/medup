@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity } from 'react-native'
 import { Check, X, Eye, EyeOff } from 'lucide-react-native'
 import { useTheme } from '@react-navigation/native'
+import Signup7 from "@/assets/images/signup-7.svg";
 
 interface PasswordStepProps {
     password: string
@@ -32,7 +33,13 @@ export default function PasswordStep({
     }, [password, confirmPassword])
 
     return (
-        <View className="flex-1 px-6">
+        <View className="flex-1 px-6 pt-16">
+
+            <View style={{ marginHorizontal: 'auto' }}> {/* Adjust spacing here */}
+                <Signup7
+                    width={250} height={250}
+                />
+            </View>
             <View className="h-16 flex-row items-center justify-center px-5">
                 <View className="flex flex-row gap-x-0.5">
                     {[1, 2, 3, 4, 5, 6].map((step) => (

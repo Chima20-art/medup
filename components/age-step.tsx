@@ -8,24 +8,19 @@ import DateTimePicker, {DateTimePickerEvent} from "@react-native-community/datet
 export default function DateOfBirthStep({ onContinue }: { onContinue: (date: Date) => void }) {
     const { colors } = useTheme();
     const [date, setDate] = useState(new Date());
-    const [showPicker, setShowPicker] = useState(false);
 
-    const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-        setShowPicker(false); // Hide the picker after selecting a date
-        if (selectedDate) {
-            setDate(selectedDate);
-        }
-    };
-
-    const openPicker = () => {
-        setShowPicker(true);
-    };
-
-    const onChange = (event:any, selectedDate: any) => {
-        const currentDate = selectedDate;
-        setShowPicker(false);
+    const handleDateChange = (event: any, selectedDate?: Date) => {
+        const currentDate = selectedDate || date;
         setDate(currentDate);
     };
+
+    const formattedDate = new Intl.DateTimeFormat('fr-FR', {
+        weekday: 'long',  // Full weekday name (e.g., "mercredi")
+        year: 'numeric',
+        month: 'long',    // Full month name (e.g., "décembre")
+        day: 'numeric',   // Day of the month
+    }).format(date);
+
 
     return (
         <View className="flex-1 pt-16">
@@ -53,11 +48,13 @@ export default function DateOfBirthStep({ onContinue }: { onContinue: (date: Dat
                 <Text className="text-2xl font-bold text-center mt-6 " style={{ color: colors.text }}>
                     Quelle est votre date de naissance ?
                 </Text>
-
+                <Text className="text-xl font-semibold mb-4 text-center">
+                    {formattedDate}
+                </Text>
                 <View className="flex-1 items-center justify-center ">
-
                         <DateTimePicker
                             value={date}
+                            onChange={handleDateChange}
                             display="spinner"
                             mode='date'
                             textColor="black"

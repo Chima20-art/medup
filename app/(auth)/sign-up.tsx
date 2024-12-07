@@ -6,6 +6,7 @@ import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
+    Alert,
 } from 'react-native'
 import { useSignUp } from '@clerk/clerk-expo'
 import { router, Link } from "expo-router"
@@ -17,6 +18,7 @@ import EmailStep from "@/components/email-step"
 import PhoneStep from "@/components/phone-step"
 import PasswordStep from "@/components/pasword-step"
 import VerificationStep from "@/components/verification-step"
+import ConfirmationStep from "@/components/confirmation-step"
 
 export default function SignUpScreen() {
     const { colors } = useTheme()
@@ -26,13 +28,12 @@ export default function SignUpScreen() {
     // Form state
     const [firstName, setFirstName] = React.useState('')
     const [lastName, setLastName] = React.useState('')
-    const [age, setAge] = React.useState(18)
+    const [dateOfBirth, setDateOfBirth] = React.useState<Date | null>(null)
     const [emailAddress, setEmailAddress] = React.useState('')
     const [phoneNumber, setPhoneNumber] = React.useState('')
     const [password, setPassword] = React.useState('')
 
     // Verification state
-    const [pendingVerification, setPendingVerification] = React.useState(false)
     const [code, setCode] = React.useState('')
     const [isVerifying, setIsVerifying] = React.useState(false)
 
@@ -43,15 +44,15 @@ export default function SignUpScreen() {
                 emailAddress
             })
             await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
-            setPendingVerification(true)
             setStep(3) // Move to verification step
         } catch (err: any) {
             console.error(JSON.stringify(err, null, 2))
+            Alert.alert("Error", err.errors?.[0]?.message || "Failed to send verification email")
         }
     }
 
-    const onPressVerify = async () => {
-        if (!isLoaded) return
+    const onPressVerify = async (): Promise<boolean> => {
+        if (!isLoaded) return false
         setIsVerifying(true)
         try {
             const completeSignUp = await signUp.attemptEmailAddressVerification({
@@ -59,11 +60,29 @@ export default function SignUpScreen() {
             })
             if (completeSignUp.status === 'complete') {
                 setStep(4) // Move to the next step after email verification
+                return true
             }
+            return false
         } catch (err: any) {
             console.error(JSON.stringify(err, null, 2))
+            if (err.errors?.[0]?.code === "verification_already_verified") {
+                setStep(4) // Move to the next step if already verified
+                return true
+            }
+            throw err
         } finally {
             setIsVerifying(false)
+        }
+    }
+
+    const resendVerificationCode = async () => {
+        if (!isLoaded) return
+        try {
+            await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+            Alert.alert("Success", "Verification code resent")
+        } catch (err: any) {
+            console.error(JSON.stringify(err, null, 2))
+            Alert.alert("Error", "Failed to resend verification code")
         }
     }
 
@@ -79,6 +98,7 @@ export default function SignUpScreen() {
             router.replace("/dashboard")
         } catch (err: any) {
             console.error(JSON.stringify(err, null, 2))
+            Alert.alert("Error", "Failed to complete sign up")
         }
     }
 
@@ -99,6 +119,7 @@ export default function SignUpScreen() {
                         onCodeChange={setCode}
                         onVerify={onPressVerify}
                         isVerifying={isVerifying}
+                        resendCode={resendVerificationCode}
                     />
                 )
             case 4:
@@ -108,12 +129,25 @@ export default function SignUpScreen() {
             case 5:
                 return (
                     <DateOfBirthStep
-                        onContinue={() => setStep(6)}
+                        onContinue={(date: Date) => {
+                            setDateOfBirth(date);
+                            setStep(6);
+                        }}
                     />
                 )
             case 6:
                 return (
-                    <PasswordStep password={password} onPasswordChange={setPassword} onContinue={onSignUpPress}/>
+                    <PasswordStep
+                        password={password}
+                        onPasswordChange={setPassword}
+                        onContinue={() => setStep(7)}
+                    />
+                )
+            case 7:
+                return (
+                    <ConfirmationStep
+                        onContinue={onSignUpPress}
+                    />
                 )
         }
     }
@@ -136,7 +170,7 @@ export default function SignUpScreen() {
 
                 {renderStepContent()}
 
-                {step !== 3 && (
+                {step !== 3 && step !== 7 && (
                     <View className="flex-row justify-center mt-5 mb-10">
                         <Text style={{ color: colors.text }}>Déjà un compte ?</Text>
                         <Link href="/sign-in" asChild>
