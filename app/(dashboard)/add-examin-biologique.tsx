@@ -21,7 +21,7 @@ interface UploadedFile {
     name: string;
 }
 
-export default function AddExaminRadiologique() {
+export default function AddExaminBiologique() {
     const router = useRouter();
     const { colors } = useTheme();
     const [formData, setFormData] = useState({
@@ -225,7 +225,7 @@ export default function AddExaminRadiologique() {
                     >
                         <ChevronLeft size={24} color={colors.text} />
                     </TouchableOpacity>
-                    <Text className=" font-bold text-xl font-semibold text-gray-900 ml-4">Ajouter un examen radiologique</Text>
+                    <Text className=" font-bold text-xl font-semibold text-gray-900 ml-4">Ajouter un examen biologique</Text>
                 </View>
             </View>
 

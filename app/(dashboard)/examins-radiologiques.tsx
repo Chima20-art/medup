@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Animated, Dimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Calendar, Search, Building2, User2, Plus } from 'lucide-react-native';
 import ExamenDetailPopup from '@/components/ExamenDetailPopup';
@@ -47,8 +47,8 @@ export default function ExamensBiologiquesList() {
     const [selectedExamen, setSelectedExamen] = useState(null);
     const slideAnim = useRef(new Animated.Value(0)).current;
 
-    const handleAddExamen = () => {
-        router.push('/add-examin-radiologique');
+    const handleAddBiologiqalExamen = () => {
+        router.push('/add-examin-biologique');
     };
 
     const handleExamenPress = (examen: any) => {
@@ -83,7 +83,7 @@ export default function ExamensBiologiquesList() {
                     </TouchableOpacity>
                     <Text className="text-xl font-bold text-indigo-600">Mes examens Biologiques</Text>
                     <TouchableOpacity
-                        onPress={handleAddExamen}
+                        onPress={handleAddBiologiqalExamen}
                         className="w-10 h-10 items-center justify-center rounded-full bg-indigo-600"
                     >
                         <Plus size={24} color="white" />

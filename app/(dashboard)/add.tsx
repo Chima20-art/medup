@@ -36,9 +36,6 @@ export default function Add() {
                 <TouchableOpacity onPress={() => router.back()} className="mb-4">
                     <ArrowLeft size={24} color="#000" />
                 </TouchableOpacity>
-                <Text className="text-2xl font-bold text-gray-900">
-                    Ajouter un élément
-                </Text>
             </View>
 
             <ScrollView className="flex-1 px-6 pt-6">
