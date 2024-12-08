@@ -84,10 +84,10 @@ export default function ListRadiologie() {
                     >
                         <ChevronLeft size={24} color="#4F46E5" />
                     </TouchableOpacity>
-                    <Text className="text-xl font-bold text-indigo-600">Mes examens Radiologiques</Text>
+                    <Text className="text-xl font-bold ">Mes examens Radiologiques</Text>
                     <TouchableOpacity
                         onPress={addRadiologie}
-                        className="w-10 h-10 items-center justify-center rounded-full bg-indigo-600"
+                        className="w-10 h-10 items-center justify-center rounded-full bg-primary"
                     >
                         <Plus size={24} color="white" />
                     </TouchableOpacity>
