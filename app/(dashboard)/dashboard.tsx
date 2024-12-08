@@ -135,7 +135,7 @@ export default function Dashboard() {
               {
                 title: "mes Examens\nradiologiques",
                 image: RadioCategory,
-                route: "/list-radiologie",
+                route: "/list-examins-radiologiques",
               },
               {
                 title: "mes Examens\nBiologiques",

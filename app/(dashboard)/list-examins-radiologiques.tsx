@@ -24,7 +24,7 @@ import Hospital from '@/assets/images/hospital.svg'
 import Doctor from '@/assets/images/doctor.svg'
 import Calender from '@/assets/images/calender.svg'
 
-export default function ListRadiologie() {
+export default function ListExaminsRadiologiques() {
   const router = useRouter();
   const [radiologies, setRadiologies] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -122,7 +122,8 @@ export default function ListRadiologie() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Recherche"
-            className="flex-1 ml-2"
+            className="flex-1 ml-3 text-base"
+            placeholderTextColor="#9CA3AF"
           />
         </View>
       </View>
