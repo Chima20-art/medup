@@ -20,6 +20,9 @@ import {
 import { supabase } from "@/utils/supabase";
 import SupabaseFile from "@/components/supabaseFile";
 import ExamenDetailPopup from "@/components/ExamenDetailPopup";
+import Hospital from '@/assets/images/hospital.svg'
+import Doctor from '@/assets/images/doctor.svg'
+import Calender from '@/assets/images/calender.svg'
 
 export default function ListRadiologie() {
   const router = useRouter();
@@ -127,70 +130,53 @@ export default function ListRadiologie() {
       {/* Radiologies List */}
       <ScrollView className="flex-1 px-4 pt-4">
         {radiologies.map((radio: any) => (
-          <TouchableOpacity
-            key={radio.id}
-            onPress={() => handleExamenPress(radio)}
-          >
-            <View className="bg-gray-50 rounded-xl mb-4 overflow-hidden shadow-sm">
-              {/* Main Content */}
-              <View className="flex-1 px-4 py-4 mx-4">
-                <Text className="font-semibold text-gray-900 mb-2">
-                  {radio.name}
-                </Text>
-                <View className="flex-row justify-start">
-                  <View className="items-center mr-4">
-                    <Calendar size={24} color="#4F46E5" />
-                    <Text className="font-bold text-lg font-medium mt-1">
-                      {new Date(radio.date).getDate()}
-                    </Text>
-                    <Text className="font-bold text-lg">
-                      {new Date(radio.date).toLocaleString("default", {
-                        month: "short",
-                      })}
-                    </Text>
-                    {/*<Text className="text-xs">{new Date(radio.date).getFullYear()}</Text>*/}
-                  </View>
-                  {/* Laboratory Info */}
-                  <View>
-                    <View className="flex-row items-center mb-2">
-                      <Building2 size={16} color="#666" />
-                      <Text className="text-sm text-gray-600 ml-2">
-                        {radio.labName}
-                      </Text>
+            <TouchableOpacity key={radio.id} onPress={() => handleExamenPress(radio)}>
+              <View className="bg-gray-100 rounded-3xl mb-4 overflow-hidden shadow-sm mx-4">
+                {/* Main Content */}
+                <View className="flex-1 px-8 py-4">
+                  <Text className="font-semibold text-gray-900 mb-2">{radio.name}</Text>
+                  <View className="flex-row justify-start">
+                    <View className="items-center mr-4">
+                      <Calender/>
+                      <Text className="font-bold text-lg font-medium mt-1">{new Date(radio.date).getDate()}</Text>
+                      <Text className="font-bold text-lg">{new Date(radio.date).toLocaleString('default', { month: 'short' })}</Text>
+                      {/*<Text className="text-xs">{new Date(radio.date).getFullYear()}</Text>*/}
                     </View>
+                    {/* Laboratory Info */}
+                    <View>
+                      <View className="flex-row items-center mb-2">
+                        <Hospital />
+                        <Text className="text-sm text-gray-600 ml-2">{radio.labName}</Text>
+                      </View>
 
-                    {/* Doctor Info */}
-                    <View className="flex-row items-center mb-3">
-                      <User2 size={16} color="#666" />
-                      <Text className="text-sm text-gray-600 ml-2">
-                        {radio.phone}
-                      </Text>
+                      {/* Doctor Info */}
+                      <View className="flex-row items-center mb-3">
+                        <Doctor />
+                        <Text className="text-sm text-gray-600 ml-2">{radio.phone}</Text>
+                      </View>
                     </View>
                   </View>
-                </View>
 
-                {/* Action Buttons */}
-                <View className="flex-row gap-x-2 justify-end">
-                  <TouchableOpacity
-                    className="bg-primary px-4 py-2 rounded-xl"
-                    onPress={() => handleExamenPress(radio)}
-                  >
-                    <Text className="text-white text-sm font-medium">
-                      Détail
-                    </Text>
-                  </TouchableOpacity>
+                  {/* Action Buttons */}
+                  <View className="flex-row gap-x-2 justify-end">
+                    <TouchableOpacity
+                        className="bg-primary px-4 py-2 rounded-xl"
+                        onPress={() => handleExamenPress(radio)}
+                    >
+                      <Text className="text-white text-sm font-medium">Détail</Text>
+                    </TouchableOpacity>
 
-                  <TouchableOpacity className="px-4 py-2  border border-primary rounded-xl">
-                    <Text className="text-sm font-medium text-indigo-500">
-                      {radio?.uploads?.length
-                        ? `${radio.uploads.length} fichier(s)`
-                        : "Aucun fichier"}
-                    </Text>
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                        className="px-4 py-2  border border-primary rounded-xl"
+                    >
+                      <Text className="text-sm font-medium text-indigo-500">
+                        {radio?.uploads?.length ? `${radio.uploads.length} fichier(s)` : 'Aucun fichier'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
         ))}
       </ScrollView>
 
