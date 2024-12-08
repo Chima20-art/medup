@@ -93,12 +93,13 @@ export default function ExamensRadiologiques() {
     //also add erros in the else and in the catchs
     let dataToInset = {
       files: formData.files,
-      name: "test",
-      date: "1996-12-07T23:09:18.000Z",
-      prescripteur: "prescripteur",
-      laboratory: "laboratoryName",
-      notes: "my  Notes",
+      name: formData.name,
+      date: formData.date,
+      prescripteur: formData.prescripteur,
+      laboratory: formData.laboratory,
+      notes: formData.notes,
     };
+
 
     console.log("Form edited data cause mafia li 3mrhom:", dataToInset);
 
@@ -201,7 +202,7 @@ export default function ExamensRadiologiques() {
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
-      <View className="px-6 pt-14 pb-6 bg-white">
+      <View className="px-6 pt-14 pb-6 bg-red-0300">
         <View className="flex-row items-center justify-between">
           <TouchableOpacity
             onPress={() => router.back()}

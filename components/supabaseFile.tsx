@@ -76,7 +76,7 @@ export default function SupabaseFile({ path }: { path: string }) {
   };
 
   return (
-    <View className="w-full bg-blue-300 py-10">
+    <View className="w-full h-64 ">
       {loading && <Text>Loading...</Text>}
 
       {error && <Text className="text-red-500 px-4">Error: {error}</Text>}
@@ -84,7 +84,7 @@ export default function SupabaseFile({ path }: { path: string }) {
       {!loading && isFileAnImage && signedUrl && (
         <Image
           source={{ uri: signedUrl }}
-          className="w-full h-48"
+          className="w-full h-64"
           resizeMode="contain"
         />
       )}

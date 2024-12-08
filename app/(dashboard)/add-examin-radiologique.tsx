@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Image } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, Image, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
 import { ChevronLeft, Upload, Calendar, User2, Building2, FileText, Image as ImageIcon, Mic, Play, Pause, MoreVertical, Trash, X } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { Audio } from 'expo-av';
+import { supabase } from "@/utils/supabase";
+import { decode as atob } from "base-64";
 
 interface AudioNote {
     id: string;
@@ -21,9 +23,10 @@ interface UploadedFile {
     name: string;
 }
 
-export default function AddExaminRadiologique() {
+export default function MergedExamensRadiologiques() {
     const router = useRouter();
     const { colors } = useTheme();
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         date: '',
@@ -162,22 +165,18 @@ export default function AddExaminRadiologique() {
         if (!audioNote?.sound) return;
 
         if (selectedAudioId === audioId) {
-            // Pause current audio
             await audioNote.sound.pauseAsync();
             setSelectedAudioId(null);
         } else {
-            // Stop any playing audio
             if (selectedAudioId) {
                 const playingNote = audioNotes.find(note => note.id === selectedAudioId);
                 if (playingNote?.sound) {
                     await playingNote.sound.stopAsync();
                 }
             }
-            // Play selected audio
             await audioNote.sound.playAsync();
             setSelectedAudioId(audioId);
 
-            // Update progress
             audioNote.sound.setOnPlaybackStatusUpdate((status) => {
                 if (status.isLoaded) {
                     setAudioNotes(prev => prev.map(note =>
@@ -209,10 +208,96 @@ export default function AddExaminRadiologique() {
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     };
 
-    const handleSubmit = () => {
-        console.log('Form submitted:', formData);
-        // Handle form submission here
-        router.back();
+    const handleSubmit = async () => {
+        setIsLoading(true);
+        console.log("Form submitted:", formData);
+
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        let userId = userData?.user?.id;
+
+        if (!userId) {
+            console.log("No user id found");
+            setIsLoading(false);
+            return;
+        }
+
+        const { data, error } = await supabase
+            .from("radiologie")
+            .insert({
+                name: formData.name,
+                date: formData.date,
+                phone: formData.prescripteur,
+                labName: formData.laboratory,
+                notes: formData.notes,
+                created_at: new Date(),
+            })
+            .select();
+
+        if (error) {
+            console.error("Error inserting data:", error);
+            Alert.alert("Error", "Failed to save form data. Please try again.");
+            setIsLoading(false);
+            return;
+        }
+
+        let supabaseFilePaths = [];
+        for (let file of formData.files) {
+            try {
+                const fileName = file.uri.split("/").pop();
+                if (!fileName) {
+                    console.error("Could not generate filename");
+                    continue;
+                }
+
+                const filePath = `${userId}/${Date.now()}_${fileName}`;
+                console.log("Uploading to path:", filePath);
+
+                const response = await fetch(file.uri);
+                const blob = await response.blob();
+
+                const reader = new FileReader();
+                const base64Promise = new Promise((resolve) => {
+                    reader.onload = () => resolve(reader.result);
+                });
+                reader.readAsDataURL(blob);
+
+                const base64Data = await base64Promise;
+                const base64String = String(base64Data).split(",")[1];
+
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from("radiologie")
+                    .upload(filePath, decode(base64String), {
+                        contentType: blob.type,
+                        upsert: false,
+                    });
+
+                if (uploadError) {
+                    console.error("Upload error:", uploadError);
+                } else {
+                    console.log("File uploaded successfully:", uploadData);
+                    supabaseFilePaths.push(uploadData.path);
+                }
+            } catch (err) {
+                console.error("Error processing file:", err, "for file:", file.uri);
+            }
+        }
+
+        if (supabaseFilePaths.length > 0) {
+            const { error: updateError } = await supabase
+                .from("radiologie")
+                .update({ uploads: supabaseFilePaths })
+                .eq("id", data[0].id);
+
+            if (updateError) {
+                console.error("Error updating radiologie:", updateError);
+            } else {
+                console.log("Radiologie updated successfully");
+            }
+        }
+
+        setIsLoading(false);
+        Alert.alert("Success", "Form data and files saved successfully");
+        router.push("/list-radiologie");
     };
 
     return (
@@ -225,7 +310,7 @@ export default function AddExaminRadiologique() {
                     >
                         <ChevronLeft size={24} color={colors.text} />
                     </TouchableOpacity>
-                    <Text className=" font-bold text-xl font-semibold text-gray-900 ml-4">Ajouter un examen radiologique</Text>
+                    <Text className="font-bold text-xl font-semibold text-gray-900 ml-4">Ajouter un examen radiologique</Text>
                 </View>
             </View>
 
@@ -449,9 +534,22 @@ export default function AddExaminRadiologique() {
                     onPress={handleSubmit}
                     className="w-full bg-indigo-600 rounded-xl py-3 items-center"
                 >
-                    <Text className="text-white font-semibold text-lg">Enregistrer</Text>
+                    <Text className="text-white font-semibold text-lg">
+                        {isLoading ? "Chargement..." : "Enregistrer"}
+                    </Text>
                 </TouchableOpacity>
             </View>
         </View>
     );
 }
+
+function decode(base64String: string) {
+    const byteCharacters = atob(base64String);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    return byteArray;
+}
+

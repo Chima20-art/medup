@@ -6,6 +6,7 @@ import { LightTheme } from "@/theme";
 import { TailwindProvider } from "tailwindcss-react-native";
 import { Alert, StyleSheet, View, AppState } from "react-native";
 import { supabase } from "@/utils/supabase";
+import {GestureHandlerRootView} from "react-native-gesture-handler";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -21,7 +22,9 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? LightTheme : LightTheme}>
       <TailwindProvider>
-        <Slot />
+        <GestureHandlerRootView>
+          <Slot />
+        </GestureHandlerRootView>
       </TailwindProvider>
     </ThemeProvider>
   );

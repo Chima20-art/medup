@@ -10,6 +10,13 @@ import {
 import { useTheme } from "@react-navigation/native";
 import { Bell, Search, Star, Calendar, Clock } from "lucide-react-native";
 import { useRouter } from "expo-router";
+import RadioCategory from '@/assets/images/radioCategory.svg';
+import BioCategory from '@/assets/images/bioCategory.svg';
+import MedicationCategory from '@/assets/images/medicationCategory.svg';
+import ConsultationCategory from '@/assets/images/consultationsCategory.svg';
+import QuickAccess from '@/assets/images/QuickAcess.svg';
+
+
 
 export default function Dashboard() {
   const { colors } = useTheme();
@@ -48,7 +55,7 @@ export default function Dashboard() {
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Medical Planning Section */}
-        <View className="px-6 py-6">
+        <View className="ml-6  py-6">
           <Text className="text-lg font-semibold text-gray-900 mb-4">
             mon planning médical:
           </Text>
@@ -58,9 +65,9 @@ export default function Dashboard() {
             className="flex flex-row gap-4 "
           >
             {/* Appointment Cards */}
-            <View className="w-64 bg-indigo-600 rounded-3xl  p-4 mr-4">
+            <View className="w-64 bg-indigo-600 rounded-3xl p-4 mr-4">
               <View className="flex-row items-center justify-between mb-3">
-                <View className="flex-row items-center space-x-3">
+                <View className="flex flex-row items-center gap-x-3">
                   <Image
                     source={{ uri: "/placeholder.svg?height=40&width=40" }}
                     className="w-10 h-10 rounded-full bg-white"
@@ -70,17 +77,17 @@ export default function Dashboard() {
                     <Text className="text-indigo-200">Dentist</Text>
                   </View>
                 </View>
-                <View className="flex-row items-center">
+                <View className=" flex-row items-center">
                   <Text className="text-white mr-1">4.8</Text>
                   <Star size={16} color="#FCD34D" fill="#FCD34D" />
                 </View>
               </View>
-              <View className="flex-row items-center space-x-4 mt-2">
-                <View className="flex-row items-center">
+              <View className=" flex flex-row items-center gap-x-4 mt-2">
+                <View className="flex-row items-center gap-x-2">
                   <Calendar size={16} color="#E0E7FF" className="mr-2" />
                   <Text className="text-indigo-100">5 Oct</Text>
                 </View>
-                <View className="flex-row items-center">
+                <View className="flex-row items-center gap-x-2">
                   <Clock size={16} color="#E0E7FF" className="mr-2" />
                   <Text className="text-indigo-100">10:30pm</Text>
                 </View>
@@ -89,7 +96,7 @@ export default function Dashboard() {
 
             <View className="w-64 bg-blue-500 rounded-3xl p-4">
               <View className="flex-row items-center justify-between mb-3">
-                <View className="flex-row items-center space-x-3">
+                <View className="flex-row items-center gap-x-3">
                   <Image
                     source={{ uri: "/placeholder.svg?height=40&width=40" }}
                     className="w-10 h-10 rounded-full bg-white"
@@ -104,12 +111,12 @@ export default function Dashboard() {
                   <Star size={16} color="#FCD34D" fill="#FCD34D" />
                 </View>
               </View>
-              <View className="flex-row items-center space-x-4 mt-2">
-                <View className="flex-row items-center">
+              <View className="flex-row items-center gap-x-4 mt-2">
+                <View className="flex-row items-center gap-x-2">
                   <Calendar size={16} color="#BFDBFE" className="mr-2" />
                   <Text className="text-blue-100">6 Oct</Text>
                 </View>
-                <View className="flex-row items-center">
+                <View className="flex-row items-center gap-x-2">
                   <Clock size={16} color="#BFDBFE" className="mr-2" />
                   <Text className="text-blue-100">10:00pm</Text>
                 </View>
@@ -127,28 +134,27 @@ export default function Dashboard() {
             {[
               {
                 title: "mes Examens\nradiologiques",
-                image: "/placeholder.svg?height=80&width=80",
+                image: RadioCategory,
                 route: "/list-radiologie",
               },
-
               {
                 title: "mes Examens\nBiologiques",
-                image: "/placeholder.svg?height=80&width=80",
+                image: BioCategory,
                 route: "/examens-biologiques",
               },
               {
                 title: "Mes\nMedicaments",
-                image: "/placeholder.svg?height=80&width=80",
+                image: MedicationCategory,
                 route: "/medicaments",
               },
               {
                 title: "Mes\nConsultations",
-                image: "/placeholder.svg?height=80&width=80",
+                image: ConsultationCategory,
                 route: "/consultations",
               },
               {
                 title: "Acces\nRapides",
-                image: "/placeholder.svg?height=80&width=80",
+                image: QuickAccess,
                 route: "/acces-rapides",
               },
             ].map((category, index) => (
@@ -164,7 +170,7 @@ export default function Dashboard() {
                 }}
                 onPress={() => router.push(category.route as any)}
               >
-                <Image source={{ uri: category.image }} className="w-12 h-12" />
+                <category.image className="w-12 h-12" />
                 <Text className="text-center text-gray-900 text-sm">
                   {category.title}
                 </Text>

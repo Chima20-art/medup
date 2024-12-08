@@ -1,16 +1,49 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView, Animated, Dimensions } from 'react-native';
-import { ChevronDown, Trash2, Eye, Download, Share2, User2, MapPin } from 'lucide-react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native';
+import { Trash2, Eye, Download, Share2, Calendar, Building2, User2, ChevronDown } from 'lucide-react-native';
+import SupabaseFile from "@/components/supabaseFile";
+import {PanGestureHandler, State} from "react-native-gesture-handler";
 
 const { height } = Dimensions.get('window');
 
-export default function ExamenDetailPopup({ examen, slideAnim, onClose }: any) {
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+interface ExamenDetailPopupProps {
+    examen: any;
+    slideAnim?: Animated.Value;
+    onClose: () => void;
+}
+
+const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({ examen, slideAnim: propSlideAnim, onClose }) => {
+    const [currentFileIndex, setCurrentFileIndex] = useState(0);
+    const defaultSlideAnim = useRef(new Animated.Value(height)).current;
+    const slideAnim = propSlideAnim || defaultSlideAnim;
 
     const translateY = slideAnim.interpolate({
         inputRange: [0, 1],
-        outputRange: [height, height * 0.01],
+        outputRange: [height, 0],
     });
+
+    React.useEffect(() => {
+        Animated.spring(slideAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 50,
+            friction: 7,
+        }).start();
+    }, [slideAnim]);
+
+
+    const handleGesture = (event: any) => {
+        if (event.nativeEvent.state === State.END) {
+            const { translationX } = event.nativeEvent;
+            if (translationX < -10) {
+                // Swipe left
+                setCurrentFileIndex((prev) => Math.min(prev + 1, examen.uploads.length - 1));
+            } else if (translationX > 10) {
+                // Swipe right
+                setCurrentFileIndex((prev) => Math.max(prev - 1, 0));
+            }
+        }
+    };
 
     return (
         <Animated.View
@@ -34,68 +67,119 @@ export default function ExamenDetailPopup({ examen, slideAnim, onClose }: any) {
                 elevation: 5,
             }}
         >
-            <View className="flex-1">
-                <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
-                    <Text className="text-xl font-bold text-indigo-600">{examen.name}</Text>
+            {/* Header */}
+            <View className="p-4 border-b border-gray-100">
+                <View className="flex-row justify-between items-center">
+                    <Text className="text-2xl font-bold text-indigo-600">Bilan général</Text>
                     <TouchableOpacity onPress={onClose}>
                         <ChevronDown size={24} color="#4F46E5" />
                     </TouchableOpacity>
                 </View>
-
-                <ScrollView className="flex-1 px-4 pt-4">
-                    {/* Action Buttons */}
-                    <View className="flex-row justify-end mb-4 bg-gray-100 rounded-full p-2">
-                        <TouchableOpacity className="p-2">
-                            <Trash2 size={20} color="#666" />
-                        </TouchableOpacity>
-                        <TouchableOpacity className="p-2">
-                            <Eye size={20} color="#666" />
-                        </TouchableOpacity>
-                        <TouchableOpacity className="p-2">
-                            <Download size={20} color="#666" />
-                        </TouchableOpacity>
-                        <TouchableOpacity className="p-2">
-                            <Share2 size={20} color="#666" />
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Image Preview */}
-                    <View className="bg-white rounded-xl overflow-hidden mb-4">
-                        <Image
-                            source={{ uri: examen.images[currentImageIndex] }}
-                            className="w-full h-48"
-                            resizeMode="cover"
-                        />
-                        {/* Pagination Dots */}
-                        <View className="flex-row justify-center mt-2 pb-2">
-                            {examen.images.map((_: any, index: any) => (
-                                <View
-                                    key={index}
-                                    className={`w-2 h-2 rounded-full mx-1 ${
-                                        currentImageIndex === index ? 'bg-indigo-600' : 'bg-gray-300'
-                                    }`}
-                                />
-                            ))}
-                        </View>
-                    </View>
-
-                    {/* Location and Doctor Info */}
-                    <View className="bg-white rounded-xl p-4 mb-4">
-                        <View className="flex-row items-center mb-3">
-                            <MapPin size={20} color="#666" />
-                            <Text className="text-gray-600 ml-2">{examen.location}</Text>
-                        </View>
-                        <View className="flex-row items-center">
-                            <User2 size={20} color="#666" />
-                            <Text className="text-gray-600 ml-2">{examen.doctor}</Text>
-                        </View>
-                        <Text className="text-gray-400 text-sm mt-2">{examen.date}</Text>
-                    </View>
-
-                    {/* Notes Section */}
-
-                </ScrollView>
             </View>
+
+            {/* Action Buttons */}
+            <View className="px-4 py-2 flex-row justify-end space-x-2 bg-gray-50">
+                <TouchableOpacity className="p-2">
+                    <Trash2 size={20} color="#666666" />
+                </TouchableOpacity>
+                <TouchableOpacity className="p-2">
+                    <Eye size={20} color="#666666" />
+                </TouchableOpacity>
+                <TouchableOpacity className="p-2">
+                    <Download size={20} color="#666666" />
+                </TouchableOpacity>
+                <TouchableOpacity className="p-2">
+                    <Share2 size={20} color="#666666" />
+                </TouchableOpacity>
+            </View>
+
+            <ScrollView className="flex-1 px-4">
+                {/* File Preview */}
+                <View className="border border-gray-200 rounded-xl p-2 mx-12">
+                    {examen.uploads && examen.uploads.length > 0 && (
+                                <View className="py-4">
+                                    <PanGestureHandler onHandlerStateChange={handleGesture}>
+                                        <View className="bg-gray-50 mb-2">
+                                            <SupabaseFile path={examen.uploads[currentFileIndex]} />
+                                        </View>
+                                    </PanGestureHandler>
+                                    {/* Pagination Dots */}
+                                    {examen.uploads.length > 1 && (
+                                        <View className="flex-row justify-center space-x-1">
+                                            {examen.uploads.map((_: any, index: number) => (
+                                                <TouchableOpacity
+                                                    key={index}
+                                                    onPress={() => setCurrentFileIndex(index)}
+                                                    className={`w-2 h-2 rounded-full ${
+                                                        currentFileIndex === index ? 'bg-indigo-600' : 'bg-gray-300'
+                                                    }`}
+                                                />
+                                            ))}
+                                        </View>
+                                    )}
+                                </View>
+                            )}
+
+                    {/* Details */}
+                    <View className=" flex flex-col gap-y-3">
+                        {/* Date */}
+                            <Text className="text-gray-700">
+                                {new Date(examen.date).toLocaleDateString()}
+                            </Text>
+
+                        {/* Laboratory */}
+                            <Text className="font-bold text-gray-700">{examen.labName}</Text>
+
+                        {/* Doctor */}
+                            <Text className="text-gray-700">{examen.phone}</Text>
+                    </View>
+                </View>
+
+                {/* Notes */}
+
+                <View className="mx-4">
+
+                    {examen.notes && (
+                        <View className="mt-6">
+                            <Text className="text-lg font-semibold mb-2">Notes:</Text>
+                            <View className="bg-gray-50 rounded-xl p-4">
+                                <Text className="text-gray-700">{examen.notes}</Text>
+                            </View>
+                        </View>
+                    )}
+
+                    {/* Files List */}
+                    {examen.uploads && examen.uploads.length > 0 && (
+                        <View className="mt-6">
+                            <Text className="text-lg font-semibold mb-2">
+                                Fichiers ({examen.uploads.length}):
+                            </Text>
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                className="flex-row space-x-3"
+                            >
+                                {examen.uploads.map((upload: string, index: number) => (
+                                    <TouchableOpacity
+                                        key={index}
+                                        onPress={() => setCurrentFileIndex(index)}
+                                        className={`w-24 h-24 rounded-xl overflow-hidden ${
+                                            currentFileIndex === index
+                                                ? 'border-2 border-indigo-600'
+                                                : 'border border-gray-200'
+                                        }`}
+                                    >
+                                        <SupabaseFile path={upload} />
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+                        </View>
+                    )}
+                </View>
+            </ScrollView>
         </Animated.View>
     );
-}
+};
+
+export default ExamenDetailPopup;
+
