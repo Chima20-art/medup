@@ -1,62 +1,28 @@
-import * as SecureStore from 'expo-secure-store'
-import {ClerkProvider, ClerkLoaded} from '@clerk/clerk-expo'
-import {Slot} from "expo-router"
-import {useColorScheme} from 'react-native'
-import {ThemeProvider} from "@react-navigation/native"
-
+import { Slot } from "expo-router";
+import { useColorScheme } from "react-native";
+import { ThemeProvider } from "@react-navigation/native";
 import "../global.css";
-import {DarkkTheme, LightTheme} from "@/theme";
-import {useFonts} from "expo-font";
-import { TailwindProvider } from 'tailwindcss-react-native';
+import { LightTheme } from "@/theme";
+import { TailwindProvider } from "tailwindcss-react-native";
+import { Alert, StyleSheet, View, AppState } from "react-native";
+import { supabase } from "@/utils/supabase";
 
-
-
-const tokenCache = {
-    async getToken(key: string) {
-        try {
-            const item = await SecureStore.getItemAsync(key)
-            if (item) {
-                console.log(`${key} was used 🔐 \n`)
-            } else {
-                console.log('No values stored under key: ' + key)
-            }
-            return item
-        } catch (error) {
-            console.error('SecureStore get item error: ', error)
-            await SecureStore.deleteItemAsync(key)
-            return null
-        }
-    },
-    async saveToken(key: string, value: string) {
-        try {
-            return SecureStore.setItemAsync(key, value)
-        } catch (err) {
-            return
-        }
-    },
-}
-
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!
-
-if (!publishableKey) {
-    throw new Error(
-        'Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env',
-    )
-}
-
+AppState.addEventListener("change", (state) => {
+  if (state === "active") {
+    supabase.auth.startAutoRefresh();
+  } else {
+    supabase.auth.stopAutoRefresh();
+  }
+});
 
 export default function RootLayout() {
-    const colorScheme = useColorScheme()
+  const colorScheme = useColorScheme();
 
-    return (
-        <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-            <ThemeProvider value={colorScheme === 'dark' ? LightTheme : LightTheme}>
-                <TailwindProvider>
-                    <ClerkLoaded>
-                        <Slot/>
-                    </ClerkLoaded>
-                </TailwindProvider>
-            </ThemeProvider>
-        </ClerkProvider>
-    )
+  return (
+    <ThemeProvider value={colorScheme === "dark" ? LightTheme : LightTheme}>
+      <TailwindProvider>
+        <Slot />
+      </TailwindProvider>
+    </ThemeProvider>
+  );
 }

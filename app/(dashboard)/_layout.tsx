@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from "react";
 import { View, TouchableOpacity, Text } from 'react-native';
 import { Slot, useRouter, usePathname } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
 import { Home, Grid, Phone, MoreHorizontal, Plus } from 'lucide-react-native';
+import { supabase } from "@/utils/supabase";
 
 export default function DashboardLayout() {
     const { colors } = useTheme();
@@ -12,6 +13,23 @@ export default function DashboardLayout() {
     // Check if the current route is the add page
     const isAddPage = pathname === '/add-examin-radiologique';
 
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+      console.log("user", user);
+      console.log("error", error);
+
+      if (!error && user) {
+        //router.replace("/dashboard");
+      } else {
+        router.replace("/sign-in");
+      }
+    };
+    getUser();
+  }, []);
     return (
         <View className="flex-1">
             <Slot />
