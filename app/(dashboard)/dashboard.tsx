@@ -127,7 +127,7 @@ export default function Dashboard() {
                             {
                                 title: 'mes Examens\nBiologiques',
                                 image: '/placeholder.svg?height=80&width=80',
-                                 route: '/examens-biologiques'
+                                 route: '/examins-biologiques'
                             },
                             {
                                 title: 'Mes\nMedicaments',

@@ -1,229 +1,181 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Image } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Animated, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useTheme } from '@react-navigation/native';
-import { ChevronLeft, Upload, Calendar, User2, Building2, FileText, Image as ImageIcon } from 'lucide-react-native';
-import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
+import { Calendar, Search, Building2, User2, Plus } from 'lucide-react-native';
+import ExamenDetailPopup from '@/components/ExamenDetailPopup';
 
-export default function ExamensRadiologiques() {
+// Mock data for the list
+const mockExamens = [
+    {
+        id: '1',
+        date: '30 jul 24',
+        name: "le nom de l'examen biologique",
+        laboratory: 'labo dar el bir',
+        doctor: 'DR. benjelloune',
+        status: 'recent',
+        location: 'lieu de réalisation',
+        notes: 'ex : pensez à refaire cet examen dans 6 mois',
+        images: ['/placeholder.svg?height=300&width=300']
+    },
+    {
+        id: '2',
+        date: '30 jul 24',
+        name: "le nom de l'examen biologique",
+        laboratory: 'labo dar el bir',
+        doctor: 'DR. benjelloune',
+        status: 'ancien',
+        location: 'lieu de réalisation',
+        notes: 'ex : pensez à refaire cet examen dans 6 mois',
+        images: ['/placeholder.svg?height=300&width=300']
+    },
+    {
+        id: '3',
+        date: '30 jul 24',
+        name: "le nom de l'examen biologique",
+        laboratory: 'labo dar el bir',
+        doctor: 'DR. benjelloune',
+        status: 'statut',
+        location: 'lieu de réalisation',
+        notes: 'ex : pensez à refaire cet examen dans 6 mois',
+        images: ['/placeholder.svg?height=300&width=300']
+    }
+];
+
+export default function ExamensBiologiquesList() {
     const router = useRouter();
-    const { colors } = useTheme();
-    const [formData, setFormData] = useState({
-        name: '',
-        date: '',
-        prescripteur: '',
-        laboratory: '',
-        notes: '',
-        files: [] as string[]
-    });
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedExamen, setSelectedExamen] = useState(null);
+    const slideAnim = useRef(new Animated.Value(0)).current;
 
-    const pickImage = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.All,
-            allowsEditing: true,
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            setFormData(prev => ({
-                ...prev,
-                files: [...prev.files, result.assets[0].uri]
-            }));
-        }
+    const handleAddExamen = () => {
+        router.push('/add-examin-radiologique');
     };
 
-    const takePicture = async () => {
-        const permission = await ImagePicker.requestCameraPermissionsAsync();
-
-        if (permission.granted) {
-            const result = await ImagePicker.launchCameraAsync({
-                allowsEditing: true,
-                quality: 1,
-            });
-
-            if (!result.canceled) {
-                setFormData(prev => ({
-                    ...prev,
-                    files: [...prev.files, result.assets[0].uri]
-                }));
-            }
-        }
+    const handleExamenPress = (examen: any) => {
+        setSelectedExamen(examen);
+        Animated.spring(slideAnim, {
+            toValue: 1,
+            useNativeDriver: true,
+            tension: 50,
+            friction: 7,
+        }).start();
     };
 
-    const pickDocument = async () => {
-        const result = await DocumentPicker.getDocumentAsync({
-            type: 'application/pdf',
-        });
-
-        if (result.assets && result.assets[0]) {
-            setFormData(prev => ({
-                ...prev,
-                files: [...prev.files, result.assets[0].uri]
-            }));
-        }
-    };
-
-    const handleSubmit = () => {
-        console.log('Form submitted:', formData);
-        // Handle form submission here
-        router.back();
+    const handleClosePopup = () => {
+        Animated.spring(slideAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 50,
+            friction: 7,
+        }).start(() => setSelectedExamen(null));
     };
 
     return (
-        <ScrollView className="flex-1 bg-gray-50">
-            <View className="px-6 pt-14 pb-6 bg-white">
-                <View className="flex-row items-center justify-between">
+        <View className="flex-1 bg-gray-50" style={{ position: 'relative' }}>
+            {/* Header */}
+            <View className="bg-white px-4 pt-14 pb-4">
+                <View className="flex-row items-center justify-between mb-4">
                     <TouchableOpacity
                         onPress={() => router.back()}
-                        className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
+                        className="w-10 h-10 items-center justify-center rounded-full bg-indigo-100"
                     >
-                        <ChevronLeft size={24} color={colors.text} />
+                        <Text className="text-indigo-600 text-xl">&larr;</Text>
                     </TouchableOpacity>
-                    <Text className="text-xl font-semibold text-gray-900">Forum</Text>
-                    <View className="w-10 h-10 items-center justify-center rounded-full bg-gray-100">
-                        <FileText size={24} color={colors.primary} />
-                    </View>
-                </View>
-            </View>
-
-            <View className="p-6">
-                <View className="space-y-4">
-                    {/* Name/Type Input */}
-                    <View>
-                        <Text className="text-sm font-medium text-gray-700 mb-1">Nom / Type</Text>
-                        <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
-                            <User2 size={20} color={colors.text} className="opacity-50" />
-                            <TextInput
-                                value={formData.name}
-                                onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
-                                placeholder="Nom / Type"
-                                className="flex-1 ml-3"
-                            />
-                        </View>
-                    </View>
-
-                    {/* Date Input */}
-                    <View>
-                        <Text className="text-sm font-medium text-gray-700 mb-1">Date</Text>
-                        <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
-                            <Calendar size={20} color={colors.text} className="opacity-50" />
-                            <TextInput
-                                value={formData.date}
-                                onChangeText={(text) => setFormData(prev => ({ ...prev, date: text }))}
-                                placeholder="Date"
-                                className="flex-1 ml-3"
-                            />
-                        </View>
-                    </View>
-
-                    {/* Prescripteur Input */}
-                    <View>
-                        <Text className="text-sm font-medium text-gray-700 mb-1">Numero de Prescripteur</Text>
-                        <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
-                            <User2 size={20} color={colors.text} className="opacity-50" />
-                            <TextInput
-                                value={formData.prescripteur}
-                                onChangeText={(text) => setFormData(prev => ({ ...prev, prescripteur: text }))}
-                                placeholder="Numero de Prescripteur"
-                                className="flex-1 ml-3"
-                            />
-                        </View>
-                    </View>
-
-                    {/* Laboratory Input */}
-                    <View>
-                        <Text className="text-sm font-medium text-gray-700 mb-1">Nom du Labo</Text>
-                        <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
-                            <Building2 size={20} color={colors.text} className="opacity-50" />
-                            <TextInput
-                                value={formData.laboratory}
-                                onChangeText={(text) => setFormData(prev => ({ ...prev, laboratory: text }))}
-                                placeholder="Nom du Labo"
-                                className="flex-1 ml-3"
-                            />
-                        </View>
-                    </View>
-
-                    {/* File Upload Section */}
-                    <View>
-                        <Text className="text-sm font-medium text-gray-700 mb-1">Ajouter l'analyse</Text>
-                        <View className="bg-white rounded-xl border border-gray-200 p-4">
-                            <View className="flex-row justify-around mb-4">
-                                <TouchableOpacity
-                                    onPress={pickImage}
-                                    className="items-center"
-                                >
-                                    <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
-                                        <ImageIcon size={24} color={colors.primary} />
-                                    </View>
-                                    <Text className="text-sm text-gray-600">Galerie</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    onPress={takePicture}
-                                    className="items-center"
-                                >
-                                    <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
-                                        <Upload size={24} color={colors.primary} />
-                                    </View>
-                                    <Text className="text-sm text-gray-600">Camera</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    onPress={pickDocument}
-                                    className="items-center"
-                                >
-                                    <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
-                                        <FileText size={24} color={colors.primary} />
-                                    </View>
-                                    <Text className="text-sm text-gray-600">Document</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                            {formData.files.length > 0 && (
-                                <ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    className="flex-row gap-2"
-                                >
-                                    {formData.files.map((file, index) => (
-                                        <Image
-                                            key={index}
-                                            source={{ uri: file }}
-                                            className="w-20 h-20 rounded-lg"
-                                        />
-                                    ))}
-                                </ScrollView>
-                            )}
-                        </View>
-                    </View>
-
-                    {/* Notes Input */}
-                    <View>
-                        <Text className="text-sm font-medium text-gray-700 mb-1">Notes</Text>
-                        <View className="bg-white rounded-xl border border-gray-200 p-4">
-                            <TextInput
-                                value={formData.notes}
-                                onChangeText={(text) => setFormData(prev => ({ ...prev, notes: text }))}
-                                placeholder="Ajouter des notes..."
-                                multiline
-                                numberOfLines={4}
-                                className="min-h-[100]"
-                                textAlignVertical="top"
-                            />
-                        </View>
-                    </View>
-
-                    {/* Submit Button */}
+                    <Text className="text-xl font-bold text-indigo-600">Mes examens Biologiques</Text>
                     <TouchableOpacity
-                        onPress={handleSubmit}
-                        className="w-full h-14 bg-indigo-600 rounded-xl items-center justify-center mt-4"
+                        onPress={handleAddExamen}
+                        className="w-10 h-10 items-center justify-center rounded-full bg-indigo-600"
                     >
-                        <Text className="text-white font-semibold text-lg">Ajouter</Text>
+                        <Plus size={24} color="white" />
                     </TouchableOpacity>
                 </View>
+
+                {/* Search Bar */}
+                <View className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12">
+                    <Search size={20} color="#666" />
+                    <TextInput
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        placeholder="Recherche"
+                        className="flex-1 ml-2"
+                    />
+                </View>
             </View>
-        </ScrollView>
+
+            {/* Examens List */}
+            <ScrollView className="flex-1 px-4 pt-4">
+                {mockExamens.map((examen) => (
+                    <TouchableOpacity key={examen.id} onPress={() => handleExamenPress(examen)}>
+                        <View className="bg-white rounded-xl mb-4 overflow-hidden shadow-sm">
+                            <View className="flex-row p-4">
+                                {/* Date Column */}
+                                <View className="items-center mr-4">
+                                    <Calendar size={24} color="#4F46E5" />
+                                    <Text className="text-xs font-medium mt-1">{examen.date.split(' ')[0]}</Text>
+                                    <Text className="text-xs">{examen.date.split(' ')[1]}</Text>
+                                    <Text className="text-xs">{examen.date.split(' ')[2]}</Text>
+                                </View>
+
+                                {/* Main Content */}
+                                <View className="flex-1">
+                                    <Text className="font-semibold text-gray-900 mb-2">{examen.name}</Text>
+
+                                    {/* Laboratory Info */}
+                                    <View className="flex-row items-center mb-2">
+                                        <Building2 size={16} color="#666" />
+                                        <Text className="text-sm text-gray-600 ml-2">{examen.laboratory}</Text>
+                                    </View>
+
+                                    {/* Doctor Info */}
+                                    <View className="flex-row items-center mb-3">
+                                        <User2 size={16} color="#666" />
+                                        <Text className="text-sm text-gray-600 ml-2">{examen.doctor}</Text>
+                                    </View>
+
+                                    {/* Action Buttons */}
+                                    <View className="flex-row justify-between">
+                                        <TouchableOpacity
+                                            className="bg-indigo-600 px-4 py-2 rounded-full"
+                                        >
+                                            <Text className="text-white text-sm font-medium">Détail</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            className={`px-4 py-2 rounded-full border ${
+                                                examen.status === 'recent'
+                                                    ? 'border-blue-500'
+                                                    : examen.status === 'ancien'
+                                                        ? 'border-gray-500'
+                                                        : 'border-indigo-500'
+                                            }`}
+                                        >
+                                            <Text
+                                                className={`text-sm font-medium ${
+                                                    examen.status === 'recent'
+                                                        ? 'text-blue-500'
+                                                        : examen.status === 'ancien'
+                                                            ? 'text-gray-500'
+                                                            : 'text-indigo-500'
+                                                }`}
+                                            >
+                                                {examen.status.charAt(0).toUpperCase() + examen.status.slice(1)}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+
+            {selectedExamen && (
+                <ExamenDetailPopup
+                    examen={selectedExamen}
+                    slideAnim={slideAnim}
+                    onClose={handleClosePopup}
+                />
+            )}
+        </View>
     );
 }
