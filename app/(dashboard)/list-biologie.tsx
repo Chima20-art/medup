@@ -24,7 +24,7 @@ import Hospital from "@/assets/images/hospital.svg";
 import Doctor from "@/assets/images/doctor.svg";
 import Calender from "@/assets/images/calender.svg";
 
-export default function ListExaminsRadiologiques() {
+export default function ListExaminsBiologiques() {
   const router = useRouter();
   const [radiologies, setRadiologies] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,7 +33,7 @@ export default function ListExaminsRadiologiques() {
 
   useEffect(() => {
     const fetchRadiologies = async () => {
-      const { data, error } = await supabase.from("radiologie").select("*");
+      const { data, error } = await supabase.from("bilogie").select("*");
       if (data) {
         setRadiologies(data);
         console.log("dataaa", data);
@@ -46,7 +46,7 @@ export default function ListExaminsRadiologiques() {
     fetchRadiologies();
 
     const subscription = supabase
-      .channel("radiologie_changes")
+      .channel("bilogie_changes")
       .on(
         "postgres_changes",
         {
@@ -69,7 +69,7 @@ export default function ListExaminsRadiologiques() {
   }, []);
 
   const addRadiologie = () => {
-    router.push("/add-examin-radiologique");
+    router.push("/add-examin-biologique");
   };
 
   const sleep = (ms: number) =>
@@ -106,7 +106,7 @@ export default function ListExaminsRadiologiques() {
           >
             <ChevronLeft size={24} color="#4F46E5" />
           </TouchableOpacity>
-          <Text className="text-xl font-bold ">Mes examens Radiologiques</Text>
+          <Text className="text-xl font-bold ">Mes examens bilogie</Text>
           <TouchableOpacity
             onPress={addRadiologie}
             className="w-10 h-10 items-center justify-center rounded-full bg-primary"
@@ -203,7 +203,7 @@ export default function ListExaminsRadiologiques() {
           examen={selectedExamen}
           slideAnim={slideAnim}
           onClose={handleClosePopup}
-          bucket="radiologie"
+          bucket="bilogie"
         />
       )}
     </SafeAreaView>

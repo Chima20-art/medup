@@ -27,12 +27,14 @@ const { height } = Dimensions.get("window");
 interface ExamenDetailPopupProps {
   examen: any;
   slideAnim?: Animated.Value;
+  bucket: string;
   onClose: () => void;
 }
 
 const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
   examen,
   slideAnim: propSlideAnim,
+  bucket,
   onClose,
 }) => {
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
@@ -203,7 +205,10 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
             <View className="py-4">
               <PanGestureHandler onHandlerStateChange={handleGesture}>
                 <View className="bg-gray-50 mb-2">
-                  <SupabaseFile path={examen.uploads[currentFileIndex]} />
+                  <SupabaseFile
+                    path={examen.uploads[currentFileIndex]}
+                    bucket={bucket}
+                  />
                 </View>
               </PanGestureHandler>
               {/* Pagination Dots */}
@@ -273,7 +278,7 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
                         : "border border-gray-200"
                     }`}
                   >
-                    <SupabaseFile path={upload} />
+                    <SupabaseFile path={upload} bucket={bucket} />
                   </TouchableOpacity>
                 ))}
               </ScrollView>

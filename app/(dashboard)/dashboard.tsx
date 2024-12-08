@@ -10,13 +10,11 @@ import {
 import { useTheme } from "@react-navigation/native";
 import { Bell, Search, Star, Calendar, Clock } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import RadioCategory from '@/assets/images/radioCategory.svg';
-import BioCategory from '@/assets/images/bioCategory.svg';
-import MedicationCategory from '@/assets/images/medicationCategory.svg';
-import ConsultationCategory from '@/assets/images/consultationsCategory.svg';
-import QuickAccess from '@/assets/images/QuickAcess.svg';
-
-
+import RadioCategory from "@/assets/images/radioCategory.svg";
+import BioCategory from "@/assets/images/bioCategory.svg";
+import MedicationCategory from "@/assets/images/medicationCategory.svg";
+import ConsultationCategory from "@/assets/images/consultationsCategory.svg";
+import QuickAccess from "@/assets/images/QuickAcess.svg";
 
 export default function Dashboard() {
   const { colors } = useTheme();
@@ -140,7 +138,7 @@ export default function Dashboard() {
               {
                 title: "mes Examens\nBiologiques",
                 image: BioCategory,
-                route: "/examens-biologiques",
+                route: "/list-biologie",
               },
               {
                 title: "Mes\nMedicaments",
@@ -182,4 +180,3 @@ export default function Dashboard() {
     </View>
   );
 }
-

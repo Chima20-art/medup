@@ -4,7 +4,13 @@ import { Button, Image, Text, View } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 
-export default function SupabaseFile({ path }: { path: string }) {
+export default function SupabaseFile({
+  path,
+  bucket = "radiologie",
+}: {
+  path: string;
+  bucket: string;
+}) {
   const [loading, setLoading] = useState(false);
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +28,7 @@ export default function SupabaseFile({ path }: { path: string }) {
       setError(null);
 
       const { data, error } = await supabase.storage
-        .from("radiologie") // Replace with your bucket name
+        .from(bucket) // Replace with your bucket name
         .createSignedUrl(path, 3600); // URL valid for 1 hour
 
       if (error) throw error;
