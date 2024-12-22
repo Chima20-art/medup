@@ -297,7 +297,7 @@ export default function MergedExamensRadiologiques() {
 
         setIsLoading(false);
         Alert.alert("Success", "Form data and files saved successfully");
-        router.push("/list-radiologie");
+        router.push("/list-examins-radiologiques");
     };
 
     return (

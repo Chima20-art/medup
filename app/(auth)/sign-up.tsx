@@ -71,6 +71,7 @@ export default function SignUpScreen() {
       data: { user },
       error,
     } = await supabase.auth.getUser();
+    router.push('/dashboard')
     console.log("user", user);
     console.log("error", error);
   };
