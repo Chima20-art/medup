@@ -143,7 +143,7 @@ export default function Dashboard() {
               {
                 title: "Mes\nMedicaments",
                 image: MedicationCategory,
-                route: "/medicaments",
+                route: "/list-medicaments",
               },
               {
                 title: "Mes\nConsultations",
