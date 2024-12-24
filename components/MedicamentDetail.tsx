@@ -9,9 +9,8 @@ import {
     TouchableWithoutFeedback,
     Modal,
     Animated,
-    Dimensions,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTheme } from "@react-navigation/native";
 import {
     ChevronLeft,
@@ -20,7 +19,13 @@ import {
     Clock,
     Pill,
     FileUp,
-    ChevronDown, FlaskConical, X,Container
+    ChevronDown,
+    FlaskConical,
+    Container,
+    Trash2,
+    Edit2,
+    Save,
+    X,
 } from "lucide-react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { supabase } from "@/utils/supabase";
@@ -41,10 +46,13 @@ interface UploadedFile {
     name: string;
 }
 
-export default function AddMedicament() {
+export default function MedicamentDetail( {initialData}: { initialData: any}) {
     const router = useRouter();
+    const { id } = useLocalSearchParams();
     const { colors } = useTheme();
     const [isLoading, setIsLoading] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [formData, setFormData] = useState({
         name: "",
         startDate: "",
@@ -61,6 +69,7 @@ export default function AddMedicament() {
         momentDePrise: "",
         stock: "",
     });
+
     const [showStartDatePicker, setShowStartDatePicker] = useState(false);
     const [showEndDatePicker, setShowEndDatePicker] = useState(false);
     const [showMomentDePrisePicker, setShowMomentDePrisePicker] = useState(false);
@@ -76,20 +85,118 @@ export default function AddMedicament() {
     ];
 
     useEffect(() => {
-        if (showMomentDePrisePicker) {
-            Animated.timing(dropdownAnimation, {
-                toValue: 1,
-                duration: 300,
-                useNativeDriver: true,
-            }).start();
-        } else {
-            Animated.timing(dropdownAnimation, {
-                toValue: 0,
-                duration: 300,
-                useNativeDriver: true,
-            }).start();
+        fetchMedicamentDetails();
+    }, [id]);
+
+    const fetchMedicamentDetails = async () => {
+        try {
+            const { data, error } = await supabase
+                .from("medicaments")
+                .select("*")
+                .eq("id", id)
+                .single();
+
+            if (error) throw error;
+            if (data) {
+                setFormData({
+                    ...data,
+                    file: data.file ? { uri: data.file, name: data.file.split('/').pop() || '' } : null
+                });
+            }
+        } catch (error) {
+            console.error("Error fetching medicament:", error);
+            Alert.alert("Error", "Failed to load medication details");
         }
-    }, [showMomentDePrisePicker]);
+    };
+
+    const handleDelete = async () => {
+        try {
+            setIsLoading(true);
+            const { error } = await supabase
+                .from("medicaments")
+                .delete()
+                .eq("id", id);
+
+            if (error) throw error;
+
+            if (formData.file) {
+                await supabase.storage
+                    .from("medicaments")
+                    .remove([formData.file.uri]);
+            }
+
+            Alert.alert("Success", "Medication deleted successfully");
+            router.push("/list-medicaments");
+        } catch (error) {
+            console.error("Error:", error);
+            Alert.alert("Error", "Failed to delete medication");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleUpdate = async () => {
+        setIsLoading(true);
+        try {
+            let filePath = formData.file?.uri || null;
+
+            if (formData.file && formData.file.uri.startsWith('file://')) {
+                const fileName = formData.file.uri.split("/").pop();
+                if (fileName) {
+                    filePath = `${Date.now()}_${fileName}`;
+                    const response = await fetch(formData.file.uri);
+                    const blob = await response.blob();
+
+                    const { error: uploadError } = await supabase.storage
+                        .from("medicaments")
+                        .upload(filePath, blob);
+
+                    if (uploadError) throw uploadError;
+                }
+            }
+
+            const { error } = await supabase
+                .from("medicaments")
+                .update({
+                    name: formData.name,
+                    startDate: formData.startDate,
+                    endDate: formData.endDate,
+                    dosage: formData.dosage,
+                    notes: formData.notes,
+                    schedule: formData.schedule,
+                    file: filePath,
+                    momentDePrise: formData.momentDePrise,
+                    stock: formData.stock,
+                })
+                .eq("id", id);
+
+            if (error) throw error;
+
+            Alert.alert("Success", "Medication updated successfully");
+            setIsEditing(false);
+        } catch (error) {
+            console.error("Error:", error);
+            Alert.alert("Error", "Failed to update medication");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const formatDate = (dateString: string) => {
+        if (!dateString) return "Sélectionner une date";
+        const [year, month, day] = dateString.split("-");
+        return `${day}-${month}-${year}`;
+    };
+
+    const onChangeStartDate = (date: any) => {
+        setFormData((prev) => ({ ...prev, startDate: date.dateString }));
+        setShowStartDatePicker(false);
+    };
+
+    const onChangeEndDate = (date: any) => {
+        setFormData((prev) => ({ ...prev, endDate: date.dateString }));
+        setShowEndDatePicker(false);
+    };
 
     const pickDocument = async () => {
         const result = await DocumentPicker.getDocumentAsync({
@@ -114,154 +221,6 @@ export default function AddMedicament() {
         }));
     };
 
-    const formatDate = (dateString: string) => {
-        if (!dateString) return "Sélectionner une date";
-        const [year, month, day] = dateString.split("-");
-        return `${day}-${month}-${year}`;
-    };
-
-    const onChangeStartDate = (date: any) => {
-        setFormData((prev) => ({ ...prev, startDate: date.dateString }));
-    };
-
-    const onChangeEndDate = (date: any) => {
-        setFormData((prev) => ({ ...prev, endDate: date.dateString }));
-    };
-
-    const handleSubmit = async () => {
-        setIsLoading(true);
-
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        let userId = userData?.user?.id;
-
-        if (!userId) {
-            console.log("No user id found");
-            setIsLoading(false);
-            return;
-        }
-
-        try {
-            let filePath = null;
-            if (formData.file) {
-                const fileName = formData.file.uri.split("/").pop();
-                if (fileName) {
-                    filePath = `${userId}/${Date.now()}_${fileName}`;
-                    const response = await fetch(formData.file.uri);
-                    const blob = await response.blob();
-
-                    const { error: uploadError } = await supabase.storage
-                        .from("medicaments")
-                        .upload(filePath, blob);
-
-                    if (uploadError) {
-                        console.error("Upload error:", uploadError);
-                        throw uploadError;
-                    }
-                }
-            }
-
-            const { error } = await supabase
-                .from("medicaments")
-                .insert({
-                    name: formData.name,
-                    startDate: formData.startDate,
-                    endDate: formData.endDate,
-                    dosage: formData.dosage,
-                    notes: formData.notes,
-                    schedule: formData.schedule,
-                    file: filePath,
-                    user_id: userId,
-                    created_at: new Date(),
-                    momentDePrise: formData.momentDePrise,
-                });
-
-            if (error) throw error;
-
-            Alert.alert("Success", "Medication added successfully");
-            router.push("/list-medicaments");
-        } catch (error) {
-            console.error("Error:", error);
-            Alert.alert("Error", "Failed to save medication. Please try again.");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const toggleMomentDePrisePicker = () => {
-        if (momentDePriseInputRef.current) {
-            momentDePriseInputRef.current.measure((x, y, width, height, pageX, pageY) => {
-                setDropdownLayout({ x: pageX, y: pageY + height, width, height });
-                setShowMomentDePrisePicker(!showMomentDePrisePicker);
-            });
-        }
-    };
-
-    const renderMomentDePrisePicker = () => (
-        <Modal
-            visible={showMomentDePrisePicker}
-            transparent={true}
-            animationType="none"
-        >
-            <TouchableWithoutFeedback onPress={() => setShowMomentDePrisePicker(false)}>
-                <View style={{ flex: 1 }}>
-                    <Animated.View
-                        style={{
-                            position: 'absolute',
-                            left: dropdownLayout.x,
-                            top: dropdownLayout.y,
-                            width: dropdownLayout.width,
-                            backgroundColor: 'white',
-                            borderRadius: 8,
-                            shadowColor: "#000",
-                            shadowOffset: {
-                                width: 0,
-                                height: 2,
-                            },
-                            shadowOpacity: 0.25,
-                            shadowRadius: 3.84,
-                            elevation: 5,
-                            opacity: dropdownAnimation,
-                            transform: [
-                                {
-                                    translateY: dropdownAnimation.interpolate({
-                                        inputRange: [0, 1],
-                                        outputRange: [-20, 0],
-                                    }),
-                                },
-                            ],
-                        }}
-                    >
-                        {momentDePriseOptions.map((option) => (
-                            <TouchableOpacity
-                                key={option.value}
-                                onPress={() => {
-                                    setFormData((prev) => ({ ...prev, momentDePrise: option.value }));
-                                    setShowMomentDePrisePicker(false);
-                                }}
-                                style={{
-                                    paddingVertical: 12,
-                                    paddingHorizontal: 16,
-                                    borderBottomWidth: 1,
-                                    borderBottomColor: '#e0e0e0',
-                                    backgroundColor: formData.momentDePrise === option.value ? colors.primary : 'white',
-                                }}
-                            >
-                                <Text
-                                    style={{
-                                        fontSize: 16,
-                                        color: formData.momentDePrise === option.value ? colors.secondary : colors.text,
-                                    }}
-                                >
-                                    {option.label}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </Animated.View>
-                </View>
-            </TouchableWithoutFeedback>
-        </Modal>
-    );
-
     return (
         <TouchableWithoutFeedback onPress={() => {
             setShowStartDatePicker(false);
@@ -269,20 +228,49 @@ export default function AddMedicament() {
             setShowMomentDePrisePicker(false);
         }}>
             <View className="flex-1 bg-gray-50">
+                {/* Header */}
                 <View className="px-6 pt-14 pb-6 bg-white">
-                    <View className="flex-row items-center">
-                        <TouchableOpacity
-                            onPress={() => router.back()}
-                            className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
-                        >
-                            <ChevronLeft size={24} color={colors.text} />
-                        </TouchableOpacity>
-                        <Text className="font-bold text-xl font-semibold text-gray-900 ml-4">
-                            Ajouter un médicament
-                        </Text>
+                    <View className="flex-row items-center justify-between">
+                        <View className="flex-row items-center">
+                            <TouchableOpacity
+                                onPress={() => router.back()}
+                                className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
+                            >
+                                <ChevronLeft size={24} color={colors.text} />
+                            </TouchableOpacity>
+                            <Text className="font-bold text-xl text-gray-900 ml-4">
+                                Détails du médicament
+                            </Text>
+                        </View>
+                        <View className="flex-row gap-2">
+                            {!isEditing ? (
+                                <>
+                                    <TouchableOpacity
+                                        onPress={() => setIsEditing(true)}
+                                        className="w-10 h-10 items-center justify-center rounded-full bg-primary-100"
+                                    >
+                                        <Edit2 size={20} color={colors.primary} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => setShowDeleteConfirm(true)}
+                                        className="w-10 h-10 items-center justify-center rounded-full bg-red-100"
+                                    >
+                                        <Trash2 size={20} color="rgb(220 38 38)" />
+                                    </TouchableOpacity>
+                                </>
+                            ) : (
+                                <TouchableOpacity
+                                    onPress={handleUpdate}
+                                    className="w-10 h-10 items-center justify-center rounded-full bg-primary"
+                                >
+                                    <Save size={20} color="white" />
+                                </TouchableOpacity>
+                            )}
+                        </View>
                     </View>
                 </View>
 
+                {/* Content */}
                 <ScrollView className="flex-1 p-6">
                     <View className="space-y-4">
                         {/* Name Input */}
@@ -300,6 +288,7 @@ export default function AddMedicament() {
                                     placeholder="Nom du médicament"
                                     placeholderTextColor="#9CA3AF"
                                     className="flex-1 ml-3"
+                                    editable={isEditing}
                                 />
                             </View>
                         </View>
@@ -310,10 +299,7 @@ export default function AddMedicament() {
                                 Date de début
                             </Text>
                             <TouchableOpacity
-                                onPress={() => {
-                                    setShowStartDatePicker(!showStartDatePicker);
-                                    setShowEndDatePicker(false);
-                                }}
+                                onPress={() => isEditing && setShowStartDatePicker(!showStartDatePicker)}
                                 className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12"
                             >
                                 <Calendar size={20} color={colors.text} className="opacity-50" />
@@ -365,10 +351,7 @@ export default function AddMedicament() {
                                 Date de fin
                             </Text>
                             <TouchableOpacity
-                                onPress={() => {
-                                    setShowEndDatePicker(!showEndDatePicker);
-                                    setShowStartDatePicker(false);
-                                }}
+                                onPress={() => isEditing && setShowEndDatePicker(!showEndDatePicker)}
                                 className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12"
                             >
                                 <Calendar size={20} color={colors.text} className="opacity-50" />
@@ -429,9 +412,11 @@ export default function AddMedicament() {
                                     placeholder="Ex: 1 comprimé"
                                     placeholderTextColor="#9CA3AF"
                                     className="flex-1 ml-3"
+                                    editable={isEditing}
                                 />
                             </View>
                         </View>
+
                         {/* Stock Input */}
                         <View>
                             <Text className="text-sm font-medium text-gray-700 mb-1">
@@ -444,9 +429,10 @@ export default function AddMedicament() {
                                     onChangeText={(text) =>
                                         setFormData((prev) => ({ ...prev, stock: text }))
                                     }
-                                    placeholder="Ex: 1 comprimé"
+                                    placeholder="Ex: 30 comprimés"
                                     placeholderTextColor="#9CA3AF"
                                     className="flex-1 ml-3"
+                                    editable={isEditing}
                                 />
                             </View>
                         </View>
@@ -458,7 +444,7 @@ export default function AddMedicament() {
                             </Text>
                             <TouchableOpacity
                                 ref={momentDePriseInputRef}
-                                onPress={toggleMomentDePrisePicker}
+                                onPress={() => isEditing && setShowMomentDePrisePicker(!showMomentDePrisePicker)}
                                 className="flex-row items-center justify-between bg-white rounded-xl border border-gray-200 px-4 h-12"
                             >
                                 <View className="flex-row items-center">
@@ -483,15 +469,13 @@ export default function AddMedicament() {
                                     {Object.entries(formData.schedule).map(([time, isSelected]) => (
                                         <TouchableOpacity
                                             key={time}
-                                            onPress={() =>
-                                                setFormData((prev) => ({
-                                                    ...prev,
-                                                    schedule: {
-                                                        ...prev.schedule,
-                                                        [time]: !isSelected,
-                                                    },
-                                                }))
-                                            }
+                                            onPress={() => isEditing && setFormData((prev) => ({
+                                                ...prev,
+                                                schedule: {
+                                                    ...prev.schedule,
+                                                    [time]: !isSelected,
+                                                },
+                                            }))}
                                             className={`px-4 py-2 rounded-full border ${
                                                 isSelected
                                                     ? "bg-indigo-600 border-indigo-600"
@@ -528,6 +512,7 @@ export default function AddMedicament() {
                                     numberOfLines={4}
                                     className="min-h-[100] text-gray-700"
                                     textAlignVertical="top"
+                                    editable={isEditing}
                                 />
                             </View>
                         </View>
@@ -546,43 +531,64 @@ export default function AddMedicament() {
                                                 {formData.file.name}
                                             </Text>
                                         </View>
-                                        <TouchableOpacity
-                                            onPress={deleteFile}
-                                            className="p-1 bg-primary-100 rounded-full absolute right-0 -top-4"
-                                        >
-                                            <X className="bg-primary-200" size={16}></X>
-                                        </TouchableOpacity>
+                                        {isEditing && (
+                                            <TouchableOpacity
+                                                onPress={deleteFile}
+                                                className="p-1 bg-primary-100 rounded-full absolute right-0 -top-4"
+                                            >
+                                                <X className="bg-primary-200" size={16}></X>
+                                            </TouchableOpacity>
+                                        )}
                                     </View>
                                 ) : (
-                                    <TouchableOpacity
-                                        onPress={pickDocument}
-                                        className="flex-row items-center justify-center py-4 border-2 border-dashed border-gray-300 rounded-lg"
-                                    >
-                                        <FileUp size={20} color={colors.text} className="opacity-50" />
-                                        <Text className="ml-2 text-sm text-gray-600">
-                                            Ajouter une ordonnance
-                                        </Text>
-                                    </TouchableOpacity>
+                                    isEditing && (
+                                        <TouchableOpacity
+                                            onPress={pickDocument}
+                                            className="flex-row items-center justify-center py-4 border-2 border-dashed border-gray-300 rounded-lg"
+                                        >
+                                            <FileUp size={20} color={colors.text} className="opacity-50" />
+                                            <Text className="ml-2 text-sm text-gray-600">
+                                                Ajouter une ordonnance
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )
                                 )}
                             </View>
                         </View>
                     </View>
                 </ScrollView>
 
-                <View className="p-6 bg-white border-t border-gray-200">
-                    <TouchableOpacity
-                        onPress={handleSubmit}
-                        disabled={isLoading}
-                        className={`w-full rounded-xl py-3 items-center ${
-                            isLoading ? "bg-indigo-400" : "bg-indigo-600"
-                        }`}
-                    >
-                        <Text className="text-white font-semibold text-lg">
-                            {isLoading ? "Chargement..." : "Enregistrer"}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-                {renderMomentDePrisePicker()}
+                {/* Delete Confirmation Modal */}
+                <Modal
+                    visible={showDeleteConfirm}
+                    transparent={true}
+                    animationType="fade"
+                >
+                    <View className="flex-1 bg-black/50 justify-center items-center p-4">
+                        <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+                            <Text className="text-xl font-bold text-gray-900 mb-4">
+                                Confirmer la suppression
+                            </Text>
+                            <Text className="text-gray-600 mb-6">
+                                Êtes-vous sûr de vouloir supprimer ce médicament ? Cette action est irréversible.
+                            </Text>
+                            <View className="flex-row justify-end gap-4">
+                                <TouchableOpacity
+                                    onPress={() => setShowDeleteConfirm(false)}
+                                    className="px-4 py-2 rounded-lg"
+                                >
+                                    <Text className="text-gray-600">Annuler</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={handleDelete}
+                                    className="px-4 py-2 bg-red-600 rounded-lg"
+                                >
+                                    <Text className="text-white font-medium">Supprimer</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
             </View>
         </TouchableWithoutFeedback>
     );

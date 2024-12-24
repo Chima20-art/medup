@@ -1,57 +1,88 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native'
 import { Link, router } from 'expo-router'
-import { ChevronLeft } from "lucide-react-native";
+import { ChevronLeft } from "lucide-react-native"
 import { useTheme } from "@react-navigation/native"
+import { supabase } from "@/utils/supabase"
 
 import PillIcon from '@/assets/images/pillIcon.svg'
 import Medicine from '@/assets/images/medicine.svg'
-import MedicationCard from "@/components/MedicationCard";
+import MedicationCard from "@/components/MedicationCard"
 
-interface MedicationCard {
+interface Medication {
     id: string
     name: string
     dosage: string
     startDate: string
     endDate: string
-    remainingPills: number
-    renewalDate: string
-    instructions: string
-    duration: string
-    isActive: boolean
+    stock: string
+    momentDePrise: string
+    notes: string
+    schedule: any
+    isActive?: boolean
 }
-
-const medications: MedicationCard[] = [
-    {
-        id: '1',
-        name: 'DOLIPRANE',
-        dosage: '30mg',
-        startDate: 'x/x/x',
-        endDate: 'x/x/x',
-        remainingPills: 20,
-        renewalDate: 'x/x/x',
-        instructions: 'X fois / jour',
-        duration: 'pendant 5 jours',
-        isActive: true
-    },
-    {
-        id: '2',
-        name: 'DOLIPRANE',
-        dosage: '30mg',
-        startDate: 'x/x/x',
-        endDate: 'x/x/x',
-        remainingPills: 20,
-        renewalDate: 'x/x/x',
-        instructions: 'X fois / jour',
-        duration: 'pendant 5 jours',
-        isActive: false
-    }
-]
-
 
 export default function ListMedicaments() {
     const [searchQuery, setSearchQuery] = useState('')
+    const [medications, setMedications] = useState<Medication[]>([])
     const { colors } = useTheme()
+
+    useEffect(() => {
+        const fetchMedications = async () => {
+            const { data, error } = await supabase
+                .from("medicaments")
+                .select("*")
+
+            if (error) {
+                console.error("Error fetching medications:", error)
+                return
+            }
+
+            if (data) {
+                // Transform the data to match your component's needs
+                const transformedData = data.map(med => ({
+                    ...med,
+                    isActive: new Date(med.endDate) > new Date() // Check if medication is still active
+                }))
+                setMedications(transformedData)
+            }
+        }
+
+        fetchMedications()
+
+        // Set up real-time subscription
+        const subscription = supabase
+            .channel("medicaments_changes")
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "medicaments",
+                },
+                async (payload) => {
+                    const { data } = await supabase.from("medicaments").select("*")
+                    if (data) {
+                        const transformedData = data.map(med => ({
+                            ...med,
+                            isActive: new Date(med.endDate) > new Date()
+                        }))
+                        setMedications(transformedData)
+                    }
+                }
+            )
+            .subscribe()
+
+        // Cleanup subscription
+        return () => {
+            subscription.unsubscribe()
+        }
+    }, [])
+
+    // Filter medications based on search query
+    const filteredMedications = medications.filter(med =>
+        med.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
 
     return (
         <View className="flex-1 bg-gray-50">
@@ -84,8 +115,14 @@ export default function ListMedicaments() {
 
             {/* Medication List */}
             <ScrollView className="flex-1 px-4 pt-8">
-                {medications.map(medication => (
-                    <MedicationCard key={medication.id} medication={medication} />
+                {filteredMedications.map(medication => (
+                    <TouchableOpacity key={medication.id}
+                                      onPress={() => router.push(`/medicament/${medication.id}`)}
+                    >
+                        <MedicationCard medication={medication} />
+                    </TouchableOpacity>
+
+
                 ))}
             </ScrollView>
         </View>

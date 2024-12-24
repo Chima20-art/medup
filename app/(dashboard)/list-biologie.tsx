@@ -106,7 +106,7 @@ export default function ListExaminsBiologiques() {
           >
             <ChevronLeft size={24} color="#4F46E5" />
           </TouchableOpacity>
-          <Text className="text-xl font-bold ">Mes examens bilogie</Text>
+          <Text className="text-xl font-bold ">Mes examens bilogiques</Text>
           <TouchableOpacity
             onPress={addRadiologie}
             className="w-10 h-10 items-center justify-center rounded-full bg-primary"
