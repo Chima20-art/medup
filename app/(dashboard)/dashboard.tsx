@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -16,9 +16,64 @@ import MedicationCategory from "@/assets/images/medicationCategory.svg";
 import ConsultationCategory from "@/assets/images/consultationsCategory.svg";
 import QuickAccess from "@/assets/images/QuickAcess.svg";
 
+// Add this outside the component to avoid recreation on each render
+const categoryCardStyle = {
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.05,
+  shadowRadius: 8,
+  elevation: 2,
+} as const;
+
+const categories = [
+  {
+    title: "mes Examens\nradiologiques",
+    image: RadioCategory,
+    route: "/list-examins-radiologiques",
+  },
+  {
+    title: "mes Examens\nBiologiques",
+    image: BioCategory,
+    route: "/list-biologie",
+  },
+  {
+    title: "Mes\nMedicaments",
+    image: MedicationCategory,
+    route: "/list-medicaments",
+  },
+  {
+    title: "Mes\nConsultations",
+    image: ConsultationCategory,
+    route: "/consultations",
+  },
+  {
+    title: "Acces\nRapides",
+    image: QuickAccess,
+    route: "/acces-rapides",
+  },
+] as const;
+
 export default function Dashboard() {
   const { colors } = useTheme();
   const router = useRouter();
+
+  const categoryItems = useMemo(
+    () =>
+      categories.map((category, index) => (
+        <TouchableOpacity
+          key={index}
+          className="w-[30%] aspect-square bg-white rounded-3xl p-4 mb-4 items-center justify-between"
+          style={categoryCardStyle}
+          onPress={() => router.push(category.route as any)}
+        >
+          <category.image className="w-12 h-12" />
+          <Text className="text-center text-gray-900 text-sm">
+            {category.title}
+          </Text>
+        </TouchableOpacity>
+      )),
+    [] // Dependencies array is empty since categories is constant
+  );
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -129,51 +184,7 @@ export default function Dashboard() {
             Categories
           </Text>
           <View className="flex-row flex-wrap justify-between">
-            {[
-              {
-                title: "mes Examens\nradiologiques",
-                image: RadioCategory,
-                route: "/list-examins-radiologiques",
-              },
-              {
-                title: "mes Examens\nBiologiques",
-                image: BioCategory,
-                route: "/list-biologie",
-              },
-              {
-                title: "Mes\nMedicaments",
-                image: MedicationCategory,
-                route: "/list-medicaments",
-              },
-              {
-                title: "Mes\nConsultations",
-                image: ConsultationCategory,
-                route: "/consultations",
-              },
-              {
-                title: "Acces\nRapides",
-                image: QuickAccess,
-                route: "/acces-rapides",
-              },
-            ].map((category, index) => (
-              <TouchableOpacity
-                key={index}
-                className="w-[30%] aspect-square bg-white rounded-3xl p-4 mb-4 items-center justify-between"
-                style={{
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 8,
-                  elevation: 2,
-                }}
-                onPress={() => router.push(category.route as any)}
-              >
-                <category.image className="w-12 h-12" />
-                <Text className="text-center text-gray-900 text-sm">
-                  {category.title}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {categoryItems}
           </View>
         </View>
       </ScrollView>
