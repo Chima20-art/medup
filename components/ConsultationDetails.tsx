@@ -28,7 +28,9 @@ import {
     Trash,
     X,
     Stethoscope,
-    ChevronDown
+    ChevronDown,
+    Edit2,
+    Save
 } from "lucide-react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { supabase } from "@/utils/supabase";
@@ -64,21 +66,35 @@ interface Specialty {
     hexColor: string;
 }
 
-export default function AddConsultation() {
+interface ConsultationDetailsProps {
+    consultation: Consultation;
+}
+interface Consultation {
+    id: number;
+    doctorName: string;
+    speciality: number;
+    date: string;
+    adress: string;
+    city: string;
+    note: string | null;
+    reminder: boolean;
+    nextAppointment: string | null;
+    uploads: string[] | null;
+    audio_notes: string[] | null;
+    created_at: string;
+    user_id: string;
+    specialties: {
+        name: string;
+        hexColor: string;
+    };
+}
+
+export default function ConsultationDetails({ consultation: initialConsultation }: ConsultationDetailsProps) {
     const router = useRouter();
     const { colors } = useTheme();
     const [isLoading, setIsLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        doctorName: "",
-        speciality: null as number | null,
-        date: "",
-        adress: "",
-        city: "",
-        notes: "",
-        reminder: false,
-        nextAppointment: "",
-        files: [] as UploadedFile[],
-    });
+    const [isEditing, setIsEditing] = useState(false);
+    const [consultation, setConsultation] = useState(initialConsultation);
 
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
     const [isRecording, setIsRecording] = useState(false);
@@ -90,10 +106,7 @@ export default function AddConsultation() {
     const [showNextAppointmentPicker, setShowNextAppointmentPicker] = useState(false);
     const [specialties, setSpecialties] = useState<Specialty[]>([]);
     const [showSpecialtyPicker, setShowSpecialtyPicker] = useState(false);
-    const [selectedSpecialty, setSelectedSpecialty] = useState<Specialty | null>(null);
     const [specialtySearch, setSpecialtySearch] = useState("");
-
-
 
     const specialtyInputRef = useRef(null);
 
@@ -220,12 +233,9 @@ export default function AddConsultation() {
             });
 
             if (result.assets && result.assets[0]) {
-                setFormData(prev => ({
+                setConsultation((prev: any) => ({
                     ...prev,
-                    files: [...prev.files, {
-                        uri: result.assets[0].uri,
-                        name: result.assets[0].name,
-                    }],
+                    uploads: [...(prev.uploads || []), result.assets[0].uri],
                 }));
             }
         } catch (error) {
@@ -235,9 +245,9 @@ export default function AddConsultation() {
     };
 
     const deleteFile = (index: number) => {
-        setFormData(prev => ({
+        setConsultation((prev: any) => ({
             ...prev,
-            files: prev.files.filter((_, i) => i !== index)
+            uploads: prev.uploads ? prev.uploads.filter((_: any, i: any) => i !== index) : []
         }));
     };
 
@@ -247,87 +257,70 @@ export default function AddConsultation() {
         return `${day}-${month}-${year}`;
     };
 
-    const handleSubmit = async () => {
-        if (!formData.doctorName || !formData.speciality || !formData.date) {
-            Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
-            return;
-        }
-        if (!formData.date) {
-            Alert.alert('Erreur', 'La date est obligatoire');
-            return;
-        }
-
+    const handleUpdate = async () => {
         setIsLoading(true);
-
         try {
-            const { data: userData, error: userError } = await supabase.auth.getUser();
-            if (userError) throw userError;
-
-            const userId = userData?.user?.id;
-            if (!userId) throw new Error("No user id found");
-
-            // Upload files and get their paths
-            const filePaths = await Promise.all(formData.files.map(async (file) => {
-                const fileName = `${userId}/${Date.now()}_${file.name}`;
-                const response = await fetch(file.uri);
-                const blob = await response.blob();
-
-                const { error: uploadError } = await supabase.storage
-                    .from("consultations")
-                    .upload(fileName, blob);
-
-                if (uploadError) throw uploadError;
-                return fileName;
-            }));
-
-            // Upload audio notes
-            const audioNotePaths = await Promise.all(audioNotes.map(async (audio) => {
-                const fileName = `${userId}/${Date.now()}_audio.m4a`;
-                const response = await fetch(audio.uri);
-                const blob = await response.blob();
-
-                const { error: uploadError } = await supabase.storage
-                    .from("consultations")
-                    .upload(fileName, blob);
-
-                if (uploadError) throw uploadError;
-                return fileName;
-            }));
-
-            const formattedDate = new Date(formData.date).toISOString();
-            const formattedNextAppointment = formData.nextAppointment
-                ? new Date(formData.nextAppointment).toISOString()
-                : null;
-
             const { error } = await supabase
                 .from("consultations")
-                .insert({
-                    doctorName: formData.doctorName,
-                    speciality: formData.speciality,
-                    date: formattedDate,
-                    adress: formData.adress,
-                    city: formData.city,
-                    note: formData.notes,
-                    reminder: formData.reminder,
-                    nextAppointment: formattedNextAppointment,
-                    uploads: filePaths,
-                    audio_notes: audioNotePaths,
-                    created_at: new Date().toISOString(),
-                    user_id: userId,
-                });
+                .update({
+                    doctorName: consultation.doctorName,
+                    speciality: consultation.speciality,
+                    date: consultation.date,
+                    adress: consultation.adress,
+                    city: consultation.city,
+                    note: consultation.note,
+                    reminder: consultation.reminder,
+                    nextAppointment: consultation.nextAppointment,
+                    uploads: consultation.uploads,
+                    audio_notes: audioNotes.map(note => note.uri),
+                })
+                .eq("id", consultation.id);
 
             if (error) throw error;
 
-            Alert.alert("Succès", "Consultation ajoutée avec succès");
-            router.push("/list-consultations");
+            Alert.alert("Succès", "Consultation mise à jour avec succès");
+            setIsEditing(false);
+            router.push('/list-consultations');
         } catch (error) {
             console.error("Error:", error);
-            Alert.alert("Erreur", "Échec de l'enregistrement de la consultation. Veuillez réessayer.");
+            Alert.alert("Erreur", "Échec de la mise à jour de la consultation");
         } finally {
             setIsLoading(false);
         }
     };
 
+    const handleDelete = async () => {
+        Alert.alert(
+            "Confirmer la suppression",
+            "Êtes-vous sûr de vouloir supprimer cette consultation ?",
+            [
+                { text: "Annuler", style: "cancel" },
+                {
+                    text: "Supprimer",
+                    style: "destructive",
+                    onPress: async () => {
+                        setIsLoading(true);
+                        try {
+                            const { error } = await supabase
+                                .from("consultations")
+                                .delete()
+                                .eq("id", consultation.id);
+
+                            if (error) throw error;
+
+                            Alert.alert("Succès", "Consultation supprimée avec succès");
+                            router.back();
+                        } catch (error) {
+                            console.error("Error:", error);
+                            Alert.alert("Erreur", "Échec de la suppression de la consultation");
+                        } finally {
+                            setIsLoading(false);
+                        }
+                    }
+                }
+            ]
+        );
+    };
 
     const filteredSpecialties = specialties.filter(specialty =>
         specialty.name.toLowerCase().includes(specialtySearch.toLowerCase())
@@ -341,8 +334,7 @@ export default function AddConsultation() {
                 renderItem={({ item }) => (
                     <TouchableOpacity
                         onPress={() => {
-                            setSelectedSpecialty(item);
-                            setFormData(prev => ({ ...prev, speciality: item.id }));
+                            setConsultation((prev: any) => ({ ...prev, speciality: item.id }));
                             setShowSpecialtyPicker(false);
                             setSpecialtySearch("");
                         }}
@@ -369,16 +361,41 @@ export default function AddConsultation() {
                     renderItem={() => (
                         <View className="space-y-4 p-6">
                             <View className="px-6 pt-14 pb-6 bg-white">
-                                <View className="flex-row items-center">
+                                <View className="flex-row items-center justify-between">
                                     <TouchableOpacity
                                         onPress={() => router.back()}
                                         className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
                                     >
                                         <ChevronLeft size={24} color={colors.text} />
                                     </TouchableOpacity>
-                                    <Text className="font-bold text-xl font-semibold text-gray-900 ml-4">
-                                        Ajouter une consultation
+                                    <Text className="font-bold text-xl font-semibold text-gray-900">
+                                        Détails de la consultation
                                     </Text>
+                                    <View className="flex-row gap-2">
+                                        {!isEditing ? (
+                                            <>
+                                                <TouchableOpacity
+                                                    onPress={() => setIsEditing(true)}
+                                                    className="w-10 h-10 items-center justify-center rounded-full bg-primary-100"
+                                                >
+                                                    <Edit2 size={20} color={colors.primary} />
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    onPress={handleDelete}
+                                                    className="w-10 h-10 items-center justify-center rounded-full bg-red-100"
+                                                >
+                                                    <Trash size={20} color="rgb(220 38 38)" />
+                                                </TouchableOpacity>
+                                            </>
+                                        ) : (
+                                            <TouchableOpacity
+                                                onPress={handleUpdate}
+                                                className="px-4 py-2 bg-primary rounded-lg"
+                                            >
+                                                <Text className="text-white font-medium">Enregistrer</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
                                 </View>
                             </View>
 
@@ -390,13 +407,14 @@ export default function AddConsultation() {
                                 <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
                                     <User2 size={20} color={colors.text} className="opacity-50" />
                                     <TextInput
-                                        value={formData.doctorName}
+                                        value={consultation.doctorName}
                                         onChangeText={(text) =>
-                                            setFormData((prev) => ({ ...prev, doctorName: text }))
+                                            setConsultation((prev: any) => ({ ...prev, doctorName: text }))
                                         }
                                         placeholder="Nom du médecin"
                                         placeholderTextColor="#9CA3AF"
                                         className="flex-1 ml-3"
+                                        editable={isEditing}
                                     />
                                 </View>
                             </View>
@@ -409,14 +427,14 @@ export default function AddConsultation() {
                                 <View className="relative">
                                     <TouchableOpacity
                                         ref={specialtyInputRef}
-                                        onPress={() => setShowSpecialtyPicker(!showSpecialtyPicker)}
+                                        onPress={() => isEditing && setShowSpecialtyPicker(!showSpecialtyPicker)}
                                         className="relative flex-row items-center justify-between bg-white rounded-xl border border-gray-200 px-4 h-12"
                                     >
                                         <View className="flex-row items-center flex-1">
                                             <Stethoscope size={20} color={colors.text} className="opacity-50" />
-                                            {selectedSpecialty ? (
-                                                <View style={{ backgroundColor: selectedSpecialty.hexColor }} className="px-3 py-1 rounded-full ml-3">
-                                                    <Text className="text-white font-medium">{selectedSpecialty.name}</Text>
+                                            {consultation.specialties ? (
+                                                <View style={{ backgroundColor: consultation.specialties.hexColor }} className="px-3 py-1 rounded-full ml-3">
+                                                    <Text className="text-white font-medium">{consultation.specialties.name}</Text>
                                                 </View>
                                             ) : (
                                                 <TextInput
@@ -428,6 +446,7 @@ export default function AddConsultation() {
                                                     placeholder="Rechercher une spécialité"
                                                     placeholderTextColor="#9CA3AF"
                                                     className="flex-1 ml-3"
+                                                    editable={isEditing}
                                                 />
                                             )}
                                         </View>
@@ -443,23 +462,23 @@ export default function AddConsultation() {
                                     Date de réalisation
                                 </Text>
                                 <TouchableOpacity
-                                    onPress={() => setShowDatePicker(!showDatePicker)}
+                                    onPress={() => isEditing && setShowDatePicker(!showDatePicker)}
                                     className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12"
                                 >
                                     <Calendar size={20} color={colors.text} className="opacity-50" />
                                     <Text className="flex-1 ml-3 text-gray-700">
-                                        {formatDate(formData.date)}
+                                        {formatDate(consultation.date)}
                                     </Text>
                                 </TouchableOpacity>
                                 {showDatePicker && (
                                     <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
                                         <RNCalendar
                                             onDayPress={(day) => {
-                                                setFormData(prev => ({ ...prev, date: day.dateString }));
+                                                setConsultation((prev :any )=> ({ ...prev, date: day.dateString }));
                                                 setShowDatePicker(false);
                                             }}
                                             markedDates={{
-                                                [formData.date]: { selected: true, selectedColor: colors.primary }
+                                                [consultation.date]: { selected: true, selectedColor: colors.primary }
                                             }}
                                             theme={{
                                                 backgroundColor: '#ffffff',
@@ -498,13 +517,14 @@ export default function AddConsultation() {
                                 <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
                                     <MapPin size={20} color={colors.text} className="opacity-50" />
                                     <TextInput
-                                        value={formData.adress}
+                                        value={consultation.adress}
                                         onChangeText={(text) =>
-                                            setFormData((prev) => ({ ...prev, adress: text }))
+                                            setConsultation((prev: any) => ({ ...prev, adress: text }))
                                         }
                                         placeholder="Adresse"
                                         placeholderTextColor="#9CA3AF"
                                         className="flex-1 ml-3"
+                                        editable={isEditing}
                                     />
                                 </View>
                             </View>
@@ -517,13 +537,14 @@ export default function AddConsultation() {
                                 <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
                                     <Building2 size={20} color={colors.text} className="opacity-50" />
                                     <TextInput
-                                        value={formData.city}
+                                        value={consultation.city}
                                         onChangeText={(text) =>
-                                            setFormData((prev) => ({ ...prev, city: text }))
+                                            setConsultation((prev: any) => ({ ...prev, city: text }))
                                         }
                                         placeholder="Ville"
                                         placeholderTextColor="#9CA3AF"
                                         className="flex-1 ml-3"
+                                        editable={isEditing}
                                     />
                                 </View>
                             </View>
@@ -537,20 +558,21 @@ export default function AddConsultation() {
                                     <View className="flex-row items-center justify-between mb-4">
                                         <Text className="text-gray-700">Activer le rappel</Text>
                                         <Switch
-                                            value={formData.reminder}
+                                            value={consultation.reminder}
                                             onValueChange={(value) =>
-                                                setFormData((prev) => ({ ...prev, reminder: value }))
+                                                setConsultation((prev : any) => ({ ...prev, reminder: value }))
                                             }
+                                            disabled={!isEditing}
                                         />
                                     </View>
-                                    {formData.reminder && (
+                                    {consultation.reminder && (
                                         <TouchableOpacity
-                                            onPress={() => setShowNextAppointmentPicker(!showNextAppointmentPicker)}
+                                            onPress={() => isEditing && setShowNextAppointmentPicker(!showNextAppointmentPicker)}
                                             className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12"
                                         >
                                             <Calendar size={20} color={colors.text} className="opacity-50" />
                                             <Text className="flex-1 ml-3 text-gray-700">
-                                                {formatDate(formData.nextAppointment) || "Date du prochain rendez-vous"}
+                                                {formatDate(consultation.nextAppointment!) || "Date du prochain rendez-vous"}
                                             </Text>
                                         </TouchableOpacity>
                                     )}
@@ -558,11 +580,11 @@ export default function AddConsultation() {
                                         <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
                                             <RNCalendar
                                                 onDayPress={(day) => {
-                                                    setFormData(prev => ({ ...prev, nextAppointment: day.dateString }));
+                                                    setConsultation((prev: any )=> ({ ...prev, nextAppointment: day.dateString }));
                                                     setShowNextAppointmentPicker(false);
                                                 }}
                                                 markedDates={{
-                                                    [formData.nextAppointment]: { selected: true, selectedColor: colors.primary }
+                                                    [consultation.nextAppointment!]: { selected: true, selectedColor: colors.primary }
                                                 }}
                                                 theme={{
                                                     backgroundColor: '#ffffff',
@@ -594,19 +616,20 @@ export default function AddConsultation() {
                                 </View>
                             </View>
 
-                            {/* Notes Input with Audio Recording */}
+                            {/* Notes Input */}
                             <View>
                                 <Text className="text-sm font-medium text-gray-700 mb-1">Notes</Text>
                                 <View className="bg-white rounded-xl border border-gray-200 p-4">
                                     <TextInput
-                                        value={formData.notes}
-                                        onChangeText={(text) => setFormData(prev => ({ ...prev, notes: text }))}
+                                        value={consultation.note!}
+                                        onChangeText={(text) => setConsultation((prev : any)  => ({ ...prev, note: text }))}
                                         placeholder="Ajouter des notes..."
                                         placeholderTextColor="#9CA3AF"
                                         multiline
                                         numberOfLines={4}
                                         className="min-h-[100] mb-4"
                                         textAlignVertical="top"
+                                        editable={isEditing}
                                     />
 
                                     {/* Audio Notes List */}
@@ -637,12 +660,14 @@ export default function AddConsultation() {
                                                         </View>
                                                     </TouchableOpacity>
 
-                                                    <TouchableOpacity
-                                                        onPress={() => setShowOptionsFor(showOptionsFor === audio.id ? null : audio.id)}
-                                                        className="p-2"
-                                                    >
-                                                        <MoreVertical size={20} color={colors.text} />
-                                                    </TouchableOpacity>
+                                                    {isEditing && (
+                                                        <TouchableOpacity
+                                                            onPress={() => setShowOptionsFor(showOptionsFor === audio.id ? null : audio.id)}
+                                                            className="p-2"
+                                                        >
+                                                            <MoreVertical size={20} color={colors.text} />
+                                                        </TouchableOpacity>
+                                                    )}
 
                                                     {showOptionsFor === audio.id && (
                                                         <TouchableOpacity
@@ -661,17 +686,19 @@ export default function AddConsultation() {
                                     )}
 
                                     {/* Recording Button */}
-                                    <TouchableOpacity
-                                        onPress={isRecording ? stopRecording : startRecording}
-                                        className="flex-row items-center"
-                                    >
-                                        <View className={`w-10 h-10 rounded-full ${isRecording ? 'bg-red-500' : 'bg-gray-100'} items-center justify-center mr-2`}>
-                                            <Mic size={20} color={isRecording ? 'white' : colors.primary} />
-                                        </View>
-                                        <Text className="text-sm text-gray-600">
-                                            {isRecording ? 'Arrêter l\'enregistrement' : 'Enregistrer une note audio'}
-                                        </Text>
-                                    </TouchableOpacity>
+                                    {isEditing && (
+                                        <TouchableOpacity
+                                            onPress={isRecording ? stopRecording : startRecording}
+                                            className="flex-row items-center"
+                                        >
+                                            <View className={`w-10 h-10 rounded-full ${isRecording ? 'bg-red-500' : 'bg-gray-100'} items-center justify-center mr-2`}>
+                                                <Mic size={20} color={isRecording ? 'white' : colors.primary} />
+                                            </View>
+                                            <Text className="text-sm text-gray-600">
+                                                {isRecording ? 'Arrêter l\'enregistrement' : 'Enregistrer une note audio'}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
                                 </View>
                             </View>
 
@@ -681,50 +708,42 @@ export default function AddConsultation() {
                                     Documents
                                 </Text>
                                 <View className="bg-white rounded-xl border border-gray-200 p-4">
-                                    <TouchableOpacity
-                                        onPress={pickDocument}
-                                        className="flex-row items-center justify-center py-4 border-2 border-dashed border-gray-300 rounded-lg"
-                                    >
-                                        <FileUp size={20} color={colors.text} className="opacity-50" />
-                                        <Text className="ml-2 text-sm text-gray-600">
-                                            Ajouter un document
-                                        </Text>
-                                    </TouchableOpacity>
-
-                                    {formData.files.length > 0 && (
+                                    {consultation.uploads && consultation.uploads.length > 0 ? (
                                         <View className="mt-4 space-y-2">
-                                            {formData.files.map((file, index) => (
+                                            {consultation.uploads.map((file: any, index: any) => (
                                                 <View key={index} className="flex-row items-center justify-between bg-gray-50 rounded-lg p-3">
                                                     <View className="flex-row items-center flex-1">
                                                         <FileText size={20} color={colors.text} />
                                                         <Text className="ml-2 text-sm text-gray-600 flex-1" numberOfLines={1}>
-                                                            {file.name}
+                                                            {file.split('/').pop()}
                                                         </Text>
                                                     </View>
-                                                    <TouchableOpacity
-                                                        onPress={() => deleteFile(index)}
-                                                        className="ml-2"
-                                                    >
-                                                        <X size={20} color="red" />
-                                                    </TouchableOpacity>
+                                                    {isEditing && (
+                                                        <TouchableOpacity
+                                                            onPress={() => deleteFile(index)}
+                                                            className="ml-2"
+                                                        >
+                                                            <X size={20} color="red" />
+                                                        </TouchableOpacity>
+                                                    )}
                                                 </View>
                                             ))}
                                         </View>
+                                    ) : (
+                                        <Text className="text-sm text-gray-600">Aucun document</Text>
+                                    )}
+                                    {isEditing && (
+                                        <TouchableOpacity
+                                            onPress={pickDocument}
+                                            className="flex-row items-center justify-center py-4 border-2 border-dashed border-gray-300 rounded-lg mt-4"
+                                        >
+                                            <FileUp size={20} color={colors.text} className="opacity-50" />
+                                            <Text className="ml-2 text-sm text-gray-600">
+                                                Ajouter un document
+                                            </Text>
+                                        </TouchableOpacity>
                                     )}
                                 </View>
-                            </View>
-                            <View className="p-6 bg-white border-t border-gray-200">
-                                <TouchableOpacity
-                                    onPress={handleSubmit}
-                                    disabled={isLoading}
-                                    className={`w-full rounded-xl py-3 items-center ${
-                                        isLoading ? "bg-indigo-400" : "bg-indigo-600"
-                                    }`}
-                                >
-                                    <Text className="text-white font-semibold text-lg">
-                                        {isLoading ? "Chargement..." : "Enregistrer"}
-                                    </Text>
-                                </TouchableOpacity>
                             </View>
                         </View>
                     )}
