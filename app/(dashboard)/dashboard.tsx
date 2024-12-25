@@ -124,7 +124,7 @@ export default function Dashboard() {
         </View>
 
         {/* Categories Section */}
-        <View className="px-6 pb-6">
+        <View className="px-6 pb-6 h-full">
           <Text className="text-lg font-semibold text-gray-900 mb-4">
             Categories
           </Text>
@@ -148,7 +148,7 @@ export default function Dashboard() {
               {
                 title: "Mes\nConsultations",
                 image: ConsultationCategory,
-                route: "/consultations",
+                route: "/list-consultations",
               },
               {
                 title: "Acces\nRapides",
