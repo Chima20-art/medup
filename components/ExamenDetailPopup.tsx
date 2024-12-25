@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -148,6 +148,35 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
     }
   };
 
+  const MemoizedFileView = useMemo(() => {
+    return (
+      <View className="py-4">
+        <PanGestureHandler onHandlerStateChange={handleGesture}>
+          <View className="bg-gray-50 mb-2">
+            <SupabaseFile
+              path={examen.uploads[currentFileIndex]}
+              bucket={bucket}
+            />
+          </View>
+        </PanGestureHandler>
+        {/* Pagination Dots */}
+        {examen.uploads.length > 1 && (
+          <View className="flex-row justify-center space-x-1">
+            {examen.uploads.map((_: any, index: number) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => setCurrentFileIndex(index)}
+                className={`w-2 h-2 rounded-full ${
+                  currentFileIndex === index ? "bg-indigo-600" : "bg-gray-300"
+                }`}
+              />
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  }, [currentFileIndex, examen.uploads, bucket]);
+
   return (
     <Animated.View
       style={{
@@ -201,34 +230,7 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
       <ScrollView className="flex-1 px-4">
         {/* File Preview */}
         <View className="border border-gray-200 rounded-xl p-2 mx-12">
-          {examen.uploads && examen.uploads.length > 0 && (
-            <View className="py-4">
-              <PanGestureHandler onHandlerStateChange={handleGesture}>
-                <View className="bg-gray-50 mb-2">
-                  <SupabaseFile
-                    path={examen.uploads[currentFileIndex]}
-                    bucket={bucket}
-                  />
-                </View>
-              </PanGestureHandler>
-              {/* Pagination Dots */}
-              {examen.uploads.length > 1 && (
-                <View className="flex-row justify-center space-x-1">
-                  {examen.uploads.map((_: any, index: number) => (
-                    <TouchableOpacity
-                      key={index}
-                      onPress={() => setCurrentFileIndex(index)}
-                      className={`w-2 h-2 rounded-full ${
-                        currentFileIndex === index
-                          ? "bg-indigo-600"
-                          : "bg-gray-300"
-                      }`}
-                    />
-                  ))}
-                </View>
-              )}
-            </View>
-          )}
+          {examen.uploads && examen.uploads.length > 0 && MemoizedFileView}
 
           {/* Details */}
           <View className=" flex flex-col gap-y-3">
