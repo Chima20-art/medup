@@ -1,22 +1,18 @@
-import {  router } from 'expo-router'
-import OnboardingImage1 from '@/assets/images/onboarding-1.svg';
-import OnboardingImage2 from '@/assets/images/onboarding-2.svg';
-import OnboardingImage3 from '@/assets/images/onboarding-3.svg';
-
+import { router } from 'expo-router'
+import OnboardingImage1 from '@/assets/images/onboarding-1.svg'
+import OnboardingImage2 from '@/assets/images/onboarding-2.svg'
+import OnboardingImage3 from '@/assets/images/onboarding-3.svg'
 import {
     Text,
     View,
-    Image,
-    TouchableOpacity,
-    useColorScheme,
     Dimensions,
     ScrollView,
-    NativeSyntheticEvent, NativeScrollEvent
+    NativeSyntheticEvent,
+    NativeScrollEvent,
+    StatusBar,
+    TouchableOpacity
 } from 'react-native'
-import { useEffect, useState, useRef } from "react"
-import { useTheme } from "@react-navigation/native"
-import { Animated } from 'react-native';
-import Svg, {Circle} from "react-native-svg";
+import { useState, useRef } from "react"
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 
@@ -24,35 +20,26 @@ const onboardingData = [
     {
         title: "Simplifiez votre suivi médical",
         description: "Regroupez toutes vos informations de santé en un seul endroit, accessibles facilement et à tout moment.",
-        Image: OnboardingImage1
+        Image: OnboardingImage1,
+        backgroundColor: '#4F46E5'
     },
     {
         title: "Gardez un œil sur vos examens",
         description: "Suivez vos analyses biologiques, radiologiques et vos consultations pour une meilleure prise en charge.",
-        Image: OnboardingImage2
+        Image: OnboardingImage2,
+        backgroundColor: '#818CF8'
     },
     {
         title: "Prenez soin de votre santé en toute simplicité",
         description: "Accédez à vos prescriptions suivant vos constantes vitales et ne manquez aucune information essentielle.",
-        Image: OnboardingImage3
+        Image: OnboardingImage3,
+        backgroundColor: '#06B6D4'
     }
 ]
 
 export default function Onboarding() {
     const [currentIndex, setCurrentIndex] = useState(0)
     const scrollViewRef = useRef<ScrollView>(null)
-    const progressAnimation = useRef(new Animated.Value(0)).current
-    const { colors } = useTheme()
-
-    const handleNext = () => {
-        if (currentIndex < onboardingData.length - 1) {
-            const nextIndex = currentIndex + 1
-            setCurrentIndex(nextIndex)
-            scrollViewRef.current?.scrollTo({ x: SCREEN_WIDTH * nextIndex, animated: true })
-        } else {
-            router.push("/sign-in")
-        }
-    }
 
     const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
         const contentOffsetX = event.nativeEvent.contentOffset.x
@@ -60,21 +47,19 @@ export default function Onboarding() {
         if (newIndex >= 0 && newIndex < onboardingData.length) {
             setCurrentIndex(newIndex)
         }
+        if (newIndex === onboardingData.length - 1 && contentOffsetX > SCREEN_WIDTH * (onboardingData.length - 1)) {
+            router.push('/sign-in') // Replace '/sign-in' with your actual sign-in route
+        }
     }
 
-    useEffect(() => {
-        Animated.timing(progressAnimation, {
-            toValue: (currentIndex + 1) / onboardingData.length,
-            duration: 300,
-            useNativeDriver: true,
-        }).start()
-    }, [currentIndex])
-
-    const circumference = 2 * Math.PI * 40 // radius is 40
-    const AnimatedCircle = Animated.createAnimatedComponent(Circle)
+    const handleDotPress = (index: number) => {
+        setCurrentIndex(index)
+        scrollViewRef.current?.scrollTo({ x: SCREEN_WIDTH * index, animated: true })
+    }
 
     return (
-        <View className="flex-1 bg-white">
+        <View className="flex-1">
+            <StatusBar barStyle="light-content" />
             <ScrollView
                 ref={scrollViewRef}
                 horizontal
@@ -85,69 +70,60 @@ export default function Onboarding() {
                 onMomentumScrollEnd={handleScroll}
             >
                 {onboardingData.map((step, index) => (
-                    <View key={index} style={{ width: SCREEN_WIDTH }} className="flex flex-col justify-items-end justify-end flex-1 px-10 py-16">
-                        <View className="w-full mt-16">
-                            <step.Image width={SCREEN_WIDTH * 0.8} height={SCREEN_HEIGHT * 0.3}/>
-                        </View>
-                        <View className="mt-10">
-                        <Text className="font-bold text-2xl mb-4 text-center text-[#333]">
+                    <View
+                        key={index}
+                        style={{
+                            width: SCREEN_WIDTH,
+                            height: SCREEN_HEIGHT,
+                            backgroundColor: step.backgroundColor
+                        }}
+                        className="flex-1 py-10"
+                    >
+                        {/* Title at the top */}
+                        <View className="pt-16 px-6 mb-2">
+                            <Text className="text-white text-[46px] font-bold leading-tight">
                                 {step.title}
                             </Text>
-                            <Text className="font-sans text-center text-[#666]">
+                        </View>
+
+                        {/* Centered Image */}
+                        <View className=" items-center justify-center px-6 mb-6">
+                            <step.Image
+                                width={SCREEN_WIDTH * 0.8}
+                                height={SCREEN_HEIGHT * 0.4}
+                            />
+                        </View>
+
+                        {/* Description at the bottom */}
+                        <View className="px-6 mb-20">
+                            <Text className="text-white text-2xl  opacity-90">
                                 {step.description}
                             </Text>
+                        </View>
+
+                        {/* Dots at the bottom */}
+                        <View className="absolute bottom-12 left-0 right-0">
+                            <View className="flex-row justify-center gap-x-2">
+                                {onboardingData.map((_, dotIndex) => (
+                                    <TouchableOpacity
+                                        key={dotIndex}
+                                        onPress={() => handleDotPress(dotIndex)}
+                                    >
+                                        <View
+                                            className={`h-2 w-2 rounded-full ${
+                                                currentIndex === dotIndex
+                                                    ? 'bg-white'
+                                                    : 'bg-white/30'
+                                            }`}
+                                        />
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
                         </View>
                     </View>
                 ))}
             </ScrollView>
-
-            <View className="flex-row justify-center mb-8">
-                {onboardingData.map((_, index) => (
-                    <View
-                        key={index}
-                        className={`h-2 w-2 rounded-full mx-1 ${
-                            currentIndex === index ? 'bg-[#0000FF]' : 'bg-[#CCCCCC]'
-                        }`}
-                    />
-                ))}
-            </View>
-
-            <View className="px-8 mb-10">
-                <TouchableOpacity
-                    onPress={handleNext}
-                    className="w-28 h-28 items-center justify-center self-end relative"
-                >
-                    <Svg width={112} height={112} style={{ position: 'absolute' }}>
-                        {/* Background circle */}
-                        <Circle
-                            cx={56}
-                            cy={56}
-                            r={36}
-                            stroke="#E5E7EB"
-                            strokeWidth={3}
-                            fill="none"
-                        />
-                        <AnimatedCircle
-                            cx={56}
-                            cy={56}
-                            r={36}
-                            stroke={colors.primary}
-                            strokeWidth={3}
-                            fill="none"
-                            strokeDasharray={circumference}
-                            strokeDashoffset={Animated.multiply(
-                                Animated.subtract(1, progressAnimation),
-                                circumference
-                            )}
-                            transform={`rotate(-90 56 56)`}
-                            strokeLinecap="round"
-                        />
-                    </Svg>
-                    <View style={{ backgroundColor: colors.primary }} className="w-14 h-14 rounded-full items-center justify-center">
-                        <Text className="text-white text-2xl">→</Text>
-                    </View>
-                </TouchableOpacity>
-            </View>
         </View>
     )
 }
+
