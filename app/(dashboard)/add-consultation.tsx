@@ -34,6 +34,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { supabase } from "@/utils/supabase";
 import { Calendar as RNCalendar, LocaleConfig } from 'react-native-calendars';
 import { Audio } from 'expo-av';
+import ConsultationCategory from "@/assets/images/consultationsCategory.svg";
 
 // Configure French locale
 LocaleConfig.locales['fr'] = {
@@ -368,19 +369,18 @@ export default function AddConsultation() {
                     data={[1]}
                     renderItem={() => (
                         <View className="space-y-4 p-6">
-                            <View className="px-6 pt-14 pb-6 bg-white">
-                                <View className="flex-row items-center">
-                                    <TouchableOpacity
-                                        onPress={() => router.back()}
-                                        className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
-                                    >
+
+                                <View className="flex-row items-center p-2 my-6 mt-8">
+                                    <TouchableOpacity onPress={() => router.back()} className="mr-4">
                                         <ChevronLeft size={24} color={colors.text} />
                                     </TouchableOpacity>
-                                    <Text className="font-bold text-xl font-semibold text-gray-900 ml-4">
+                                    <Text style={{ fontFamily: 'Poppins_800ExtraBold' }} className="text-2xl font-medium text-primary-600">
                                         Ajouter une consultation
                                     </Text>
+                                    <View className="absolute right-0">
+                                        <ConsultationCategory />
+                                    </View>
                                 </View>
-                            </View>
 
                             {/* Doctor Name Input */}
                             <View>

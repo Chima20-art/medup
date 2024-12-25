@@ -44,7 +44,7 @@ const categories = [
   {
     title: "Mes\nConsultations",
     image: ConsultationCategory,
-    route: "/consultations",
+    route: "/list-consultations",
   },
   {
     title: "Acces\nRapides",

@@ -36,6 +36,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { supabase } from "@/utils/supabase";
 import { Calendar as RNCalendar, LocaleConfig } from 'react-native-calendars';
 import { Audio } from 'expo-av';
+import ConsultationCategory from "@/assets/images/consultationsCategory.svg";
 
 // Configure French locale
 LocaleConfig.locales['fr'] = {
@@ -360,8 +361,9 @@ export default function ConsultationDetails({ consultation: initialConsultation 
                     data={[1]}
                     renderItem={() => (
                         <View className="space-y-4 p-6">
-                            <View className="px-6 pt-14 pb-6 bg-white">
+                            <View className="px-2 pt-14 pb-6 bg-white">
                                 <View className="flex-row items-center justify-between">
+
                                     <TouchableOpacity
                                         onPress={() => router.back()}
                                         className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
