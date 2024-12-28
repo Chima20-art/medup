@@ -1,17 +1,18 @@
+import React, { useEffect, useState } from "react";
+import {View, Text, Image, Button, TouchableOpacity} from "react-native";
 import { supabase } from "@/utils/supabase";
-import { useEffect, useState } from "react";
-import { Button, Text, View, Image } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
-// import { Image } from "expo-image";
+import { FileText } from 'lucide-react-native';
+import Pdf from "@/assets/images/pdf.svg"
 
-const blurhash =
-  "|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[";
+// Assuming you have a LoadingSpinner component
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 export default function SupabaseFile({
-  path,
-  bucket = "radiologie",
-}: {
+                                       path,
+                                       bucket = "radiologie",
+                                     }: {
   path: string;
   bucket: string;
 }) {
@@ -19,8 +20,8 @@ export default function SupabaseFile({
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const isFileAnImage =
-    path.includes(".png") || path.includes(".jpg") || path.includes(".jpeg");
+  const isFileAnImage = /\.(jpg|jpeg|png|gif)$/i.test(path);
+  const isPDF = /\.pdf$/i.test(path);
 
   useEffect(() => {
     getSignedUrl();
@@ -32,8 +33,8 @@ export default function SupabaseFile({
       setError(null);
 
       const { data, error } = await supabase.storage
-        .from(bucket) // Replace with your bucket name
-        .createSignedUrl(path, 3600); // URL valid for 1 hour
+          .from(bucket)
+          .createSignedUrl(path, 3600);
 
       if (error) throw error;
 
@@ -57,20 +58,17 @@ export default function SupabaseFile({
         throw new Error("No signed URL available");
       }
 
-      // Get file name from path
       const fileName = path.split("/").pop() || "downloaded-file";
 
-      // Download to local filesystem
       const downloadResult = await FileSystem.downloadAsync(
-        signedUrl,
-        FileSystem.documentDirectory + fileName
+          signedUrl,
+          FileSystem.documentDirectory + fileName
       );
 
       if (downloadResult.status !== 200) {
         throw new Error("Download failed");
       }
 
-      // Share the file
       const canShare = await Sharing.isAvailableAsync();
       if (canShare) {
         await Sharing.shareAsync(downloadResult.uri);
@@ -84,25 +82,30 @@ export default function SupabaseFile({
       setLoading(false);
     }
   };
-  console.log(signedUrl);
 
   return (
-    <View className="w-full h-64 ">
-      {loading && <Text>Loading...</Text>}
+      <View className="w-full h-64 justify-center items-center">
+        {loading && <LoadingSpinner />}
 
-      {error && <Text className="text-red-500 px-4">Error: {error}</Text>}
+        {error && <Text className="text-red-500 px-4">Error: {error}</Text>}
 
-      {!loading && isFileAnImage && signedUrl && (
-        <Image
-          source={{ uri: signedUrl }}
-          className="w-full h-64"
-          resizeMode="contain"
-        />
-      )}
+        {!loading && isFileAnImage && signedUrl && (
+            <Image
+                source={{ uri: signedUrl }}
+                className="w-full h-64"
+                resizeMode="contain"
+            />
+        )}
 
-      {!loading && !isFileAnImage && (
-        <Button title="Download File" onPress={downloadFile} />
-      )}
-    </View>
+        {!loading && (isPDF || (!isFileAnImage && !isPDF)) && (
+            <View className="items-center">
+              <Pdf width={200} height={250} />
+              <TouchableOpacity  onPress={downloadFile} className="mt-2">
+                Download File
+              </TouchableOpacity>
+            </View>
+        )}
+      </View>
   );
 }
+

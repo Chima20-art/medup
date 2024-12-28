@@ -3,45 +3,56 @@ import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 
+import RadioCategory from "@/assets/images/radioCategory.svg";
+import BioCategory from "@/assets/images/bioCategory.svg";
+import MedicationCategory from "@/assets/images/medicationCategory.svg";
+import ConsultationCategory from "@/assets/images/consultationsCategory.svg";
+import QuickAccess from "@/assets/images/QuickAcess.svg";
+
 export default function Add() {
     const router = useRouter();
-
     const categories = [
         {
-            title: 'Examens\nRadiologiques',
-            image: '/placeholder.svg?height=80&width=80',
+            title: "Examen \nradiologique",
+            image: RadioCategory,
             route: '/add-examin-radiologique'
         },
         {
-            title: 'Examens\nBiologiques',
-            image: '/placeholder.svg?height=80&width=80',
+            title: " Examen\nBiologique",
+            image: BioCategory,
             route: '/add-examin-biologique'
         },
         {
-            title: 'Médicaments',
-            image: '/placeholder.svg?height=80&width=80',
+            title: "\nMedicament",
+            image: MedicationCategory,
             route: '/add-medicament'
         },
         {
-            title: 'Consultations',
-            image: '/placeholder.svg?height=80&width=80',
+            title: "\nConsultation",
+            image: ConsultationCategory,
+            route: "/add-consultation",
+        },
+        {
+            title: "\nRapide",
+            image: QuickAccess,
             route: '/add-consultation'
         },
-    ];
+    ] as const;
 
     return (
         <View className="flex-1 bg-gray-50">
             {/* Header Section */}
-            <View className="px-6 pt-14 pb-6 bg-white">
+            <View className="flex-row px-6 pt-14 pb-6 bg-white">
                 <TouchableOpacity onPress={() => router.back()} className="mb-4">
                     <ArrowLeft size={24} color="#000" />
                 </TouchableOpacity>
+                <Text className="text-2xl ml-2 font-semibold text-primary-500  mb-4">
+                    Que souhaitez-vous ajouter ?
+                </Text>
             </View>
 
             <ScrollView className="flex-1 px-6 pt-6">
-                <Text className="text-lg font-semibold text-gray-900 mb-4">
-                    Que souhaitez-vous ajouter ?
-                </Text>
+
                 <View className="flex-row flex-wrap justify-between">
                     {categories.map((category, index) => (
                         <TouchableOpacity
@@ -56,8 +67,7 @@ export default function Add() {
                             }}
                             onPress={() => router.push(category.route as any)}
                         >
-                            <Image
-                                source={{ uri: category.image }}
+                            <category.image
                                 className="w-16 h-16"
                             />
                             <Text className="text-center text-gray-900 text-base font-medium">

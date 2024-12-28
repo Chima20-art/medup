@@ -6,23 +6,27 @@ import {
   ScrollView,
   Animated,
   Dimensions,
+  Modal,
+  SafeAreaView,
+  Alert,
 } from "react-native";
 import {
   Trash2,
   Eye,
   Download,
   Share2,
-  Calendar,
-  Building2,
-  User2,
   ChevronDown,
+  X,
 } from "lucide-react-native";
 import SupabaseFile from "@/components/supabaseFile";
 import { PanGestureHandler, State } from "react-native-gesture-handler";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { supabase } from "@/utils/supabase";
-const { height } = Dimensions.get("window");
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { WebView } from 'react-native-webview';
+
+const { height, width } = Dimensions.get("window");
 
 interface ExamenDetailPopupProps {
   examen: any;
@@ -37,15 +41,16 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
                                                                bucket,
                                                                onClose,
                                                              }) => {
-  // Early return if examen is null or undefined
   if (!examen) {
-    console.error("Examen is null or undefined");
+    console.error("L'examen est nul ou non défini");
     return null;
   }
 
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false);
   const defaultSlideAnim = useRef(new Animated.Value(height)).current;
   const slideAnim = propSlideAnim || defaultSlideAnim;
 
@@ -67,44 +72,57 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
     if (event.nativeEvent.state === State.END) {
       const { translationX } = event.nativeEvent;
       if (translationX < -10) {
-        // Swipe left
         setCurrentFileIndex((prev) =>
             Math.min(prev + 1, (examen.uploads?.length || 1) - 1)
         );
       } else if (translationX > 10) {
-        // Swipe right
         setCurrentFileIndex((prev) => Math.max(prev - 1, 0));
       }
     }
   };
 
   const onDeleteItem = async () => {
-    console.log("delete", examen);
-    let uploads: string[] = examen.uploads || [];
-    let rowId: number = examen.id;
+    Alert.alert(
+        "Confirmer la suppression",
+        "Êtes-vous sûr de vouloir supprimer cet examen ?",
+        [
+          { text: "Annuler", style: "cancel" },
+          {
+            text: "Supprimer",
+            style: "destructive",
+            onPress: async () => {
+              setLoading(true);
+              try {
+                let uploads: string[] = examen.uploads || [];
+                let rowId: number = examen.id;
 
-    //delete row from supabase
-    const { error } = await supabase
-        .from("radiologie")
-        .delete()
-        .eq("id", rowId);
-    if (error) {
-      console.log("error", error);
-    }
+                const { error: deleteError } = await supabase
+                    .from("radiologie")
+                    .delete()
+                    .eq("id", rowId);
 
-    //delete files from supabase storage by path
-    uploads.forEach(async (upload) => {
-      const { error } = await supabase.storage
-          .from("radiologie")
-          .remove([upload]);
+                if (deleteError) throw deleteError;
 
-      if (error) {
-        console.log("error", error);
-      }
-    });
+                for (const upload of uploads) {
+                  const { error: removeError } = await supabase.storage
+                      .from("radiologie")
+                      .remove([upload]);
 
-    //close popup
-    onClose();
+                  if (removeError) throw removeError;
+                }
+
+                Alert.alert("Succès", "Examen supprimé avec succès");
+                onClose();
+              } catch (err) {
+                console.error("Erreur lors de la suppression de l'élément:", err);
+                Alert.alert("Erreur", "Échec de la suppression de l'examen");
+              } finally {
+                setLoading(false);
+              }
+            }
+          }
+        ]
+    );
   };
 
   const downloadFile = async () => {
@@ -113,56 +131,82 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
       setError(null);
 
       if (!examen.uploads || examen.uploads.length === 0) {
-        throw new Error("No files available for download");
+        throw new Error("Aucun fichier disponible pour le téléchargement");
       }
 
       let path = examen.uploads[currentFileIndex];
-
       const { data, error } = await supabase.storage
           .from("radiologie")
           .createSignedUrl(path, 3600);
 
-      if (error) {
-        throw new Error("No signed URL available");
-      }
+      if (error) throw error;
 
       let signedUrl = data?.signedUrl;
+      if (!signedUrl) throw new Error("URL signée invalide");
 
-      if (!signedUrl) {
-        throw new Error("Invalid signed URL");
-      }
-
-      // Get file name from path
-      const fileName = path.split("/").pop() || "downloaded-file";
-
-      // Download to local filesystem
+      const fileName = path.split("/").pop() || "fichier-téléchargé";
       const downloadResult = await FileSystem.downloadAsync(
           signedUrl,
           FileSystem.documentDirectory + fileName
       );
 
-      if (downloadResult.status !== 200) {
-        throw new Error("Download failed");
-      }
+      if (downloadResult.status !== 200) throw new Error("Le téléchargement a échoué");
 
-      // Share the file
       const canShare = await Sharing.isAvailableAsync();
       if (canShare) {
         await Sharing.shareAsync(downloadResult.uri);
       } else {
-        throw new Error("Sharing is not available on this platform");
+        throw new Error("Le partage n'est pas disponible sur cette plateforme");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      console.error("Error downloading file:", err);
+      setError(err instanceof Error ? err.message : "Une erreur s'est produite");
+      console.error("Erreur lors du téléchargement du fichier:", err);
+      Alert.alert("Erreur", "Échec du téléchargement du fichier");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleViewFile = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      if (!examen.uploads || examen.uploads.length === 0) {
+        throw new Error("Aucun fichier disponible pour la visualisation");
+      }
+
+      let path = examen.uploads[currentFileIndex];
+      const { data, error } = await supabase.storage
+          .from("radiologie")
+          .createSignedUrl(path, 3600);
+
+      if (error) throw error;
+
+      setPdfUrl(data.signedUrl);
+      setIsPDFViewerOpen(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Une erreur s'est produite");
+      console.error("Erreur lors de la visualisation du fichier:", err);
+      Alert.alert("Erreur", "Échec de l'ouverture du fichier");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isCurrentFilePDF = useMemo(() => {
+    if (!examen.uploads || examen.uploads.length === 0) return false;
+    const currentFile = examen.uploads[currentFileIndex];
+    return currentFile.toLowerCase().endsWith('.pdf');
+  }, [examen.uploads, currentFileIndex]);
+
   const MemoizedFileView = useMemo(() => {
     if (!examen.uploads || examen.uploads.length === 0) {
       return null;
+    }
+
+    if (loading) {
+      return <LoadingSpinner />;
     }
 
     return (
@@ -175,7 +219,6 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
               />
             </View>
           </PanGestureHandler>
-          {/* Pagination Dots */}
           {examen.uploads.length > 1 && (
               <View className="flex-row justify-center space-x-1">
                 {examen.uploads.map((_: any, index: number) => (
@@ -191,119 +234,139 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
           )}
         </View>
     );
-  }, [currentFileIndex, examen.uploads, bucket]);
+  }, [currentFileIndex, examen.uploads, bucket, loading]);
 
   return (
-      <Animated.View
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: height * 0.7,
-            backgroundColor: "white",
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            transform: [{ translateY }],
-            shadowColor: "#000",
-            shadowOffset: {
-              width: 0,
-              height: -2,
-            },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
-          }}
-      >
-        {/* Header */}
-        <View className="p-4 border-b border-gray-100">
-          <View className="flex-row justify-between items-center">
-            <Text className="text-2xl font-bold text-indigo-600">
-              Bilan général
-            </Text>
-            <TouchableOpacity onPress={onClose}>
-              <ChevronDown size={24} color="#4F46E5" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Action Buttons */}
-        <View className="px-4 py-2 flex-row justify-end space-x-2 bg-gray-50">
-          <TouchableOpacity onPress={onDeleteItem} className="p-2">
-            <Trash2 size={20} color="#666666" />
-          </TouchableOpacity>
-          <TouchableOpacity className="p-2">
-            <Eye size={20} color="#666666" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={downloadFile} className="p-2">
-            <Download size={20} color="#666666" />
-          </TouchableOpacity>
-          <TouchableOpacity className="p-2">
-            <Share2 size={20} color="#666666" />
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView className="flex-1 px-4">
-          {/* File Preview */}
-          <View className="border border-gray-200 rounded-xl p-2 mx-12">
-            {examen.uploads && examen.uploads.length > 0 && MemoizedFileView}
-
-            {/* Details */}
-            <View className=" flex flex-col gap-y-3">
-              {/* Date */}
-              <Text className="text-gray-700">
-                {examen.date ? new Date(examen.date).toLocaleDateString() : 'Date non disponible'}
+      <>
+        <Animated.View
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: height * 0.7,
+              backgroundColor: "white",
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              transform: [{ translateY }],
+              shadowColor: "#000",
+              shadowOffset: {
+                width: 0,
+                height: -2,
+              },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+              elevation: 5,
+            }}
+        >
+          <View className="p-4 border-b border-gray-100">
+            <View className="flex-row justify-between items-center">
+              <Text className="text-2xl font-bold text-indigo-600">
+                {examen.name}
               </Text>
-
-              {/* Laboratory */}
-              <Text className="font-bold text-gray-700">{examen.labName || 'Laboratoire non spécifié'}</Text>
-
-              {/* Doctor */}
-              <Text className="text-gray-700">{examen.phone || 'Téléphone non disponible'}</Text>
+              <TouchableOpacity onPress={onClose}>
+                <ChevronDown size={24} color="#4F46E5" />
+              </TouchableOpacity>
             </View>
           </View>
 
-          {/* Notes */}
-          <View className="mx-4">
-            {examen.notes && (
-                <View className="mt-6">
-                  <Text className="text-lg font-semibold mb-2">Notes:</Text>
-                  <View className="bg-gray-50 rounded-xl p-4">
-                    <Text className="text-gray-700">{examen.notes}</Text>
-                  </View>
-                </View>
-            )}
-
-            {/* Files List */}
-            {examen.uploads && examen.uploads.length > 0 && (
-                <View className="mt-6">
-                  <Text className="text-lg font-semibold mb-2">
-                    Fichiers ({examen.uploads.length}):
-                  </Text>
-                  <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      className="flex-row space-x-3"
-                  >
-                    {examen.uploads.map((upload: string, index: number) => (
-                        <TouchableOpacity
-                            key={index}
-                            onPress={() => setCurrentFileIndex(index)}
-                            className={`w-24 h-24 rounded-xl overflow-hidden ${
-                                currentFileIndex === index
-                                    ? "border-2 border-indigo-600"
-                                    : "border border-gray-200"
-                            }`}
-                        >
-                          <SupabaseFile path={upload} bucket={bucket} />
-                        </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-            )}
+          <View className="px-8 py-1 flex-row justify-around bg-gray-100 mx-auto w-[70%] rounded-full mb-2 ">
+            <TouchableOpacity onPress={onDeleteItem} className="p-2">
+              <Trash2 size={20} color="#666666" />
+            </TouchableOpacity>
+            <TouchableOpacity
+                onPress={isCurrentFilePDF ? handleViewFile : undefined}
+                className={`p-2 ${isCurrentFilePDF ? '' : 'opacity-50'}`}
+            >
+              <Eye size={20} color="#666666" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={downloadFile} className="p-2">
+              <Download size={20} color="#666666" />
+            </TouchableOpacity>
+            <TouchableOpacity className="p-2">
+              <Share2 size={20} color="#666666" />
+            </TouchableOpacity>
           </View>
-        </ScrollView>
-      </Animated.View>
+
+          <ScrollView className="flex-1 px-4">
+            <View className="border border-gray-200 rounded-xl p-2 mx-auto w-[80%]">
+              {examen.uploads && examen.uploads.length > 0 && MemoizedFileView}
+
+              <View className="flex flex-col gap-y-3">
+                <Text className="text-gray-700">
+                  {examen.date ? new Date(examen.date).toLocaleDateString() : 'Date non disponible'}
+                </Text>
+                <Text className="font-bold text-gray-700">{examen.labName || 'Laboratoire non spécifié'}</Text>
+                <Text className="text-gray-700">{examen.phone || 'Téléphone non disponible'}</Text>
+              </View>
+            </View>
+
+            <View className="mx-4">
+              {examen.notes && (
+                  <View className="mt-6">
+                    <Text className="text-lg font-semibold mb-2">Notes :</Text>
+                    <View className="bg-gray-50 rounded-xl p-4">
+                      <Text className="text-gray-700">{examen.notes}</Text>
+                    </View>
+                  </View>
+              )}
+
+              {examen.uploads && examen.uploads.length > 0 && (
+                  <View className="mt-6">
+                    <Text className="text-lg font-semibold mb-2">
+                      Fichiers ({examen.uploads.length}) :
+                    </Text>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        className="flex-row space-x-3"
+                    >
+                      {examen.uploads.map((upload: string, index: number) => (
+                          <TouchableOpacity
+                              key={index}
+                              onPress={() => setCurrentFileIndex(index)}
+                              className={`w-24 h-24 rounded-xl overflow-hidden ${
+                                  currentFileIndex === index
+                                      ? "border-2 border-indigo-600"
+                                      : "border border-gray-200"
+                              }`}
+                          >
+                            <SupabaseFile path={upload} bucket={bucket} />
+                          </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+              )}
+            </View>
+          </ScrollView>
+        </Animated.View>
+
+        <Modal
+            animationType="slide"
+            transparent={true}
+            visible={isPDFViewerOpen}
+            onRequestClose={() => setIsPDFViewerOpen(false)}
+        >
+          <View className="flex-1 bg-black bg-opacity-50">
+            <SafeAreaView className="flex-1 m-4 bg-white rounded-lg overflow-hidden">
+              <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
+                <Text className="text-lg font-semibold">Visualiseur PDF</Text>
+                <TouchableOpacity onPress={() => setIsPDFViewerOpen(false)}>
+                  <X size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+              <View className="flex-1">
+                {loading && <LoadingSpinner />}
+                <WebView
+                    source={{ uri: `https://docs.google.com/gview?embedded=true&url=${pdfUrl}` }}
+                    onLoadEnd={() => setLoading(false)}
+                    style={{ flex: 1 }}
+                />
+              </View>
+            </SafeAreaView>
+          </View>
+        </Modal>
+      </>
   );
 };
 
