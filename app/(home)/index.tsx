@@ -13,25 +13,42 @@ import {
     TouchableOpacity
 } from 'react-native'
 import { useState, useRef } from "react"
+import {Bold} from "lucide-react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 
 const onboardingData = [
     {
         title: "Simplifiez votre suivi médical",
-        description: "Regroupez toutes vos informations de santé en un seul endroit, accessibles facilement et à tout moment.",
+        description: (
+            <Text style={{ fontFamily: 'Poppins-Regular' }}>
+                "Regroupez toutes vos informations de santé en un seul endroit, accessible facilement et à tout moment."
+            </Text>
+        ),
         Image: OnboardingImage1,
         backgroundColor: '#4F46E5'
     },
     {
-        title: "Gardez un œil sur vos examens",
-        description: "Suivez vos analyses biologiques, radiologiques et vos consultations pour une meilleure prise en charge.",
+        title:  (
+            <Text style={{ fontFamily: 'Poppins-Regular' }}>
+                Gardez un œil {"\n"} sur vos examens
+            </Text>
+        ),
+        description: (
+            <Text className="text-right" style={{ fontFamily: 'Poppins-Regular' }}>
+                "Suivez vos  <Text className="font-extrabold"> analyses biologiques, radiologiques</Text> et vos <Text className="font-extrabold">consultations</Text> pour une meilleure prise en charge."
+            </Text>
+        ),
         Image: OnboardingImage2,
         backgroundColor: '#818CF8'
     },
     {
         title: "Prenez soin de votre santé en toute simplicité",
-        description: "Accédez à vos prescriptions suivant vos constantes vitales et ne manquez aucune information essentielle.",
+        description: (
+            <Text style={{ fontFamily: 'Poppins-Regular' }}>
+                "Accédez à vos <Text className="font-extrabold">prescriptions</Text>, suivez vos <Text className="font-extrabold">constantes vitales</Text> et ne manquez aucune information essentielle."
+            </Text>
+        ),
         Image: OnboardingImage3,
         backgroundColor: '#06B6D4'
     }
@@ -81,36 +98,36 @@ export default function Onboarding() {
                     >
                         {/* Title at the top */}
                         <View className="pt-16 px-6 mb-2">
-                            <Text className="text-white text-[46px] font-bold leading-tight">
+                            <Text className="text-white text-[46px] font-extrabold leading-tight">
                                 {step.title}
                             </Text>
                         </View>
 
                         {/* Centered Image */}
-                        <View className=" items-center justify-center px-6 mb-6">
+                        <View className=" items-center justify-center mb-6">
                             <step.Image
-                                width={SCREEN_WIDTH * 0.8}
+                                width={SCREEN_WIDTH * 0.87}
                                 height={SCREEN_HEIGHT * 0.4}
                             />
                         </View>
 
                         {/* Description at the bottom */}
                         <View className="px-6 mb-20">
-                            <Text className="text-white text-2xl  opacity-90">
+                            <Text className="text-white text-2xl w-[90%] flex-col justify-end justify-items-end text-end opacity-90 leading-9">
                                 {step.description}
                             </Text>
                         </View>
 
                         {/* Dots at the bottom */}
                         <View className="absolute bottom-12 left-0 right-0">
-                            <View className="flex-row justify-center gap-x-2">
+                            <View className="flex-row justify-center gap-x-3">
                                 {onboardingData.map((_, dotIndex) => (
                                     <TouchableOpacity
                                         key={dotIndex}
                                         onPress={() => handleDotPress(dotIndex)}
                                     >
                                         <View
-                                            className={`h-2 w-2 rounded-full ${
+                                            className={`h-3 w-3 rounded-full ${
                                                 currentIndex === dotIndex
                                                     ? 'bg-white'
                                                     : 'bg-white/30'
