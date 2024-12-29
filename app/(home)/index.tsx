@@ -21,7 +21,7 @@ const onboardingData = [
     {
         title: "Simplifiez votre suivi médical",
         description: (
-            <Text style={{ fontFamily: 'Poppins-Regular' }}>
+            <Text className="font-semibold" style={{ fontFamily: 'Poppins-Regular' }}>
                 "Regroupez toutes vos informations de santé en un seul endroit, accessible facilement et à tout moment."
             </Text>
         ),
@@ -35,7 +35,7 @@ const onboardingData = [
             </Text>
         ),
         description: (
-            <Text className="text-right" style={{ fontFamily: 'Poppins-Regular' }}>
+            <Text className="font-semibold text-right" style={{ fontFamily: 'Poppins-Regular' }}>
                 "Suivez vos  <Text className="font-extrabold"> analyses biologiques, radiologiques</Text> et vos <Text className="font-extrabold">consultations</Text> pour une meilleure prise en charge."
             </Text>
         ),
@@ -45,8 +45,8 @@ const onboardingData = [
     {
         title: "Prenez soin de votre santé en toute simplicité",
         description: (
-            <Text style={{ fontFamily: 'Poppins-Regular' }}>
-                "Accédez à vos <Text className="font-extrabold">prescriptions</Text>, suivez vos <Text className="font-extrabold">constantes vitales</Text> et ne manquez aucune information essentielle."
+            <Text className="font-semibold" style={{ fontFamily: 'Poppins-Regular' }}>
+                "Accédez à vos {"\n"} <Text className="font-extrabold">prescriptions</Text>, suivez vos <Text className="font-extrabold">constantes vitales</Text> et ne manquez aucune {"\n"} information essentielle."
             </Text>
         ),
         Image: OnboardingImage3,
@@ -97,22 +97,24 @@ export default function Onboarding() {
                         className="flex-1 py-10"
                     >
                         {/* Title at the top */}
-                        <View className="pt-16 px-6 mb-2">
-                            <Text className="text-white text-[46px] font-extrabold leading-tight">
-                                {step.title}
-                            </Text>
-                        </View>
+                      <View className="flex-1">
+                          <View className="pt-16 px-6 mb-2">
+                              <Text className="text-white text-[46px] font-extrabold leading-tight">
+                                  {step.title}
+                              </Text>
+                          </View>
 
-                        {/* Centered Image */}
-                        <View className=" items-center justify-center mb-6">
-                            <step.Image
-                                width={SCREEN_WIDTH * 0.87}
-                                height={SCREEN_HEIGHT * 0.4}
-                            />
-                        </View>
+                          {/* Centered Image */}
+                          <View className=" items-center justify-center mb-6">
+                              <step.Image
+                                  width={SCREEN_WIDTH * 0.87}
+                                  height={SCREEN_HEIGHT * 0.4}
+                              />
+                          </View>
+                      </View>
 
                         {/* Description at the bottom */}
-                        <View className="px-6 mb-20">
+                        <View className="px-6 pl-8 mb-20">
                             <Text className="text-white text-2xl w-[90%] flex-col justify-end justify-items-end text-end opacity-90 leading-9">
                                 {step.description}
                             </Text>
@@ -129,7 +131,7 @@ export default function Onboarding() {
                                         <View
                                             className={`h-3 w-3 rounded-full ${
                                                 currentIndex === dotIndex
-                                                    ? 'bg-white'
+                                                    ? 'bg-blue-900'
                                                     : 'bg-white/30'
                                             }`}
                                         />
