@@ -3,17 +3,23 @@ import {View, Text, TextInput, TouchableOpacity, Image} from 'react-native'
 import { Check, X } from 'lucide-react-native'
 import { useTheme } from '@react-navigation/native'
 import Signup3 from "@/assets/images/signup-3.svg";
+import Logo from "@/assets/images/logo.svg";
+import {CircularButton} from "@/components/Cicular-button";
 
 interface PhoneStepProps {
     phoneNumber: string
     onPhoneChange: (value: string) => void
     onContinue: () => void
+    currentStep: number;
+    totalSteps: number;
 }
 
 export default function PhoneStep({
                                       phoneNumber,
                                       onPhoneChange,
-                                      onContinue
+                                      onContinue,
+                                      currentStep,
+                                      totalSteps
                                   }: PhoneStepProps) {
     const { colors } = useTheme()
     const [isValid, setIsValid] = useState(false)
@@ -49,10 +55,8 @@ export default function PhoneStep({
     return (
         <View className="flex-1 pt-16">
 
-            <View style={{ marginHorizontal: 'auto' }}> {/* Adjust spacing here */}
-                <Signup3
-                    width={250} height={250}
-                />
+            <View className="mx-auto">
+                <Logo/>
             </View>
             <View className="h-16 flex-row items-center justify-center px-5">
                 <View className="flex flex-row gap-x-0.5">
@@ -61,7 +65,7 @@ export default function PhoneStep({
                             key={step}
                             className={`h-1 w-10 rounded-full`}
                             style={{
-                                backgroundColor: step <= 3 ? colors.primary : colors.border
+                                backgroundColor: step <= 4 ? colors.primary : colors.border
                             }}
                         />
                     ))}
@@ -97,16 +101,14 @@ export default function PhoneStep({
 
             </View>
 
-            <TouchableOpacity
-                className={`w-full h-14 rounded-full items-center justify-center mb-4`}
-                style={{ backgroundColor: isValid ? colors.primary : colors.border }}
-                onPress={onContinue}
-                disabled={!isValid}
-            >
-                <Text className="text-lg font-semibold" style={{ color: colors.background }}>
-                    Continuer
-                </Text>
-            </TouchableOpacity>
+            <View className="items-center mb-4">
+                <CircularButton
+                    onPress={onContinue}
+                    disabled={!isValid}
+                    currentStep={currentStep}
+                    totalSteps={totalSteps}
+                />
+            </View>
         </View>
     )
 }

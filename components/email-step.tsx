@@ -4,17 +4,23 @@ import { Check, X } from 'lucide-react-native'
 import { useTheme } from '@react-navigation/native'
 import Signup2 from "@/assets/images/signup-2.svg";
 import Signup1 from "@/assets/images/signup-1.svg";
+import Logo from "@/assets/images/logo.svg";
+import {CircularButton} from "@/components/Cicular-button";
 
 interface EmailStepProps {
     emailAddress: string
     onEmailChange: (value: string) => void
-    onContinue: () => void
+    onContinue: () => void,
+    currentStep?: number;
+    totalSteps?: number;
 }
 
 export default function EmailStep({
                                       emailAddress,
                                       onEmailChange,
-                                      onContinue
+                                      onContinue,
+                                      currentStep = 2,
+                                      totalSteps = 6
                                   }: EmailStepProps) {
     const { colors } = useTheme()
     const [isValid, setIsValid] = useState(false)
@@ -30,10 +36,8 @@ export default function EmailStep({
 
     return (
         <View className="flex-1 px-6 pt-16">
-            <View style={{ marginHorizontal: 'auto' }}> {/* Adjust spacing here */}
-                <Signup2
-                    width={250} height={250}
-                />
+            <View className="mx-auto">
+                <Logo/>
             </View>
             <View className="h-16 flex-row items-center justify-center px-5">
                 <View className="flex flex-row gap-x-0.5">
@@ -81,16 +85,14 @@ export default function EmailStep({
                 </Text>
             </View>
 
-            <TouchableOpacity
-                className={`w-full h-14 rounded-full items-center justify-center mb-4`}
-                style={{ backgroundColor: isValid ? colors.primary : colors.border }}
-                onPress={onContinue}
-                disabled={!isValid}
-            >
-                <Text className="text-lg font-semibold" style={{ color: colors.background }}>
-                    Continuer
-                </Text>
-            </TouchableOpacity>
+            <View className="items-center mb-4">
+                <CircularButton
+                    onPress={onContinue}
+                    disabled={!isValid}
+                    currentStep={currentStep}
+                    totalSteps={totalSteps}
+                />
+            </View>
         </View>
     )
 }

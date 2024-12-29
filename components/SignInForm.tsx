@@ -83,7 +83,7 @@ export default function SignInForm() {
 
       {error && <Text className="text-red-500 text-center pt-4">{error}</Text>}
       <TouchableOpacity
-        className="bg-primary-500 py-4 rounded-lg   mt-10 w-full mx-auto"
+        className="bg-primary-500 py-4 rounded-lg mt-8 w-full mx-auto"
         onPress={onSignInPress}
         disabled={isSigningIn}
       >

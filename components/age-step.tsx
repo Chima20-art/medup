@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Platform, Image } from 'react-native';
 import { useTheme } from '@react-navigation/native';
-import Signup5 from "@/assets/images/signup-5.svg";
-
 import DateTimePicker, {DateTimePickerEvent} from "@react-native-community/datetimepicker";
+import Logo from "@/assets/images/logo.svg";
+import {CircularButton} from "@/components/Cicular-button";
 
-export default function DateOfBirthStep({ onContinue }: { onContinue: (date: Date) => void }) {
+export default function DateOfBirthStep({ onContinue,  currentStep,
+                                            totalSteps }: { onContinue: (date: Date) => void,currentStep: number;
+    totalSteps: number; }) {
     const { colors } = useTheme();
     const [date, setDate] = useState(new Date());
 
@@ -25,10 +27,8 @@ export default function DateOfBirthStep({ onContinue }: { onContinue: (date: Dat
     return (
         <View className="flex-1 pt-16">
 
-            <View style={{ marginHorizontal: 'auto' }}> {/* Adjust spacing here */}
-                <Signup5
-                    width={250} height={250}
-                />
+            <View className="mx-auto">
+                <Logo/>
             </View>
             <View className="h-16 flex-row items-center justify-center px-5">
                 <View className="flex flex-row gap-x-0.5">
@@ -62,15 +62,13 @@ export default function DateOfBirthStep({ onContinue }: { onContinue: (date: Dat
 
                 </View>
 
-                <TouchableOpacity
-                    className="w-full h-14 rounded-full items-center justify-center mb-4"
-                    style={{ backgroundColor: colors.primary }}
-                    onPress={() => onContinue(date)}
-                >
-                    <Text className="text-lg font-semibold" style={{ color: colors.background }}>
-                        Continuer
-                    </Text>
-                </TouchableOpacity>
+                <View className="items-center mb-4">
+                    <CircularButton
+                        onPress={() => onContinue(date)}
+                        currentStep={currentStep}
+                        totalSteps={totalSteps}
+                    />
+                </View>
             </View>
         </View>
     );

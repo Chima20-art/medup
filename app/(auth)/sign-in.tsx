@@ -13,6 +13,7 @@ import { useTheme } from "@react-navigation/native";
 import { LinearGradient } from 'expo-linear-gradient';
 import SignInForm from "@/components/SignInForm";
 import Logo from "@/assets/images/logo.svg";
+import Google from "@/assets/images/google.svg";
 
 export default function Page() {
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
@@ -52,14 +53,14 @@ export default function Page() {
               <Logo width={250} height={250} />
             </View>
 
-            <View className="flex-row items-end justify-between mb-4 mt-14">
+            <View className="flex-row items-end justify-between mb-4 mt-10">
               <Text
                   className="font-bold text-3xl font-semibold"
                   style={{ color: colors.text }}
               >
                 Connexion
               </Text>
-              <Link href="/sign-up" asChild>
+              <Link href="/sign-up-onboarding" asChild>
                 <TouchableOpacity>
                   <Text className="text-base" style={{ color: colors.primary }}>
                     S'inscrire
@@ -70,7 +71,7 @@ export default function Page() {
 
             <SignInForm />
 
-            <View className="flex-row justify-between mt-10 mb-8">
+            <View className="flex-row justify-between mt-8 mb-4">
               <TouchableOpacity>
                 <Text className="text-sm" style={{ color: colors.text }}>
                   Besoin d'aide
@@ -80,6 +81,20 @@ export default function Page() {
                 <Text className="text-sm" style={{ color: colors.text }}>
                   Changer le mot de passe
                 </Text>
+              </TouchableOpacity>
+            </View>
+            <View className="space-y-4">
+              <View className="bg-gray-400 h-[1px] w-full mb-4" />
+              <Text className="text-center text-gray-500 mb-4">Ou</Text>
+
+              <TouchableOpacity className="flex-row justify-center items-center  space-x-8">
+                <View
+                    className="w-10 h-10 rounded-full shadow-sm items-center justify-center border border-gray-200"
+                >
+                  <Google width={20} height={20} color="#DB4437" />
+
+                </View>
+                <Text> Connexion avec google</Text>
               </TouchableOpacity>
             </View>
           </Animated.ScrollView>

@@ -1,40 +1,40 @@
-import React from 'react'
-import {View, Text, TextInput, TouchableOpacity, Image} from 'react-native'
-import { UserCircle2 } from 'lucide-react-native'
-import { useTheme } from '@react-navigation/native'
-import Signup1 from '@/assets/images/signup-1.svg'
-import WelcomeIllustration from "@/assets/images/welcome-illustration.svg";
+import React from 'react';
+import { View, Text, TextInput } from 'react-native';
+import { useTheme } from '@react-navigation/native';
+import Logo from '@/assets/images/logo.svg';
+import { CircularButton } from '@/components/Cicular-button';
 
 interface NameStepProps {
-    name: string
-    onNameChange: (value: string) => void
-    onContinue: () => void
+    name: string;
+    onNameChange: (value: string) => void;
+    onContinue: () => void;
+    currentStep: number;
+    totalSteps: number;
 }
 
 export default function NameStep({
                                      name,
                                      onNameChange,
-                                     onContinue
+                                     onContinue,
+                                     currentStep,
+                                     totalSteps
                                  }: NameStepProps) {
-    const { colors } = useTheme()
+    const { colors } = useTheme();
 
     return (
         <View className="flex-1 pt-16">
-            <View style={{ marginHorizontal: 'auto' }}> {/* Adjust spacing here */}
-               <Signup1
-                   width={250} height={250}
-               />
-           </View>
-
+            <View className="mx-auto">
+                <Logo />
+            </View>
 
             <View className="h-16 flex-row items-center justify-center px-5">
                 <View className="flex flex-row gap-x-0.5">
-                    {[1, 2, 3, 4, 5, 6].map((step) => (
+                    {Array.from({ length: totalSteps }).map((_, index) => (
                         <View
-                            key={step}
+                            key={index}
                             className={`h-1 w-10 rounded-full`}
                             style={{
-                                backgroundColor: step <= 1 ? colors.primary : colors.border
+                                backgroundColor: index < currentStep ? colors.primary : colors.border
                             }}
                         />
                     ))}
@@ -56,16 +56,15 @@ export default function NameStep({
                 />
             </View>
 
-            <TouchableOpacity
-                className="w-full h-14 rounded-full items-center justify-center mb-4"
-                style={{ backgroundColor: name.trim() ? colors.primary : colors.border }}
-                onPress={onContinue}
-                disabled={!name.trim()}
-            >
-                <Text className="text-lg font-semibold" style={{ color: colors.background }}>
-                    Continuer
-                </Text>
-            </TouchableOpacity>
+            <View className="items-center mb-4">
+                <CircularButton
+                    onPress={onContinue}
+                    disabled={!name.trim()}
+                    currentStep={currentStep}
+                    totalSteps={totalSteps}
+                />
+            </View>
         </View>
-    )
+    );
 }
+

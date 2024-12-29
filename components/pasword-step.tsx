@@ -3,17 +3,23 @@ import { View, Text, TextInput, TouchableOpacity } from 'react-native'
 import { Check, X, Eye, EyeOff } from 'lucide-react-native'
 import { useTheme } from '@react-navigation/native'
 import Signup7 from "@/assets/images/signup-7.svg";
+import Logo from "@/assets/images/logo.svg";
+import {CircularButton} from "@/components/Cicular-button";
 
 interface PasswordStepProps {
     password: string
     onPasswordChange: (value: string) => void
-    onContinue: () => void
+    onContinue: () => void;
+    currentStep: number;
+    totalSteps: number;
 }
 
 export default function PasswordStep({
                                          password,
                                          onPasswordChange,
-                                         onContinue
+                                         onContinue,
+                                         currentStep,
+                                         totalSteps
                                      }: PasswordStepProps) {
     const { colors } = useTheme()
     const [confirmPassword, setConfirmPassword] = useState('')
@@ -35,10 +41,8 @@ export default function PasswordStep({
     return (
         <View className="flex-1 px-6 pt-16">
 
-            <View style={{ marginHorizontal: 'auto' }}> {/* Adjust spacing here */}
-                <Signup7
-                    width={250} height={250}
-                />
+            <View className="mx-auto">
+                <Logo/>
             </View>
             <View className="h-16 flex-row items-center justify-center px-5">
                 <View className="flex flex-row gap-x-0.5">
@@ -47,7 +51,7 @@ export default function PasswordStep({
                             key={step}
                             className={`h-1 w-10 rounded-full`}
                             style={{
-                                backgroundColor: step <= 6 ? colors.primary : colors.border
+                                backgroundColor: step <= 3 ? colors.primary : colors.border
                             }}
                         />
                     ))}
@@ -116,16 +120,14 @@ export default function PasswordStep({
                 </Text>
             </View>
 
-            <TouchableOpacity
-                className={`w-full h-14 rounded-full items-center justify-center mb-4`}
-                style={{ backgroundColor: isPasswordValid && doPasswordsMatch ? colors.primary : colors.border }}
-                onPress={onContinue}
-                disabled={!isPasswordValid || !doPasswordsMatch}
-            >
-                <Text className="text-lg font-semibold" style={{ color: colors.background }}>
-                    Continuer
-                </Text>
-            </TouchableOpacity>
+            <View className="items-center mb-4">
+                <CircularButton
+                    onPress={onContinue}
+                    disabled={!isPasswordValid || !doPasswordsMatch}
+                    currentStep={currentStep}
+                    totalSteps={totalSteps}
+                />
+            </View>
         </View>
     )
 }
