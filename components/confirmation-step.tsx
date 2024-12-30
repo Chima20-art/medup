@@ -16,7 +16,7 @@ export default function ConfirmationStep({ onContinue }: ConfirmationStepProps) 
         <View className="flex-1 pt-16">
 
             <View style={{ marginHorizontal: 'auto' }}>
-                <Logo/>
+                <Logo width={250} height={150}/>
             </View>
 
             <View className="flex-1 px-2">
@@ -33,15 +33,36 @@ export default function ConfirmationStep({ onContinue }: ConfirmationStepProps) 
                     <Signup6 width={200} height={200} />
                 </View>
 
-                    <View className="flex-1 items-center justify-end pb-4">
+                <View className="flex-1 items-center justify-end pb-12">
+                    <View className="relative">
+                        <View
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                                backgroundColor: colors.primary,
+                                opacity: 0.2,
+                                transform: [{ scale: 1.2 }]
+                            }}
+                        />
                         <TouchableOpacity
-                            className="w-16 h-16 p-4 bg-red-300 rounded-full items-center justify-center"
-                            style={{ backgroundColor: colors.primary }}
+                            className="w-20 h-20 rounded-full items-center justify-center"
+                            style={{
+                                backgroundColor: colors.primary,
+                                shadowColor: colors.primary,
+                                shadowOffset: {
+                                    width: 0,
+                                    height: 0,
+                                },
+                                shadowOpacity: 0.5,
+                                shadowRadius: 10,
+                                elevation: 8,
+                            }}
                             onPress={onContinue}
                         >
                             <Home size={24} color="white" />
                         </TouchableOpacity>
                     </View>
+                </View>
+
             </View>
         </View>
     );

@@ -1,8 +1,11 @@
-import React from 'react';
-import { View, Text, TextInput } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, Animated } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import Logo from '@/assets/images/logo.svg';
 import { CircularButton } from '@/components/Cicular-button';
+import { UserIcon } from 'lucide-react-native';
+import {Colors} from "@/constants/Colors";
+import SignupUser from "@/assets/images/signupUser.svg"
 
 interface NameStepProps {
     name: string;
@@ -19,7 +22,44 @@ export default function NameStep({
                                      currentStep,
                                      totalSteps
                                  }: NameStepProps) {
+    const [showError, setShowError] = useState(false);
+    const [shakeAnimation] = useState(new Animated.Value(0));
+
+    const handleContinue = () => {
+        if (!name.trim()) {
+            setShowError(true);
+            // Shake animation
+            Animated.sequence([
+                Animated.timing(shakeAnimation, {
+                    toValue: 10,
+                    duration: 100,
+                    useNativeDriver: true
+                }),
+                Animated.timing(shakeAnimation, {
+                    toValue: -10,
+                    duration: 100,
+                    useNativeDriver: true
+                }),
+                Animated.timing(shakeAnimation, {
+                    toValue: 0,
+                    duration: 100,
+                    useNativeDriver: true
+                })
+            ]).start();
+        } else {
+            setShowError(false);
+            onContinue();
+        }
+    };
+
     const { colors } = useTheme();
+
+    const handleTextChange = (text: string) => {
+        onNameChange(text);
+        if (showError) {
+            setShowError(false);
+        }
+    };
 
     return (
         <View className="flex-1 pt-16">
@@ -41,25 +81,45 @@ export default function NameStep({
                 </View>
             </View>
 
-            <Text className="text-2xl font-bold text-center mt-8 mb-2" style={{ color: colors.text }}>
+            <Text className="text-[22px] font-bold text-start mt-8 mb-4 px-2" style={{ color: colors.text }}>
                 Écrivez votre nom d'utilisateur
             </Text>
 
-            <View className="flex-1">
-                <TextInput
-                    className="w-full h-12 border-b px-2 text-center text-lg"
-                    style={{ borderBottomColor: colors.border, color: colors.text }}
-                    value={name}
-                    onChangeText={onNameChange}
-                    placeholder="Entrez votre nom ou surnom"
-                    placeholderTextColor={colors.text}
-                />
+            <View className="flex-1 px-2 mb-6">
+                <Animated.View
+                    style={{
+                        transform: [{ translateX: shakeAnimation }]
+                    }}
+                >
+                    <View className="relative">
+                        <TextInput
+                            className={`w-full flex-row justify-center px-4 h-16 text-xl font-sans rounded-lg bg-gray-50 ${
+                                showError ? 'border border-red-500' : ''
+                            }`}
+                            style={{
+                                color: Colors.light.text,
+                                backgroundColor: '#F9FAFB'
+                            }}
+                            value={name}
+                            onChangeText={handleTextChange}
+                            placeholder="Sofia"
+                            placeholderTextColor={Colors.light.placeholder}
+                        />
+                        <View className="absolute right-3 top-5">
+                            <SignupUser />
+                        </View>
+                    </View>
+                    {showError && (
+                        <Text className="text-red-500 text-sm mt-4">
+                            Veuillez entrer votre nom d'utilisateur
+                        </Text>
+                    )}
+                </Animated.View>
             </View>
 
             <View className="items-center mb-4">
                 <CircularButton
-                    onPress={onContinue}
-                    disabled={!name.trim()}
+                    onPress={handleContinue}
                     currentStep={currentStep}
                     totalSteps={totalSteps}
                 />

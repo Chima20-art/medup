@@ -19,8 +19,8 @@ export function CircularButton({
                                }: CircularButtonProps) {
     const { colors } = useTheme();
 
-    const size = 64;
-    const strokeWidth = 2;
+    const size = 80;
+    const strokeWidth = 4;
     const center = size / 2;
     const radius = size / 2 - strokeWidth / 2;
     const circumference = 2 * Math.PI * radius;
@@ -36,7 +36,7 @@ export function CircularButton({
         <View style={styles.container}>
             <Svg height={size} width={size} style={styles.svg}>
                 <Circle
-                    stroke={colors.border}
+                    stroke={"#fff"}
                     fill="none"
                     cx={center}
                     cy={center}
@@ -66,7 +66,7 @@ export function CircularButton({
                     }
                 ]}
             >
-                <ArrowRight size={24} color={colors.background} />
+                <ArrowRight size={30} color={colors.background} /> {/* Increased from 24 */}
             </TouchableOpacity>
         </View>
     );
@@ -83,9 +83,9 @@ const styles = StyleSheet.create({
         position: 'absolute',
     },
     button: {
-        width: 52,
-        height: 52,
-        borderRadius: 26,
+        width: 66, // Increased from 52
+        height: 66, // Increased from 52
+        borderRadius: 33, // Increased to half of width/height
         alignItems: 'center',
         justifyContent: 'center',
     },
