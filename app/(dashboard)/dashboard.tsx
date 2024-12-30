@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Dimensions,
   RefreshControl,
   Alert,
+  Animated,
 } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { Bell, Star, Calendar, Clock, Plus } from "lucide-react-native";
@@ -85,26 +86,124 @@ export default function Dashboard() {
   const [isAvatarModalVisible, setIsAvatarModalVisible] = useState(false);
   const [currentAvatarId, setCurrentAvatarId] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    {
-      id: '1',
-      doctorName: 'Dr. Jason Smith',
-      specialty: 'Dentist',
-      rating: 4.8,
-      date: '5 Oct',
-      time: '10:30pm',
-      color: 'bg-indigo-600'
-    },
-    {
-      id: '2',
-      doctorName: 'Dr. Sarah Johnson',
-      specialty: 'Cardiologist',
-      rating: 4.9,
-      date: '7 Oct',
-      time: '2:15pm',
-      color: 'bg-primary-500'
+  const [isLoading, setIsLoading] = useState(true);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+
+  //     [
+  //   {
+  //     id: '1',
+  //     doctorName: 'Dr. Jason Smith',
+  //     specialty: 'Dentist',
+  //     rating: 4.8,
+  //     date: '5 Oct',
+  //     time: '10:30pm',
+  //     color: 'bg-indigo-600'
+  //   },
+  //   {
+  //     id: '2',
+  //     doctorName: 'Dr. Sarah Johnson',
+  //     specialty: 'Cardiologist',
+  //     rating: 4.9,
+  //     date: '7 Oct',
+  //     time: '2:15pm',
+  //     color: 'bg-primary-500'},
+  // ]
+
+
+  const shimmerAnimation = useRef(new Animated.Value(0)).current;
+
+  // Add shimmer animation effect
+  useEffect(() => {
+    const shimmer = Animated.loop(
+        Animated.sequence([
+          Animated.timing(shimmerAnimation, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(shimmerAnimation, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+    );
+
+    if (isLoading) {
+      shimmer.start();
+    } else {
+      shimmer.stop();
     }
-  ]);
+
+    return () => shimmer.stop();
+  }, [isLoading, shimmerAnimation]);
+
+  const renderSkeletonCard = () => (
+      <View className="w-64 bg-white rounded-3xl p-4 mr-4" style={categoryCardStyle}>
+        <View className="flex-row items-center justify-between mb-10">
+          <View className="flex flex-row items-start gap-x-3">
+            <Animated.View
+                className="w-10 h-10 rounded-full bg-gray-200"
+                style={{
+                  opacity: shimmerAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.3, 0.7],
+                  }),
+                }}
+            />
+            <View className="flex-1">
+              <Animated.View
+                  className="h-4 w-32 bg-gray-200 rounded mb-2"
+                  style={{
+                    opacity: shimmerAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.3, 0.7],
+                    }),
+                  }}
+              />
+              <Animated.View
+                  className="h-3 w-24 bg-gray-200 rounded mb-2"
+                  style={{
+                    opacity: shimmerAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.3, 0.7],
+                    }),
+                  }}
+              />
+              <Animated.View
+                  className="h-3 w-16 bg-gray-200 rounded"
+                  style={{
+                    opacity: shimmerAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.3, 0.7],
+                    }),
+                  }}
+              />
+            </View>
+          </View>
+        </View>
+        <View className="flex flex-row items-center justify-between">
+          <Animated.View
+              className="h-3 w-20 bg-gray-200 rounded"
+              style={{
+                opacity: shimmerAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.3, 0.7],
+                }),
+              }}
+          />
+          <Animated.View
+              className="h-3 w-20 bg-gray-200 rounded"
+              style={{
+                opacity: shimmerAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.3, 0.7],
+                }),
+              }}
+          />
+        </View>
+      </View>
+  );
 
   // Effects
   useEffect(() => {
@@ -227,59 +326,66 @@ export default function Dashboard() {
         >
           {/* Medical Planning Section */}
           <View className="ml-6 py-6">
-            <Text className="text-lg font-semibold text-gray-900 mb-4">
-              mon planning médical:
+            <Text className="text-2xl font-extrabold text-primary-500 mb-4">
+              Mon planning médical ...
             </Text>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 className="flex flex-row gap-4"
             >
-              {appointments.map((appointment) => (
-                  <View
-                      key={appointment.id}
-                      className={`w-64 ${appointment.color} rounded-3xl p-4 mr-4`}
-                  >
-                    <View className="flex-row items-center justify-between mb-10">
-                      <View className="flex flex-row items-start gap-x-3">
-                        <Image
-                            source={{ uri: "/placeholder.svg?height=40&width=40" }}
-                            className="w-10 h-10 rounded-full bg-white"
-                        />
-                        <View>
-                          <Text className="text-white font-medium">
-                            {appointment.doctorName}
-                          </Text>
-                          <Text className="text-indigo-200">
-                            {appointment.specialty}
-                          </Text>
-                          <View className="flex-row items-center">
-                            <Text className="text-white mr-1">
-                              {appointment.rating}
+              {appointments.length > 0 ? (appointments.map((appointment) => (
+                    <View
+                        key={appointment.id}
+                        className={`w-64 ${appointment.color} rounded-3xl p-4 mr-4`}
+                    >
+                      <View className="flex-row items-center justify-between mb-10">
+                        <View className="flex flex-row items-start gap-x-3">
+                          <Image
+                              source={{ uri: "/placeholder.svg?height=40&width=40" }}
+                              className="w-10 h-10 rounded-full bg-white"
+                          />
+                          <View>
+                            <Text className="text-white font-medium">
+                              {appointment.doctorName}
                             </Text>
-                            <Star size={16} color="#FCD34D" fill="#FCD34D" />
+                            <Text className="text-indigo-200">
+                              {appointment.specialty}
+                            </Text>
+                            <View className="flex-row items-center">
+                              <Text className="text-white mr-1">
+                                {appointment.rating}
+                              </Text>
+                              <Star size={16} color="#FCD34D" fill="#FCD34D" />
+                            </View>
                           </View>
                         </View>
                       </View>
-                    </View>
-                    <View className="flex flex-row items-center gap-x-4 mt-2">
-                      <View className="flex-row items-center gap-x-2">
-                        <Calendar size={16} color="#E0E7FF" className="mr-2" />
-                        <Text className="text-indigo-100">{appointment.date}</Text>
+                      <View className="flex flex-row items-center gap-x-4 mt-2">
+                        <View className="flex-row items-center gap-x-2">
+                          <Calendar size={16} color="#E0E7FF" className="mr-2" />
+                          <Text className="text-indigo-100">{appointment.date}</Text>
+                        </View>
+                        <View className="flex-row items-center gap-x-2">
+                          <Clock size={16} color="#E0E7FF" className="mr-2" />
+                          <Text className="text-indigo-100">{appointment.time}</Text>
+                        </View>
                       </View>
-                      <View className="flex-row items-center gap-x-2">
-                        <Clock size={16} color="#E0E7FF" className="mr-2" />
-                        <Text className="text-indigo-100">{appointment.time}</Text>
-                      </View>
                     </View>
-                  </View>
-              ))}
+                ))) :   <>
+                {[1, 2].map((key) => (
+                    <View key={key}>
+                      {renderSkeletonCard()}
+                    </View>
+                ))}
+              </> }
+
             </ScrollView>
           </View>
 
           {/* Categories Section */}
           <View className="px-6 pb-6 h-full">
-            <Text className="text-lg font-semibold text-gray-900 mb-4">
+            <Text className="text-2xl font-extrabold text-primary-500 mb-4">
               Categories
             </Text>
             <View className="flex-row flex-wrap justify-start gap-x-4">

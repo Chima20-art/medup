@@ -56,7 +56,7 @@ export default function VerificationStep({
         }
     };
 
-    return (<View className="flex-1 px-6">
+    return (<View className="flex-1 pt-16">
             <View className="mx-auto">
                 <Logo/>
             </View>

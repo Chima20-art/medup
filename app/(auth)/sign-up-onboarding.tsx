@@ -16,7 +16,7 @@ export default function SignUpOnboarding() {
                 <View className="flex-1 px-6 pt-10">
                     {/* Header */}
                     <Text className="text-white text-[56px] font-bold mb-2">
-                        Welcome to{"\n"}
+                        Bienvenue sur{"\n"}
                         <Text className="text-[#A5B4FC]">Medup.</Text>
                     </Text>
 
@@ -54,10 +54,10 @@ export default function SignUpOnboarding() {
 
                     {/* Footer */}
                     <Text className="text-center text-white/70 text-sm mb-6">
-                        By signing in you agree to our{'\n'}
-                        <Text className="underline font-bold">Terms of Service</Text>
-                        {' '}and{' '}
-                        <Text className="underline font-bold">Privacy Policy</Text>
+                        En vous inscrivant, vous acceptez nos{'\n'}
+                        <Text className="underline font-bold">Conditions d'utilisation</Text>
+                        {' '}et notre{' '}
+                        <Text className="underline font-bold">Politique de confidentialité</Text>
                     </Text>
                 </View>
             </ScrollView>

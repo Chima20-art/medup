@@ -201,7 +201,7 @@ export default function SignUpScreen() {
                   className="absolute top-20 left-5 z-10"
                   onPress={() => setStep(step - 1)}
               >
-                <ChevronLeft size={24} color={colors.text} />
+                <ChevronLeft size={34} color={colors.primary} />
               </TouchableOpacity>
           )}
 
