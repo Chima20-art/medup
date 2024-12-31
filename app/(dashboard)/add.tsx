@@ -45,7 +45,9 @@ export default function Add() {
         <View className="flex-1 pt-12 bg-gray-50">
             {/* Header Section */}
             <View className="flex-row px-6 pt-14 pb-6 bg-white">
-                <TouchableOpacity onPress={() => router.back()} className="mb-4">
+                <TouchableOpacity onPress={() => router.back()}
+                                  className="w-10 h-10 items-center justify-center rounded-full bg-gray-100 mr-1"
+                >
                     <ChevronLeft size={34} color={colors.primary} />
                 </TouchableOpacity>
                 <Text className="text-primary-500 text-3xl font-extrabold">

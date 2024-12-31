@@ -118,7 +118,7 @@ export default function ListExaminsRadiologiques() {
               </View>
             </View>
           </View>
-          <RadioCategory className="" />
+          <RadioCategory />
         </View>
 
         {/* Search Bar */}
