@@ -1,16 +1,18 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft } from 'lucide-react-native';
+import {ArrowLeft, ChevronLeft} from 'lucide-react-native';
 
 import RadioCategory from "@/assets/images/radioCategory.svg";
 import BioCategory from "@/assets/images/bioCategory.svg";
 import MedicationCategory from "@/assets/images/medicationCategory.svg";
 import ConsultationCategory from "@/assets/images/consultationsCategory.svg";
 import QuickAccess from "@/assets/images/QuickAcess.svg";
+import {useTheme} from "@react-navigation/native";
 
 export default function Add() {
     const router = useRouter();
+    const { colors } = useTheme();
     const categories = [
         {
             title: "Examen \nradiologique",
@@ -40,13 +42,13 @@ export default function Add() {
     ] as const;
 
     return (
-        <View className="flex-1 bg-gray-50">
+        <View className="flex-1 pt-12 bg-gray-50">
             {/* Header Section */}
             <View className="flex-row px-6 pt-14 pb-6 bg-white">
                 <TouchableOpacity onPress={() => router.back()} className="mb-4">
-                    <ArrowLeft size={24} color="#000" />
+                    <ChevronLeft size={34} color={colors.primary} />
                 </TouchableOpacity>
-                <Text className="text-2xl ml-2 font-semibold text-primary-500  mb-4">
+                <Text className="text-primary-500 text-3xl font-extrabold">
                     Que souhaitez-vous ajouter ?
                 </Text>
             </View>

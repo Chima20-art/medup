@@ -84,18 +84,6 @@ export default function VerificationStep({
                 vérifier votre compte
             </Text>
 
-            {/* <View className="flex-1">
-        <TextInput
-          className="w-full h-12 border-b px-2 text-center text-lg"
-          style={{ borderBottomColor: colors.border, color: colors.text }}
-          value={code}
-          onChangeText={onCodeChange}
-          placeholder="Code de vérification"
-          placeholderTextColor={colors.text}
-          keyboardType="number-pad"
-          maxLength={6}
-        />
-      </View> */}
 
             {error && <Text className="text-red-500 text-center mb-2">{error}</Text>}
 
