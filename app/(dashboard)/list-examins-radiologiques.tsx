@@ -59,10 +59,6 @@ export default function ListExaminsRadiologiques() {
     };
   }, []);
 
-  const addRadiologie = () => {
-    router.push("/add-examin-radiologique");
-  };
-
   const sleep = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -99,39 +95,42 @@ export default function ListExaminsRadiologiques() {
     <SafeAreaView className="flex-1 bg-gray-50">
       {/* Header */}
       <View className="bg-white px-2 pb-4">
-        <View className="flex-row items-center justify-between mb-2">
-          <View className="flex-1 mr-2">
-            <View className="flex-row items-start">
+        <View className="flex-row items-center justify-between mb-2 ">
+          <View className="flex-col flex-1 mr-2">
+            <View className="flex-row items-start gap-x-2">
               <TouchableOpacity
                 onPress={() => router.back()}
-                className="w-10 h-10 items-center justify-center rounded-full"
+                className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
               >
-                <ChevronLeft size={24} color="#4F46E5" />
+                <ChevronLeft size={26} color="#4F46E5"/>
               </TouchableOpacity>
-              <View className="flex-col items-center mr-2">
-                <Text className="text-primary-500 text-3xl font-bold">
+              <View className="flex-col items-center mr-2 flex-1">
+                <Text className="text-primary-500 text-3xl font-extrabold">
                   Mes examens
                 </Text>
-                <Text className="text-primary-500 text-3xl font-bold ml-1">
+                <Text className="text-primary-500 text-3xl font-extrabold ml-1">
                   radiologiques
                 </Text>
               </View>
             </View>
+            {/* Search Bar */}
+
+            <View className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12 m-2 mt-4 ml-4">
+              <Search size={26} color="#9CA3AF" />
+              <TextInput
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholder="Recherche"
+                  className="flex-1 ml-3 text-lg"
+                  placeholderTextColor="#9CA3AF"
+              />
+            </View>
           </View>
           <RadioCategory />
+
         </View>
 
-        {/* Search Bar */}
-        <View className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12 mt-2">
-          <Search size={20} color="#9CA3AF" />
-          <TextInput
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Recherche"
-            className="flex-1 ml-3 text-base"
-            placeholderTextColor="#9CA3AF"
-          />
-        </View>
+
       </View>
 
       {/* Radiologies List */}
@@ -144,6 +143,7 @@ export default function ListExaminsRadiologiques() {
               onPress={() => handleExamenPress(radio)}
               className="mb-4 flex-row items-stretch px-2"
             >
+              {/*date*/}
               <View className="bg-primary-500 w-16 py-4 items-center justify-center rounded-full my-2 mr-2">
                 <Text className="text-white text-2xl font-bold">
                   {date.day}
@@ -151,40 +151,45 @@ export default function ListExaminsRadiologiques() {
                 <Text className="text-white uppercase">{date.month}</Text>
                 <Text className="text-white">{date.year}</Text>
               </View>
+
+              {/*detailed card*/}
               <View className="flex-1 bg-white rounded-3xl p-4 shadow-sm">
-                <Text className="text-gray-900 font-medium mb-2">
+                <Text className="text-gray-900 text-lg font-bold mb-2">
                   {radio.name}
                 </Text>
 
-                {/* Laboratory Info */}
-                <View className="flex-row items-center mb-2">
-                  <Hospital />
-                  <Text className="text-sm text-gray-600 ml-2">
-                    {radio.labName}
-                  </Text>
-                </View>
+                <View className="flex-col ml-6 ">
+                  {/* Laboratory Info */}
+                  <View className="flex-row items-center mb-2 w-fit ">
+                    <Hospital />
+                    <Text className="text-base font-semibold text-gray-600 ml-2">
+                      {radio.labName}
+                    </Text>
+                  </View>
 
-                {/* Doctor Info */}
-                <View className="flex-row items-center mb-3">
-                  <Doctor />
-                  <Text className="text-sm text-gray-600 ml-2">
-                    {radio.phone}
-                  </Text>
+                  {/* Doctor Info */}
+                  <View className="flex-row items-center mb-2 w-fit">
+                    <Doctor />
+                    <Text className="text-base font-semibold text-gray-600 ml-2">
+                      {radio.phone}
+                    </Text>
+                  </View>
                 </View>
 
                 {/* Action Buttons */}
                 <View className="flex-row gap-x-2 justify-end">
-                  <TouchableOpacity
-                    className="bg-primary px-4 py-2 rounded-xl"
-                    onPress={() => handleExamenPress(radio)}
-                  >
-                    <Text className="text-white text-sm font-medium">
-                      Détail
-                    </Text>
-                  </TouchableOpacity>
+                  {/*<TouchableOpacity*/}
+                  {/*  className="bg-primary px-4 py-2 rounded-xl"*/}
+                  {/*  onPress={() => handleExamenPress(radio)}*/}
+                  {/*>*/}
+                  {/*  <Text className="textwhite text-sm font-medium">*/}
+                  {/*    Détail*/}
+                  {/*  </Text>*/}
+                  {/*</TouchableOpacity>*/}
 
-                  <TouchableOpacity className="px-4 py-2 border border-primary rounded-xl">
-                    <Text className="text-sm font-medium text-primary">
+                  <TouchableOpacity className="px-4 py-2 bg-primary-500 rounded-xl"
+                                    onPress={() => handleExamenPress(radio)}>
+                    <Text className="text-xs font-medium text-secondary">
                       {radio?.uploads?.length
                         ? `${radio.uploads.length} fichier(s)`
                         : "Aucun fichier"}
@@ -197,13 +202,6 @@ export default function ListExaminsRadiologiques() {
         })}
       </ScrollView>
 
-      {/* Add Button */}
-      <TouchableOpacity
-        onPress={addRadiologie}
-        className="absolute bottom-6 right-6 w-14 h-14 items-center justify-center rounded-full bg-primary shadow-lg"
-      >
-        <Plus size={24} color="white" />
-      </TouchableOpacity>
 
       {selectedExamen && slideAnim ? (
         <ExamenDetailPopup

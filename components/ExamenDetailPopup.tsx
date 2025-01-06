@@ -18,6 +18,7 @@ import {
   ChevronDown,
   X,
 } from "lucide-react-native";
+import ImageView from "react-native-image-viewing";
 import SupabaseFile from "@/components/supabaseFile";
 import { PanGestureHandler, State } from "react-native-gesture-handler";
 import * as FileSystem from "expo-file-system";
@@ -25,6 +26,8 @@ import * as Sharing from "expo-sharing";
 import { supabase } from "@/utils/supabase";
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { WebView } from 'react-native-webview';
+
+import Notes from '@/assets/images/notes-icon.svg'
 
 const { height, width } = Dimensions.get("window");
 
@@ -51,6 +54,8 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false);
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const defaultSlideAnim = useRef(new Animated.Value(height)).current;
   const slideAnim = propSlideAnim || defaultSlideAnim;
 
@@ -183,8 +188,14 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
 
       if (error) throw error;
 
-      setPdfUrl(data.signedUrl);
-      setIsPDFViewerOpen(true);
+      const fileUrl = data.signedUrl;
+      if (isCurrentFilePDF) {
+        setPdfUrl(fileUrl);
+        setIsPDFViewerOpen(true);
+      } else {
+        setCurrentImageUrl(fileUrl);
+        setImageViewerVisible(true);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur s'est produite");
       console.error("Erreur lors de la visualisation du fichier:", err);
@@ -198,6 +209,12 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
     if (!examen.uploads || examen.uploads.length === 0) return false;
     const currentFile = examen.uploads[currentFileIndex];
     return currentFile.toLowerCase().endsWith('.pdf');
+  }, [examen.uploads, currentFileIndex]);
+
+  const isCurrentFileViewable = useMemo(() => {
+    if (!examen.uploads || examen.uploads.length === 0) return false;
+    const currentFile = examen.uploads[currentFileIndex].toLowerCase();
+    return currentFile.endsWith('.pdf') || currentFile.endsWith('.jpg') || currentFile.endsWith('.png') || currentFile.endsWith('.jpeg');
   }, [examen.uploads, currentFileIndex]);
 
   const MemoizedFileView = useMemo(() => {
@@ -220,13 +237,13 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
             </View>
           </PanGestureHandler>
           {examen.uploads.length > 1 && (
-              <View className="flex-row justify-center space-x-1">
+              <View className="flex-row justify-center gap-x-1">
                 {examen.uploads.map((_: any, index: number) => (
                     <TouchableOpacity
                         key={index}
                         onPress={() => setCurrentFileIndex(index)}
                         className={`w-2 h-2 rounded-full ${
-                            currentFileIndex === index ? "bg-indigo-600" : "bg-gray-300"
+                            currentFileIndex === index ? "bg-primary-500" : "bg-gray-300"
                         }`}
                     />
                 ))}
@@ -259,32 +276,32 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
               elevation: 5,
             }}
         >
-          <View className="p-4 border-b border-gray-100">
+          <View className="p-2 mb-2 ">
             <View className="flex-row justify-between items-center">
-              <Text className="text-2xl font-bold text-indigo-600">
+              <Text className="text-2xl ml-2 font-bold text-primary-500">
                 {examen.name}
               </Text>
-              <TouchableOpacity onPress={onClose}>
-                <ChevronDown size={24} color="#4F46E5" />
+              <TouchableOpacity onPress={onClose} className=" bg-gray-50 p-2 rounded-full">
+                <ChevronDown size={28} color="#4F46E5" />
               </TouchableOpacity>
             </View>
           </View>
 
-          <View className="px-8 py-1 flex-row justify-around bg-gray-100 mx-auto w-[70%] rounded-full mb-2 ">
+          <View className="px-8 py-1 flex-row justify-around bg-[#E1E1E1] mx-auto w-[70%] rounded-full mb-2 ">
             <TouchableOpacity onPress={onDeleteItem} className="p-2">
-              <Trash2 size={20} color="#666666" />
+              <Trash2 size={20} color="#5b7bf6" />
             </TouchableOpacity>
             <TouchableOpacity
-                onPress={isCurrentFilePDF ? handleViewFile : undefined}
-                className={`p-2 ${isCurrentFilePDF ? '' : 'opacity-50'}`}
+                onPress={isCurrentFileViewable ? handleViewFile : undefined}
+                className={`p-2 ${isCurrentFileViewable ? '' : 'opacity-50'}`}
             >
-              <Eye size={20} color="#666666" />
+              <Eye size={20} color="#5b7bf6" />
             </TouchableOpacity>
             <TouchableOpacity onPress={downloadFile} className="p-2">
-              <Download size={20} color="#666666" />
+              <Download size={20} color="#5b7bf6" />
             </TouchableOpacity>
             <TouchableOpacity className="p-2">
-              <Share2 size={20} color="#666666" />
+              <Share2 size={20} color="#5b7bf6" />
             </TouchableOpacity>
           </View>
 
@@ -304,8 +321,11 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
             <View className="mx-4">
               {examen.notes && (
                   <View className="mt-6">
-                    <Text className="text-lg font-semibold mb-2">Notes :</Text>
-                    <View className="bg-gray-50 rounded-xl p-4">
+                    <View className="relative bg-[#EFEFEF] rounded-xl p-4 mb-2 mt-6">
+                      <View className="absolute -top-10 -left-14">
+                        <Notes />
+                      </View>
+                      <Text className="text-lg font-semibold ml-14 my-2">Notes :</Text>
                       <Text className="text-gray-700">{examen.notes}</Text>
                     </View>
                   </View>
@@ -319,7 +339,7 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        className="flex-row space-x-3"
+                        className="flex-row gap-x-3"
                     >
                       {examen.uploads.map((upload: string, index: number) => (
                           <TouchableOpacity
@@ -327,7 +347,7 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
                               onPress={() => setCurrentFileIndex(index)}
                               className={`w-24 h-24 rounded-xl overflow-hidden ${
                                   currentFileIndex === index
-                                      ? "border-2 border-indigo-600"
+                                      ? "border-2 border-primary-500"
                                       : "border border-gray-200"
                               }`}
                           >
@@ -347,7 +367,7 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
             visible={isPDFViewerOpen}
             onRequestClose={() => setIsPDFViewerOpen(false)}
         >
-          <View className="flex-1 bg-black bg-opacity-50">
+          {pdfUrl &&  <View className="flex-1 bg-black bg-opacity-50">
             <SafeAreaView className="flex-1 m-4 bg-white rounded-lg overflow-hidden">
               <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
                 <Text className="text-lg font-semibold">Visualiseur PDF</Text>
@@ -364,8 +384,17 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
                 />
               </View>
             </SafeAreaView>
-          </View>
+          </View> }
+
         </Modal>
+        {currentImageUrl &&
+            <ImageView
+            images={[{ uri: currentImageUrl }]}
+            imageIndex={0}
+            visible={imageViewerVisible}
+            onRequestClose={() => setImageViewerVisible(false)}
+        />}
+
       </>
   );
 };

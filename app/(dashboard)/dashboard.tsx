@@ -269,7 +269,7 @@ export default function Dashboard() {
                   style={categoryCardStyle}
                   onPress={() => router.push(category.route as any)}
               >
-                <category.image className="w-12 h-12" />
+                <category.image width={120} height={120} />
                 <Text className="text-center text-gray-900 text-sm">
                   {category.title}
                 </Text>
