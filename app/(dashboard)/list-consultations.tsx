@@ -85,46 +85,44 @@ export default function ListConsultations() {
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
+        <SafeAreaView className="flex-1 pt-4">
             {/* Header */}
             <View className="bg-white px-2 pb-4">
                 <View className="flex-row items-center justify-between mb-2">
-                    <View className="flex-1 mr-2">
-                        <View className="flex-row items-start">
+                    <View className="flex-col flex-1 mr-2">
+                        <View className="flex-row items-start gap-x-2">
                             <TouchableOpacity
                                 onPress={() => router.back()}
-                                className="w-10 h-10 items-center justify-center rounded-full"
+                                className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
                             >
                                 <ChevronLeft size={24} color="#4F46E5" />
                             </TouchableOpacity>
-                            <View className="flex-col items-center mr-2">
-                                <Text className="text-primary-500 text-3xl font-bold">
+                            <View className="flex-col items-start mr-2 flex-1">
+                                <Text className="text-primary-500 text-3xl font-extrabold">
                                     Mes
                                 </Text>
-                                <Text className="text-primary-500 text-3xl font-bold ml-1">
+                                <Text className="text-primary-500 text-3xl font-extrabold ml-1">
                                     consultations
                                 </Text>
                             </View>
                         </View>
+                        {/* Search Bar */}
+                        <View className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12 m-2 mt-4 ml-4">
+                            <Search size={26} color="#9CA3AF" />
+                            <TextInput
+                                value={searchQuery}
+                                onChangeText={setSearchQuery}
+                                placeholder="Recherche"
+                                className="flex-1 ml-3 text-lg"
+                                placeholderTextColor="#9CA3AF"
+                            />
+                        </View>
                     </View>
-                    <ConsultationCategory className="" />
-                </View>
-
-                {/* Search Bar */}
-                <View className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12 mt-2">
-                    <Search size={20} color="#9CA3AF" />
-                    <TextInput
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                        placeholder="Recherche"
-                        className="flex-1 ml-3 text-base"
-                        placeholderTextColor="#9CA3AF"
-                    />
+                    <ConsultationCategory />
                 </View>
             </View>
-
             {/* Consultations List */}
-            <ScrollView className="flex-1 px-4 pt-4">
+            <ScrollView className="flex-1 px-4  bg-gray-50 pt-4">
                 {consultations.map((consultation) => {
                     const date = formatDate(consultation.date)
                     return (

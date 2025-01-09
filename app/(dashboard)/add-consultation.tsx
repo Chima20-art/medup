@@ -10,6 +10,10 @@ import {
     Alert,
     TouchableWithoutFeedback,
     Switch,
+    ScrollView,
+    KeyboardAvoidingView,
+    Platform,
+    Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "@react-navigation/native";
@@ -28,12 +32,16 @@ import {
     Trash,
     X,
     Stethoscope,
-    ChevronDown
+    ChevronDown,
+    ImageIcon,
+    Upload
 } from "lucide-react-native";
+import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { supabase } from "@/utils/supabase";
 import { Calendar as RNCalendar, LocaleConfig } from 'react-native-calendars';
 import { Audio } from 'expo-av';
+import ConsultationCategory from "@/assets/images/consultationsCategory.svg";
 
 // Configure French locale
 LocaleConfig.locales['fr'] = {
@@ -55,6 +63,7 @@ interface AudioNote {
 
 interface UploadedFile {
     uri: string;
+    type: "image" | "document";
     name: string;
 }
 
@@ -92,8 +101,6 @@ export default function AddConsultation() {
     const [showSpecialtyPicker, setShowSpecialtyPicker] = useState(false);
     const [selectedSpecialty, setSelectedSpecialty] = useState<Specialty | null>(null);
     const [specialtySearch, setSpecialtySearch] = useState("");
-
-
 
     const specialtyInputRef = useRef(null);
 
@@ -213,6 +220,47 @@ export default function AddConsultation() {
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     };
 
+    const pickImage = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            const newFile: UploadedFile = {
+                uri: result.assets[0].uri,
+                type: "image",
+                name: result.assets[0].uri.split("/").pop() || "image",
+            };
+            setFormData((prev) => ({
+                ...prev,
+                files: [...prev.files, newFile],
+            }));
+        }
+    };
+
+    const takePicture = async () => {
+        const result = await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            const newFile: UploadedFile = {
+                uri: result.assets[0].uri,
+                type: "image",
+                name: result.assets[0].uri.split("/").pop() || "image",
+            };
+            setFormData((prev) => ({
+                ...prev,
+                files: [...prev.files, newFile],
+            }));
+        }
+    };
+
     const pickDocument = async () => {
         try {
             const result = await DocumentPicker.getDocumentAsync({
@@ -220,12 +268,14 @@ export default function AddConsultation() {
             });
 
             if (result.assets && result.assets[0]) {
+                const newFile: UploadedFile = {
+                    uri: result.assets[0].uri,
+                    type: "document",
+                    name: result.assets[0].name,
+                };
                 setFormData(prev => ({
                     ...prev,
-                    files: [...prev.files, {
-                        uri: result.assets[0].uri,
-                        name: result.assets[0].name,
-                    }],
+                    files: [...prev.files, newFile],
                 }));
             }
         } catch (error) {
@@ -328,7 +378,6 @@ export default function AddConsultation() {
         }
     };
 
-
     const filteredSpecialties = specialties.filter(specialty =>
         specialty.name.toLowerCase().includes(specialtySearch.toLowerCase())
     );
@@ -358,108 +407,210 @@ export default function AddConsultation() {
     );
 
     return (
-        <TouchableWithoutFeedback onPress={() => {
-            setShowDatePicker(false);
-            setShowNextAppointmentPicker(false);
-            setShowSpecialtyPicker(false);
-        }}>
-            <View className="flex-1 bg-gray-50">
-                <FlatList
-                    data={[1]}
-                    renderItem={() => (
-                        <View className="space-y-4 p-6">
-                            <View className="px-6 pt-14 pb-6 bg-white">
-                                <View className="flex-row items-center">
-                                    <TouchableOpacity
-                                        onPress={() => router.back()}
-                                        className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
-                                    >
-                                        <ChevronLeft size={24} color={colors.text} />
-                                    </TouchableOpacity>
-                                    <Text className="font-bold text-xl font-semibold text-gray-900 ml-4">
-                                        Ajouter une consultation
-                                    </Text>
-                                </View>
-                            </View>
+        <View className="flex-1 bg-gray-50 pt-4">
+            <View className="px-6 pt-14 pb-2 bg-white">
+                <View className="flex-row items-start">
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
+                    >
+                        <ChevronLeft size={34} color={colors.primary} />
+                    </TouchableOpacity>
+                    <Text className="text-primary-500 text-3xl font-extrabold ml-4">
+                        Ajouter {'\n'} une consultation
+                    </Text>
+                    <ConsultationCategory/>
+                </View>
+            </View>
 
-                            {/* Doctor Name Input */}
-                            <View>
-                                <Text className="text-sm font-medium text-gray-700 mb-1">
-                                    Nom du médecin
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={{ flex: 1 }}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+            >
+                <ScrollView className="flex-1 p-6">
+                    <View className="gap-y-4">
+                        {/* Doctor Name Input */}
+                        <View>
+                            <Text className="text-md font-medium text-gray-700 mb-1">
+                                Nom du médecin
+                            </Text>
+                            <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-14">
+                                <User2 size={20} color={colors.text} className="opacity-50" />
+                                <TextInput
+                                    value={formData.doctorName}
+                                    onChangeText={(text) =>
+                                        setFormData((prev) => ({ ...prev, doctorName: text }))
+                                    }
+                                    placeholder="Nom du médecin"
+                                    placeholderTextColor="#9CA3AF"
+                                    className="flex-1 ml-3 text-md font-semibold"
+                                />
+                            </View>
+                        </View>
+
+                        {/* Specialty Selector */}
+                        <View>
+                            <Text className="text-md font-medium text-gray-700 mb-1">
+                                Spécialité
+                            </Text>
+                            <View className="relative">
+                                <TouchableOpacity
+                                    ref={specialtyInputRef}
+                                    onPress={() => setShowSpecialtyPicker(!showSpecialtyPicker)}
+                                    className="relative flex-row items-center justify-between bg-white rounded-xl border border-gray-200 px-4 h-14"
+                                >
+                                    <View className="flex-row items-center flex-1">
+                                        <Stethoscope size={20} color={colors.text} className="opacity-50" />
+                                        {selectedSpecialty ? (
+                                            <View style={{ backgroundColor: selectedSpecialty.hexColor }} className="px-3 py-1 rounded-full ml-3">
+                                                <Text className="text-white font-medium">{selectedSpecialty.name}</Text>
+                                            </View>
+                                        ) : (
+                                            <TextInput
+                                                value={specialtySearch}
+                                                onChangeText={(text) => {
+                                                    setSpecialtySearch(text);
+                                                    setShowSpecialtyPicker(true);
+                                                }}
+                                                placeholder="Rechercher une spécialité"
+                                                placeholderTextColor="#9CA3AF"
+                                                className="flex-1 ml-3 text-md font-semibold"
+                                            />
+                                        )}
+                                    </View>
+                                    <ChevronDown size={20} color={colors.text} className="opacity-50" />
+                                </TouchableOpacity>
+                                {showSpecialtyPicker && renderSpecialtyPicker()}
+                            </View>
+                        </View>
+
+                        {/* Date Input */}
+                        <View>
+                            <Text className="text-md font-medium text-gray-700 mb-1">
+                                Date de réalisation
+                            </Text>
+                            <TouchableOpacity
+                                onPress={() => setShowDatePicker(!showDatePicker)}
+                                className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-14"
+                            >
+                                <Calendar size={20} color={colors.text} className="opacity-50" />
+                                <Text className="flex-1 ml-3 text-gray-700">
+                                    {formatDate(formData.date)}
                                 </Text>
-                                <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
-                                    <User2 size={20} color={colors.text} className="opacity-50" />
-                                    <TextInput
-                                        value={formData.doctorName}
-                                        onChangeText={(text) =>
-                                            setFormData((prev) => ({ ...prev, doctorName: text }))
-                                        }
-                                        placeholder="Nom du médecin"
-                                        placeholderTextColor="#9CA3AF"
-                                        className="flex-1 ml-3"
+                            </TouchableOpacity>
+                            {showDatePicker && (
+                                <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
+                                    <RNCalendar
+                                        onDayPress={(day) => {
+                                            setFormData(prev => ({ ...prev, date: day.dateString }));
+                                            setShowDatePicker(false);
+                                        }}
+                                        markedDates={{
+                                            [formData.date]: { selected: true, selectedColor: colors.primary }
+                                        }}
+                                        theme={{
+                                            backgroundColor: '#ffffff',
+                                            calendarBackground: '#ffffff',
+                                            textSectionTitleColor: colors.text,
+                                            selectedDayBackgroundColor: colors.primary,
+                                            selectedDayTextColor: '#ffffff',
+                                            todayTextColor: colors.primary,
+                                            dayTextColor: colors.text,
+                                            textDisabledColor: '#d9e1e8',
+                                            dotColor: colors.primary,
+                                            selectedDotColor: '#ffffff',
+                                            arrowColor: colors.text,
+                                            monthTextColor: colors.text,
+                                            indicatorColor: 'blue',
+                                            textDayFontFamily: 'System',
+                                            textMonthFontFamily: 'System',
+                                            textDayHeaderFontFamily: 'System',
+                                            textDayFontWeight: '300',
+                                            textMonthFontWeight: 'bold',
+                                            textDayHeaderFontWeight: '300',
+                                            textDayFontSize: 16,
+                                            textMonthFontSize: 16,
+                                            textDayHeaderFontSize: 16
+                                        }}
                                     />
                                 </View>
-                            </View>
+                            )}
+                        </View>
 
-                            {/* Specialty Selector */}
-                            <View>
-                                <Text className="text-sm font-medium text-gray-700 mb-1">
-                                    Spécialité
-                                </Text>
-                                <View className="relative">
-                                    <TouchableOpacity
-                                        ref={specialtyInputRef}
-                                        onPress={() => setShowSpecialtyPicker(!showSpecialtyPicker)}
-                                        className="relative flex-row items-center justify-between bg-white rounded-xl border border-gray-200 px-4 h-12"
-                                    >
-                                        <View className="flex-row items-center flex-1">
-                                            <Stethoscope size={20} color={colors.text} className="opacity-50" />
-                                            {selectedSpecialty ? (
-                                                <View style={{ backgroundColor: selectedSpecialty.hexColor }} className="px-3 py-1 rounded-full ml-3">
-                                                    <Text className="text-white font-medium">{selectedSpecialty.name}</Text>
-                                                </View>
-                                            ) : (
-                                                <TextInput
-                                                    value={specialtySearch}
-                                                    onChangeText={(text) => {
-                                                        setSpecialtySearch(text);
-                                                        setShowSpecialtyPicker(true);
-                                                    }}
-                                                    placeholder="Rechercher une spécialité"
-                                                    placeholderTextColor="#9CA3AF"
-                                                    className="flex-1 ml-3"
-                                                />
-                                            )}
-                                        </View>
-                                        <ChevronDown size={20} color={colors.text} className="opacity-50" />
-                                    </TouchableOpacity>
-                                    {showSpecialtyPicker && renderSpecialtyPicker()}
+                        {/* Address Input */}
+                        <View>
+                            <Text className="text-md font-medium text-gray-700 mb-1">
+                                Lieu de réalisation
+                            </Text>
+                            <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-14">
+                                <MapPin size={20} color={colors.text} className="opacity-50" />
+                                <TextInput
+                                    value={formData.adress}
+                                    onChangeText={(text) =>
+                                        setFormData((prev) => ({ ...prev, adress: text }))
+                                    }
+                                    placeholder="Adresse"
+                                    placeholderTextColor="#9CA3AF"
+                                    className="flex-1 ml-3 text-md font-semibold"
+                                />
+                            </View>
+                        </View>
+
+                        {/* City Input */}
+                        <View>
+                            <Text className="text-md font-medium text-gray-700 mb-1">
+                                Ville
+                            </Text>
+                            <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-14">
+                                <Building2 size={20} color={colors.text} className="opacity-50" />
+                                <TextInput
+                                    value={formData.city}
+                                    onChangeText={(text) =>
+                                        setFormData((prev) => ({ ...prev, city: text }))
+                                    }
+                                    placeholder="Ville"
+                                    placeholderTextColor="#9CA3AF"
+                                    className="flex-1 ml-3 text-md font-semibold"
+                                />
+                            </View>
+                        </View>
+
+                        {/* Reminder Section */}
+                        <View>
+                            <Text className="text-md font-medium text-gray-700 mb-1">
+                                Rappel pour la prochaine consultation
+                            </Text>
+                            <View className="bg-white rounded-xl border border-gray-200 p-4">
+                                <View className="flex-row items-center justify-between mb-4">
+                                    <Text className="text-gray-700">Activer le rappel</Text>
+                                    <Switch
+                                        value={formData.reminder}
+                                        onValueChange={(value) =>
+                                            setFormData((prev) => ({ ...prev, reminder: value }))
+                                        }
+                                    />
                                 </View>
-                            </View>
-
-                            {/* Date Input */}
-                            <View>
-                                <Text className="text-sm font-medium text-gray-700 mb-1">
-                                    Date de réalisation
-                                </Text>
-                                <TouchableOpacity
-                                    onPress={() => setShowDatePicker(!showDatePicker)}
-                                    className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12"
-                                >
-                                    <Calendar size={20} color={colors.text} className="opacity-50" />
-                                    <Text className="flex-1 ml-3 text-gray-700">
-                                        {formatDate(formData.date)}
-                                    </Text>
-                                </TouchableOpacity>
-                                {showDatePicker && (
+                                {formData.reminder && (
+                                    <TouchableOpacity
+                                        onPress={() => setShowNextAppointmentPicker(!showNextAppointmentPicker)}
+                                        className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12"
+                                    >
+                                        <Calendar size={20} color={colors.text} className="opacity-50" />
+                                        <Text className="flex-1 ml-3 text-gray-700">
+                                            {formatDate(formData.nextAppointment) || "Date du prochain rendez-vous"}
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
+                                {showNextAppointmentPicker && (
                                     <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
                                         <RNCalendar
                                             onDayPress={(day) => {
-                                                setFormData(prev => ({ ...prev, date: day.dateString }));
-                                                setShowDatePicker(false);
+                                                setFormData(prev => ({ ...prev, nextAppointment: day.dateString }));
+                                                setShowNextAppointmentPicker(false);
                                             }}
                                             markedDates={{
-                                                [formData.date]: { selected: true, selectedColor: colors.primary }
+                                                [formData.nextAppointment]: { selected: true, selectedColor: colors.primary }
                                             }}
                                             theme={{
                                                 backgroundColor: '#ffffff',
@@ -489,249 +640,178 @@ export default function AddConsultation() {
                                     </View>
                                 )}
                             </View>
+                        </View>
 
-                            {/* Address Input */}
-                            <View>
-                                <Text className="text-sm font-medium text-gray-700 mb-1">
-                                    Lieu de réalisation
-                                </Text>
-                                <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
-                                    <MapPin size={20} color={colors.text} className="opacity-50" />
-                                    <TextInput
-                                        value={formData.adress}
-                                        onChangeText={(text) =>
-                                            setFormData((prev) => ({ ...prev, adress: text }))
-                                        }
-                                        placeholder="Adresse"
-                                        placeholderTextColor="#9CA3AF"
-                                        className="flex-1 ml-3"
-                                    />
-                                </View>
-                            </View>
-
-                            {/* City Input */}
-                            <View>
-                                <Text className="text-sm font-medium text-gray-700 mb-1">
-                                    Ville
-                                </Text>
-                                <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
-                                    <Building2 size={20} color={colors.text} className="opacity-50" />
-                                    <TextInput
-                                        value={formData.city}
-                                        onChangeText={(text) =>
-                                            setFormData((prev) => ({ ...prev, city: text }))
-                                        }
-                                        placeholder="Ville"
-                                        placeholderTextColor="#9CA3AF"
-                                        className="flex-1 ml-3"
-                                    />
-                                </View>
-                            </View>
-
-                            {/* Reminder Section */}
-                            <View>
-                                <Text className="text-sm font-medium text-gray-700 mb-1">
-                                    Rappel pour la prochaine consultation
-                                </Text>
-                                <View className="bg-white rounded-xl border border-gray-200 p-4">
-                                    <View className="flex-row items-center justify-between mb-4">
-                                        <Text className="text-gray-700">Activer le rappel</Text>
-                                        <Switch
-                                            value={formData.reminder}
-                                            onValueChange={(value) =>
-                                                setFormData((prev) => ({ ...prev, reminder: value }))
-                                            }
-                                        />
-                                    </View>
-                                    {formData.reminder && (
-                                        <TouchableOpacity
-                                            onPress={() => setShowNextAppointmentPicker(!showNextAppointmentPicker)}
-                                            className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12"
-                                        >
-                                            <Calendar size={20} color={colors.text} className="opacity-50" />
-                                            <Text className="flex-1 ml-3 text-gray-700">
-                                                {formatDate(formData.nextAppointment) || "Date du prochain rendez-vous"}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    )}
-                                    {showNextAppointmentPicker && (
-                                        <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
-                                            <RNCalendar
-                                                onDayPress={(day) => {
-                                                    setFormData(prev => ({ ...prev, nextAppointment: day.dateString }));
-                                                    setShowNextAppointmentPicker(false);
-                                                }}
-                                                markedDates={{
-                                                    [formData.nextAppointment]: { selected: true, selectedColor: colors.primary }
-                                                }}
-                                                theme={{
-                                                    backgroundColor: '#ffffff',
-                                                    calendarBackground: '#ffffff',
-                                                    textSectionTitleColor: colors.text,
-                                                    selectedDayBackgroundColor: colors.primary,
-                                                    selectedDayTextColor: '#ffffff',
-                                                    todayTextColor: colors.primary,
-                                                    dayTextColor: colors.text,
-                                                    textDisabledColor: '#d9e1e8',
-                                                    dotColor: colors.primary,
-                                                    selectedDotColor: '#ffffff',
-                                                    arrowColor: colors.text,
-                                                    monthTextColor: colors.text,
-                                                    indicatorColor: 'blue',
-                                                    textDayFontFamily: 'System',
-                                                    textMonthFontFamily: 'System',
-                                                    textDayHeaderFontFamily: 'System',
-                                                    textDayFontWeight: '300',
-                                                    textMonthFontWeight: 'bold',
-                                                    textDayHeaderFontWeight: '300',
-                                                    textDayFontSize: 16,
-                                                    textMonthFontSize: 16,
-                                                    textDayHeaderFontSize: 16
-                                                }}
-                                            />
+                        {/* File Upload Section */}
+                        <View>
+                            <Text className="text-md font-medium text-gray-700 mb-1">
+                                Documents
+                            </Text>
+                            <View className="bg-white rounded-xl border border-gray-200 p-4">
+                                <View className="flex-row justify-around mb-4">
+                                    <TouchableOpacity onPress={pickImage} className="items-center">
+                                        <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
+                                            <ImageIcon size={24} color={colors.primary} />
                                         </View>
-                                    )}
-                                </View>
-                            </View>
-
-                            {/* Notes Input with Audio Recording */}
-                            <View>
-                                <Text className="text-sm font-medium text-gray-700 mb-1">Notes</Text>
-                                <View className="bg-white rounded-xl border border-gray-200 p-4">
-                                    <TextInput
-                                        value={formData.notes}
-                                        onChangeText={(text) => setFormData(prev => ({ ...prev, notes: text }))}
-                                        placeholder="Ajouter des notes..."
-                                        placeholderTextColor="#9CA3AF"
-                                        multiline
-                                        numberOfLines={4}
-                                        className="min-h-[100] mb-4"
-                                        textAlignVertical="top"
-                                    />
-
-                                    {/* Audio Notes List */}
-                                    {audioNotes.length > 0 && (
-                                        <View className="mb-4">
-                                            {audioNotes.map((audio) => (
-                                                <View key={audio.id} className="flex-row items-center justify-between py-2 border-b border-gray-100">
-                                                    <TouchableOpacity
-                                                        onPress={() => playPauseAudio(audio.id)}
-                                                        className="flex-row items-center flex-1"
-                                                    >
-                                                        <View className="w-8 h-8 rounded-full bg-indigo-100 items-center justify-center mr-3">
-                                                            {selectedAudioId === audio.id ? (
-                                                                <Pause size={16} color={colors.primary} />
-                                                            ) : (
-                                                                <Play size={16} color={colors.primary} />
-                                                            )}
-                                                        </View>
-                                                        <View className="flex-1">
-                                                            <Text className="text-sm text-gray-600">
-                                                                Note audio {audioNotes.indexOf(audio) + 1}
-                                                            </Text>
-                                                            <Text className="text-xs text-gray-400">
-                                                                {selectedAudioId === audio.id
-                                                                    ? `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`
-                                                                    : formatTime(audio.duration)}
-                                                            </Text>
-                                                        </View>
-                                                    </TouchableOpacity>
-
-                                                    <TouchableOpacity
-                                                        onPress={() => setShowOptionsFor(showOptionsFor === audio.id ? null : audio.id)}
-                                                        className="p-2"
-                                                    >
-                                                        <MoreVertical size={20} color={colors.text} />
-                                                    </TouchableOpacity>
-
-                                                    {showOptionsFor === audio.id && (
-                                                        <TouchableOpacity
-                                                            onPress={() => deleteAudio(audio.id)}
-                                                            className="absolute right-10 top-2 bg-white shadow-lg rounded-lg p-2"
-                                                        >
-                                                            <View className="flex-row items-center">
-                                                                <Trash size={16} color="red" />
-                                                                <Text className="ml-2 text-red-500">Supprimer</Text>
-                                                            </View>
-                                                        </TouchableOpacity>
-                                                    )}
-                                                </View>
-                                            ))}
-                                        </View>
-                                    )}
-
-                                    {/* Recording Button */}
-                                    <TouchableOpacity
-                                        onPress={isRecording ? stopRecording : startRecording}
-                                        className="flex-row items-center"
-                                    >
-                                        <View className={`w-10 h-10 rounded-full ${isRecording ? 'bg-red-500' : 'bg-gray-100'} items-center justify-center mr-2`}>
-                                            <Mic size={20} color={isRecording ? 'white' : colors.primary} />
-                                        </View>
-                                        <Text className="text-sm text-gray-600">
-                                            {isRecording ? 'Arrêter l\'enregistrement' : 'Enregistrer une note audio'}
-                                        </Text>
+                                        <Text className="text-md text-gray-600">Galerie</Text>
                                     </TouchableOpacity>
-                                </View>
-                            </View>
 
-                            {/* File Upload Section */}
-                            <View>
-                                <Text className="text-sm font-medium text-gray-700 mb-1">
-                                    Documents
-                                </Text>
-                                <View className="bg-white rounded-xl border border-gray-200 p-4">
+                                    <TouchableOpacity
+                                        onPress={takePicture}
+                                        className="items-center"
+                                    >
+                                        <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
+                                            <Upload size={24} color={colors.primary} />
+                                        </View>
+                                        <Text className="text-md text-gray-600">Camera</Text>
+                                    </TouchableOpacity>
+
                                     <TouchableOpacity
                                         onPress={pickDocument}
-                                        className="flex-row items-center justify-center py-4 border-2 border-dashed border-gray-300 rounded-lg"
+                                        className="items-center"
                                     >
-                                        <FileUp size={20} color={colors.text} className="opacity-50" />
-                                        <Text className="ml-2 text-sm text-gray-600">
-                                            Ajouter un document
-                                        </Text>
+                                        <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
+                                            <FileText size={24} color={colors.primary} />
+                                        </View>
+                                        <Text className="text-md text-gray-600">Document</Text>
                                     </TouchableOpacity>
+                                </View>
 
-                                    {formData.files.length > 0 && (
-                                        <View className="mt-4 space-y-2">
-                                            {formData.files.map((file, index) => (
-                                                <View key={index} className="flex-row items-center justify-between bg-gray-50 rounded-lg p-3">
-                                                    <View className="flex-row items-center flex-1">
-                                                        <FileText size={20} color={colors.text} />
-                                                        <Text className="ml-2 text-sm text-gray-600 flex-1" numberOfLines={1}>
+                                {formData.files.length > 0 && (
+                                    <ScrollView
+                                        horizontal
+                                        showsHorizontalScrollIndicator={false}
+                                        className="flex-row gap-2"
+                                    >
+                                        {formData.files.map((file, index) => (
+                                            <View key={index} className="relative">
+                                                {file.type === "image" ? (
+                                                    <Image
+                                                        source={{ uri: file.uri }}
+                                                        className="w-20 h-20 rounded-lg"
+                                                    />
+                                                ) : (
+                                                    <View className="w-20 h-20 bg-gray-200 rounded-lg items-center justify-center">
+                                                        <FileText size={24} color={colors.primary} />
+                                                        <Text
+                                                            className="text-xs text-gray-600 mt-1"
+                                                            numberOfLines={1}
+                                                        >
                                                             {file.name}
                                                         </Text>
                                                     </View>
-                                                    <TouchableOpacity
-                                                        onPress={() => deleteFile(index)}
-                                                        className="ml-2"
-                                                    >
-                                                        <X size={20} color="red" />
-                                                    </TouchableOpacity>
-                                                </View>
-                                            ))}
-                                        </View>
-                                    )}
-                                </View>
+                                                )}
+                                                <TouchableOpacity
+                                                    onPress={() => deleteFile(index)}
+                                                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full items-center justify-center"
+                                                    hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                                                >
+                                                    <X size={12} color="white" />
+                                                </TouchableOpacity>
+                                            </View>
+                                        ))}
+                                    </ScrollView>
+                                )}
                             </View>
-                            <View className="p-6 bg-white border-t border-gray-200">
+                        </View>
+
+                        {/* Notes Input with Audio Recording */}
+                        <View>
+                            <Text className="text-md font-medium text-gray-700 mb-1">Notes</Text>
+                            <View className="bg-white rounded-xl border border-gray-200 p-4">
+                                <TextInput
+                                    value={formData.notes}
+                                    onChangeText={(text) => setFormData(prev => ({ ...prev, notes: text }))}
+                                    placeholder="Ajouter des notes..."
+                                    placeholderTextColor="#9CA3AF"
+                                    multiline
+                                    numberOfLines={4}
+                                    className="min-h-[100] mb-4 text-md font-semibold"
+                                    textAlignVertical="top"
+                                />
+
+                                {/* Audio Notes List */}
+                                {audioNotes.length > 0 && (
+                                    <View className="mb-4">
+                                        {audioNotes.map((audio) => (
+                                            <View key={audio.id} className="flex-row items-center justify-between py-2 border-b border-gray-100">
+                                                <TouchableOpacity
+                                                    onPress={() => playPauseAudio(audio.id)}
+                                                    className="flex-row items-center flex-1"
+                                                >
+                                                    <View className="w-8 h-8 rounded-full bg-indigo-100 items-center justify-center mr-3">
+                                                        {selectedAudioId === audio.id ? (
+                                                            <Pause size={16} color={colors.primary} />
+                                                        ) : (
+                                                            <Play size={16} color={colors.primary} />
+                                                        )}
+                                                    </View>
+                                                    <View className="flex-1">
+                                                        <Text className="text-md text-gray-600">
+                                                            Note audio {audioNotes.indexOf(audio) + 1}
+                                                        </Text>
+                                                        <Text className="text-xs text-gray-400">
+                                                            {selectedAudioId === audio.id
+                                                                ? `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`
+                                                                : formatTime(audio.duration)}
+                                                        </Text>
+                                                    </View>
+                                                </TouchableOpacity>
+
+                                                <TouchableOpacity
+                                                    onPress={() => setShowOptionsFor(showOptionsFor === audio.id ? null : audio.id)}
+                                                    className="p-2"
+                                                >
+                                                    <MoreVertical size={20} color={colors.text} />
+                                                </TouchableOpacity>
+
+                                                {showOptionsFor === audio.id && (
+                                                    <TouchableOpacity
+                                                        onPress={() => deleteAudio(audio.id)}
+                                                        className="absolute right-10 top-2 bg-white shadow-lg rounded-lg p-2"
+                                                    >
+                                                        <View className="flex-row items-center">
+                                                            <Trash size={16} color="red" />
+                                                            <Text className="ml-2 text-red-500">Supprimer</Text>
+                                                        </View>
+                                                    </TouchableOpacity>
+                                                )}
+                                            </View>
+                                        ))}
+                                    </View>
+                                )}
+
+                                {/* Recording Button */}
                                 <TouchableOpacity
-                                    onPress={handleSubmit}
-                                    disabled={isLoading}
-                                    className={`w-full rounded-xl py-3 items-center ${
-                                        isLoading ? "bg-indigo-400" : "bg-indigo-600"
-                                    }`}
+                                    onPress={isRecording ? stopRecording : startRecording}
+                                    className="flex-row items-center"
                                 >
-                                    <Text className="text-white font-semibold text-lg">
-                                        {isLoading ? "Chargement..." : "Enregistrer"}
+                                    <View className={`w-10 h-10 rounded-full ${isRecording ? 'bg-red-500' : 'bg-gray-100'} items-center justify-center mr-2`}>
+                                        <Mic size={20} color={isRecording ? 'white' : colors.primary} />
+                                    </View>
+                                    <Text className="text-md text-gray-600">
+                                        {isRecording ? 'Arrêter l\'enregistrement' : 'Enregistrer une note audio'}
                                     </Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
-                    )}
-                    keyExtractor={() => 'form'}
-                />
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
+            <View className="p-6 bg-white border-t border-gray-200">
+                <TouchableOpacity
+                    onPress={handleSubmit}
+                    disabled={isLoading}
+                    className={`w-full rounded-xl py-3 items-center ${
+                        isLoading ? "bg-indigo-400" : "bg-indigo-600"
+                    }`}
+                >
+                    <Text className="text-white font-semibold text-xl">
+                        {isLoading ? "Chargement..." : "Enregistrer"}
+                    </Text>
+                </TouchableOpacity>
             </View>
-        </TouchableWithoutFeedback>
+        </View>
     );
 }
 

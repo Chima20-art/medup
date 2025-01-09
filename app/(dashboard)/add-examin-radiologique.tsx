@@ -319,7 +319,7 @@ export default function MergedExamensRadiologiques() {
     };
 
     return (
-        <View className="flex-1 bg-gray-50 pt-8">
+        <View className="flex-1 bg-gray-50 pt-4">
             <View className="px-6 pt-14 pb-2 bg-white">
                 <View className="flex-row items-start">
                     <TouchableOpacity

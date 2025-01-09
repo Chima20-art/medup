@@ -11,7 +11,7 @@ export default function DashboardLayout() {
   const pathname = usePathname();
 
   // Check if the current route is the add page
-  const isAddPage = pathname === "/add-examin-radiologique";
+  const isAddPage = pathname === "/add-examin-radiologique" || pathname === "/add-examin-biologique" || pathname === "/add-consultation" || pathname === "/add-medicament";
 
   useEffect(() => {
     const getUser = async () => {
