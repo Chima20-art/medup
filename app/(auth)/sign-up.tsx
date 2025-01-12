@@ -67,19 +67,24 @@ export default function SignUpScreen() {
 
     if (error) {
       console.error("Error resending verification email:", error);
-      Alert.alert("Error", "Failed to resend verification email. Please try again.");
+      Alert.alert(
+        "Error",
+        "Failed to resend verification email. Please try again."
+      );
     } else {
-      Alert.alert("Success", "Verification email has been resent. Please check your inbox.");
+      Alert.alert(
+        "Success",
+        "Verification email has been resent. Please check your inbox."
+      );
     }
   };
-
 
   const onSignUpPress = async () => {
     const {
       data: { user },
       error,
     } = await supabase.auth.getUser();
-    router.push('/dashboard')
+    router.push("/dashboard");
     console.log("user", user);
     console.log("error", error);
   };
@@ -96,11 +101,11 @@ export default function SignUpScreen() {
           displayName: firstName,
           dateOfBirth: dateOfBirth,
           age: dateOfBirth
-              ? Math.floor(
-                  (new Date().getTime() - new Date(dateOfBirth).getTime()) /
+            ? Math.floor(
+                (new Date().getTime() - new Date(dateOfBirth).getTime()) /
                   (1000 * 60 * 60 * 24 * 365.25)
               )
-              : null,
+            : null,
           phone: "+212" + phoneNumber,
         },
       },
@@ -114,69 +119,69 @@ export default function SignUpScreen() {
     switch (step) {
       case 1:
         return (
-            <NameStep
-                name={firstName}
-                onNameChange={setFirstName}
-                onContinue={() => setStep(2)}
-                currentStep={step}
-                totalSteps={totalSteps}
-            />
+          <NameStep
+            name={firstName}
+            onNameChange={setFirstName}
+            onContinue={() => setStep(2)}
+            currentStep={step}
+            totalSteps={totalSteps}
+          />
         );
       case 2:
         return (
-            <EmailStep
-                emailAddress={emailAddress}
-                onEmailChange={setEmailAddress}
-                onContinue={onEmailSubmit}
-                currentStep={step}
-                totalSteps={totalSteps}
-            />
+          <EmailStep
+            emailAddress={emailAddress}
+            onEmailChange={setEmailAddress}
+            onContinue={onEmailSubmit}
+            currentStep={step}
+            totalSteps={totalSteps}
+          />
         );
       case 3:
         return (
-            <PasswordStep
-                password={password}
-                onPasswordChange={setPassword}
-                onContinue={() => setStep(4)}
-                currentStep={step}
-                totalSteps={totalSteps}
-            />
+          <PasswordStep
+            password={password}
+            onPasswordChange={setPassword}
+            onContinue={() => setStep(4)}
+            currentStep={step}
+            totalSteps={totalSteps}
+          />
         );
       case 4:
         return (
-            <PhoneStep
-                phoneNumber={phoneNumber}
-                onPhoneChange={setPhoneNumber}
-                onContinue={() => setStep(5)}
-                currentStep={step}
-                totalSteps={totalSteps}
-            />
+          <PhoneStep
+            phoneNumber={phoneNumber}
+            onPhoneChange={setPhoneNumber}
+            onContinue={() => setStep(5)}
+            currentStep={step}
+            totalSteps={totalSteps}
+          />
         );
       case 5:
         return (
-            <DateOfBirthStep
-                onContinue={(date: Date) => {
-                  setDateOfBirth(date);
-                  console.log("onSignUpPress");
-                  signUserUp();
-                  setStep(6);
-                }}
-                currentStep={step}
-                totalSteps={totalSteps}
-            />
+          <DateOfBirthStep
+            onContinue={(date: Date) => {
+              setDateOfBirth(date);
+              console.log("onSignUpPress");
+              signUserUp();
+              setStep(6);
+            }}
+            currentStep={step}
+            totalSteps={totalSteps}
+          />
         );
       case 6:
         return (
-            <VerificationStep
-                code={"123456"}
-                onCodeChange={setCode}
-                onVerify={onPressVerify}
-                isVerifying={isVerifying}
-                resendCode={resendVerificationCode}
-                verifingError={verifingError}
-                currentStep={step}
-                totalSteps={totalSteps}
-            />
+          <VerificationStep
+            code={"123456"}
+            onCodeChange={setCode}
+            onVerify={onPressVerify}
+            isVerifying={isVerifying}
+            resendCode={resendVerificationCode}
+            verifingError={verifingError}
+            currentStep={step}
+            totalSteps={totalSteps}
+          />
         );
       case 7:
         return <ConfirmationStep onContinue={onSignUpPress} />;
@@ -184,30 +189,30 @@ export default function SignUpScreen() {
   };
 
   return (
-      <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          className="flex-1"
-          style={{ backgroundColor: colors.background }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
+    >
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          padding: 20,
+        }}
       >
-        <ScrollView
-            contentContainerStyle={{
-              flexGrow: 1,
-              justifyContent: "center",
-              padding: 20,
-            }}
-        >
-          {step > 1 && step < 7 && (
-              <TouchableOpacity
-                  className="absolute top-20 left-5 z-10"
-                  onPress={() => setStep(step - 1)}
-              >
-                <ChevronLeft size={34} color={colors.primary} />
-              </TouchableOpacity>
-          )}
+        {step > 1 && step < 7 && (
+          <TouchableOpacity
+            className="absolute top-20 left-5 z-10"
+            onPress={() => setStep(step - 1)}
+          >
+            <ChevronLeft size={34} color={colors.primary} />
+          </TouchableOpacity>
+        )}
 
-          {renderStepContent()}
+        {renderStepContent()}
 
-          {step !== 3 && step !== 7 && (
+        {/* {step !== 3 && step !== 7 && (
               <View className="flex-row justify-center mt-5 mb-10">
                 <Text style={{ color: colors.text }}>Déjà un compte ?</Text>
                 <Link href="/sign-in" asChild>
@@ -221,9 +226,8 @@ export default function SignUpScreen() {
                   </TouchableOpacity>
                 </Link>
               </View>
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
+          )} */}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
-

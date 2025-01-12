@@ -1,6 +1,7 @@
-'use client';
+"use client";
 
-import React, {useEffect, useMemo, useRef, useState} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { use$ } from "@legendapp/state/react";
 import {
   View,
   Text,
@@ -22,10 +23,11 @@ import ConsultationCategory from "@/assets/images/consultationsCategory.svg";
 import QuickAccess from "@/assets/images/QuickAcess.svg";
 import { supabase } from "@/utils/supabase";
 import { AvatarSelectionModal } from "@/components/avatar-selection-modal";
-import { avatars, DefaultAvatar, type AvatarType } from '@/constants/avatars';
+import { avatars, DefaultAvatar, type AvatarType } from "@/constants/avatars";
+import { notificationStore$ } from "@/store/notification";
 
 // Constants
-const SCREEN_WIDTH = Dimensions.get('window').width;
+const SCREEN_WIDTH = Dimensions.get("window").width;
 
 // Styles
 const categoryCardStyle = {
@@ -81,6 +83,11 @@ export default function Dashboard() {
   const { colors } = useTheme();
   const router = useRouter();
 
+  const unreadNotificationsNumber =
+    use$(() => notificationStore$.unreadNotificationsNumber.get()) ?? 0;
+
+  console.log("unreadNotificationsNumber", unreadNotificationsNumber);
+
   // State
   const [username, setUsername] = useState<string>("Guest");
   const [isAvatarModalVisible, setIsAvatarModalVisible] = useState(false);
@@ -109,24 +116,23 @@ export default function Dashboard() {
   //     color: 'bg-primary-500'},
   // ]
 
-
   const shimmerAnimation = useRef(new Animated.Value(0)).current;
 
   // Add shimmer animation effect
   useEffect(() => {
     const shimmer = Animated.loop(
-        Animated.sequence([
-          Animated.timing(shimmerAnimation, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(shimmerAnimation, {
-            toValue: 0,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-        ])
+      Animated.sequence([
+        Animated.timing(shimmerAnimation, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shimmerAnimation, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
     );
 
     if (isLoading) {
@@ -139,70 +145,73 @@ export default function Dashboard() {
   }, [isLoading, shimmerAnimation]);
 
   const renderSkeletonCard = () => (
-      <View className="w-64 bg-white rounded-3xl p-4 mr-4" style={categoryCardStyle}>
-        <View className="flex-row items-center justify-between mb-10">
-          <View className="flex flex-row items-start gap-x-3">
+    <View
+      className="w-64 bg-white rounded-3xl p-4 mr-4"
+      style={categoryCardStyle}
+    >
+      <View className="flex-row items-center justify-between mb-10">
+        <View className="flex flex-row items-start gap-x-3">
+          <Animated.View
+            className="w-10 h-10 rounded-full bg-gray-200"
+            style={{
+              opacity: shimmerAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.3, 0.7],
+              }),
+            }}
+          />
+          <View className="flex-1">
             <Animated.View
-                className="w-10 h-10 rounded-full bg-gray-200"
-                style={{
-                  opacity: shimmerAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.3, 0.7],
-                  }),
-                }}
+              className="h-4 w-32 bg-gray-200 rounded mb-2"
+              style={{
+                opacity: shimmerAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.3, 0.7],
+                }),
+              }}
             />
-            <View className="flex-1">
-              <Animated.View
-                  className="h-4 w-32 bg-gray-200 rounded mb-2"
-                  style={{
-                    opacity: shimmerAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.3, 0.7],
-                    }),
-                  }}
-              />
-              <Animated.View
-                  className="h-3 w-24 bg-gray-200 rounded mb-2"
-                  style={{
-                    opacity: shimmerAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.3, 0.7],
-                    }),
-                  }}
-              />
-              <Animated.View
-                  className="h-3 w-16 bg-gray-200 rounded"
-                  style={{
-                    opacity: shimmerAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.3, 0.7],
-                    }),
-                  }}
-              />
-            </View>
+            <Animated.View
+              className="h-3 w-24 bg-gray-200 rounded mb-2"
+              style={{
+                opacity: shimmerAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.3, 0.7],
+                }),
+              }}
+            />
+            <Animated.View
+              className="h-3 w-16 bg-gray-200 rounded"
+              style={{
+                opacity: shimmerAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.3, 0.7],
+                }),
+              }}
+            />
           </View>
         </View>
-        <View className="flex flex-row items-center justify-between">
-          <Animated.View
-              className="h-3 w-20 bg-gray-200 rounded"
-              style={{
-                opacity: shimmerAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.3, 0.7],
-                }),
-              }}
-          />
-          <Animated.View
-              className="h-3 w-20 bg-gray-200 rounded"
-              style={{
-                opacity: shimmerAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.3, 0.7],
-                }),
-              }}
-          />
-        </View>
       </View>
+      <View className="flex flex-row items-center justify-between">
+        <Animated.View
+          className="h-3 w-20 bg-gray-200 rounded"
+          style={{
+            opacity: shimmerAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.3, 0.7],
+            }),
+          }}
+        />
+        <Animated.View
+          className="h-3 w-20 bg-gray-200 rounded"
+          style={{
+            opacity: shimmerAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.3, 0.7],
+            }),
+          }}
+        />
+      </View>
+    </View>
   );
 
   // Effects
@@ -213,7 +222,10 @@ export default function Dashboard() {
   // Handlers
   const fetchUserData = async () => {
     try {
-      const { data: { user }, error } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
       if (error) throw error;
 
       if (user) {
@@ -221,7 +233,7 @@ export default function Dashboard() {
         if (user.user_metadata?.displayName) {
           setUsername(user.user_metadata.displayName);
         } else if (user.email) {
-          setUsername(user.email.split('@')[0]);
+          setUsername(user.email.split("@")[0]);
         }
 
         // Set avatar
@@ -230,26 +242,29 @@ export default function Dashboard() {
         }
       }
     } catch (error) {
-      console.error('Error fetching user data:', error);
-      Alert.alert('Error', 'Failed to load user data');
+      console.error("Error fetching user data:", error);
+      Alert.alert("Error", "Failed to load user data");
     }
   };
 
   const handleAvatarSelect = async (avatarId: number) => {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
       if (userError) throw userError;
 
       const { error: updateError } = await supabase.auth.updateUser({
-        data: { avatarId }
+        data: { avatarId },
       });
 
       if (updateError) throw updateError;
 
       setCurrentAvatarId(avatarId);
     } catch (error) {
-      console.error('Error updating avatar:', error);
-      Alert.alert('Error', 'Failed to update avatar');
+      console.error("Error updating avatar:", error);
+      Alert.alert("Error", "Failed to update avatar");
     }
   };
 
@@ -261,147 +276,163 @@ export default function Dashboard() {
 
   // Memoized values
   const categoryItems = useMemo(
-      () =>
-          categories.map((category, index) => (
-              <TouchableOpacity
-                  key={index}
-                  className="w-[30%] aspect-square bg-white rounded-3xl p-4 mb-4 items-center justify-between"
-                  style={categoryCardStyle}
-                  onPress={() => router.push(category.route as any)}
-              >
-                <category.image width={120} height={120} />
-                <Text className="text-center text-gray-900 text-sm">
-                  {category.title}
-                </Text>
-              </TouchableOpacity>
-          )),
-      []
+    () =>
+      categories.map((category, index) => (
+        <TouchableOpacity
+          key={index}
+          className="w-[30%] aspect-square bg-white rounded-3xl p-4 mb-4 items-center justify-between"
+          style={categoryCardStyle}
+          onPress={() => router.push(category.route as any)}
+        >
+          <category.image width={120} height={120} />
+          <Text className="text-center text-gray-900 text-sm">
+            {category.title}
+          </Text>
+        </TouchableOpacity>
+      )),
+    []
   );
 
   // Determine which avatar component to use
-  const AvatarComponent: AvatarType = currentAvatarId && avatars[currentAvatarId]
+  const AvatarComponent: AvatarType =
+    currentAvatarId && avatars[currentAvatarId]
       ? avatars[currentAvatarId]
       : DefaultAvatar;
 
   return (
-      <View className="flex-1 bg-gray-50">
-        {/* Header */}
-        <View className="px-6 pt-14 pb-6 bg-white">
-          <View className="flex-row items-center justify-between mb-4">
-            <View className="flex-row items-center space-x-3">
-              <TouchableOpacity
-                  onPress={() => setIsAvatarModalVisible(true)}
-                  className="relative"
-              >
-                <AvatarComponent width={56} height={56} />
-                <View className="absolute -bottom-1 -right-1 bg-white rounded-full p-1">
-                  <Plus size={16} color="#CBCBCB" />
-                </View>
-              </TouchableOpacity>
-              <View>
-                <View className="flex-row items-end ml-2">
-                  <Text className="text-primary-500 text-3xl font-extrabold">Bonjour,</Text>
-                  <Text className="text-primary-500 text-2xl font-bold"> {username}</Text>
-                </View>
+    <View className="flex-1 bg-gray-50">
+      {/* Header */}
+      <View className="px-6 pt-14 pb-6 bg-white">
+        <View className="flex-row items-center justify-between mb-4">
+          <View className="flex-row items-center space-x-3">
+            <TouchableOpacity
+              onPress={() => setIsAvatarModalVisible(true)}
+              className="relative"
+            >
+              <AvatarComponent width={56} height={56} />
+              <View className="absolute -bottom-1 -right-1 bg-white rounded-full p-1">
+                <Plus size={16} color="#CBCBCB" />
+              </View>
+            </TouchableOpacity>
+            <View>
+              <View className="flex-row items-end ml-2">
+                <Text className="text-primary-500 text-3xl font-extrabold">
+                  Bonjour,
+                </Text>
+                <Text className="text-primary-500 text-2xl font-bold">
+                  {" "}
+                  {username}
+                </Text>
               </View>
             </View>
-
-            <TouchableOpacity>
-              <Bell size={24} color={colors.text} />
-            </TouchableOpacity>
           </View>
 
+          <TouchableOpacity onPress={() => router.push("/notifaction")}>
+            <View className="relative">
+              <Bell size={24} color={colors.text} />
+              {unreadNotificationsNumber > 0 && (
+                <View className="absolute -top-2 -right-2 bg-red-500 rounded-full w-5 h-5 items-center justify-center">
+                  <Text className="text-white text-xs font-bold">
+                    {unreadNotificationsNumber}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Main Content */}
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+        }
+      >
+        {/* Medical Planning Section */}
+        <View className="ml-6 py-6">
+          <Text className="text-2xl font-extrabold text-primary-500 mb-4">
+            Mon planning médical ...
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="flex flex-row gap-4"
+          >
+            {appointments.length > 0 ? (
+              appointments.map((appointment) => (
+                <View
+                  key={appointment.id}
+                  className={`w-64 ${appointment.color} rounded-3xl p-4 mr-4`}
+                >
+                  <View className="flex-row items-center justify-between mb-10">
+                    <View className="flex flex-row items-start gap-x-3">
+                      <Image
+                        source={{ uri: "/placeholder.svg?height=40&width=40" }}
+                        className="w-10 h-10 rounded-full bg-white"
+                      />
+                      <View>
+                        <Text className="text-white font-medium">
+                          {appointment.doctorName}
+                        </Text>
+                        <Text className="text-indigo-200">
+                          {appointment.specialty}
+                        </Text>
+                        <View className="flex-row items-center">
+                          <Text className="text-white mr-1">
+                            {appointment.rating}
+                          </Text>
+                          <Star size={16} color="#FCD34D" fill="#FCD34D" />
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                  <View className="flex flex-row items-center gap-x-4 mt-2">
+                    <View className="flex-row items-center gap-x-2">
+                      <Calendar size={16} color="#E0E7FF" className="mr-2" />
+                      <Text className="text-indigo-100">
+                        {appointment.date}
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center gap-x-2">
+                      <Clock size={16} color="#E0E7FF" className="mr-2" />
+                      <Text className="text-indigo-100">
+                        {appointment.time}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <>
+                {[1, 2].map((key) => (
+                  <View key={key}>{renderSkeletonCard()}</View>
+                ))}
+              </>
+            )}
+          </ScrollView>
         </View>
 
-        {/* Main Content */}
-        <ScrollView
-            className="flex-1"
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                  refreshing={isRefreshing}
-                  onRefresh={handleRefresh}
-              />
-            }
-        >
-          {/* Medical Planning Section */}
-          <View className="ml-6 py-6">
-            <Text className="text-2xl font-extrabold text-primary-500 mb-4">
-              Mon planning médical ...
-            </Text>
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                className="flex flex-row gap-4"
-            >
-              {appointments.length > 0 ? (appointments.map((appointment) => (
-                    <View
-                        key={appointment.id}
-                        className={`w-64 ${appointment.color} rounded-3xl p-4 mr-4`}
-                    >
-                      <View className="flex-row items-center justify-between mb-10">
-                        <View className="flex flex-row items-start gap-x-3">
-                          <Image
-                              source={{ uri: "/placeholder.svg?height=40&width=40" }}
-                              className="w-10 h-10 rounded-full bg-white"
-                          />
-                          <View>
-                            <Text className="text-white font-medium">
-                              {appointment.doctorName}
-                            </Text>
-                            <Text className="text-indigo-200">
-                              {appointment.specialty}
-                            </Text>
-                            <View className="flex-row items-center">
-                              <Text className="text-white mr-1">
-                                {appointment.rating}
-                              </Text>
-                              <Star size={16} color="#FCD34D" fill="#FCD34D" />
-                            </View>
-                          </View>
-                        </View>
-                      </View>
-                      <View className="flex flex-row items-center gap-x-4 mt-2">
-                        <View className="flex-row items-center gap-x-2">
-                          <Calendar size={16} color="#E0E7FF" className="mr-2" />
-                          <Text className="text-indigo-100">{appointment.date}</Text>
-                        </View>
-                        <View className="flex-row items-center gap-x-2">
-                          <Clock size={16} color="#E0E7FF" className="mr-2" />
-                          <Text className="text-indigo-100">{appointment.time}</Text>
-                        </View>
-                      </View>
-                    </View>
-                ))) :   <>
-                {[1, 2].map((key) => (
-                    <View key={key}>
-                      {renderSkeletonCard()}
-                    </View>
-                ))}
-              </> }
-
-            </ScrollView>
+        {/* Categories Section */}
+        <View className="px-6 pb-6 h-full">
+          <Text className="text-2xl font-extrabold text-primary-500 mb-4">
+            Categories
+          </Text>
+          <View className="flex-row flex-wrap justify-start gap-x-4">
+            {categoryItems}
           </View>
+        </View>
+      </ScrollView>
 
-          {/* Categories Section */}
-          <View className="px-6 pb-6 h-full">
-            <Text className="text-2xl font-extrabold text-primary-500 mb-4">
-              Categories
-            </Text>
-            <View className="flex-row flex-wrap justify-start gap-x-4">
-              {categoryItems}
-            </View>
-          </View>
-        </ScrollView>
-
-        {/* Avatar Selection Modal */}
-        <AvatarSelectionModal
-            visible={isAvatarModalVisible}
-            onClose={() => setIsAvatarModalVisible(false)}
-            onSelectAvatar={handleAvatarSelect}
-            username={username}
-            currentAvatarId={currentAvatarId ?? 13}
-        />
-      </View>
+      {/* Avatar Selection Modal */}
+      <AvatarSelectionModal
+        visible={isAvatarModalVisible}
+        onClose={() => setIsAvatarModalVisible(false)}
+        onSelectAvatar={handleAvatarSelect}
+        username={username}
+        currentAvatarId={currentAvatarId ?? 13}
+      />
+    </View>
   );
 }

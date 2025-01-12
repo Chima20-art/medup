@@ -102,7 +102,7 @@ export default function ListExaminsRadiologiques() {
                 onPress={() => router.back()}
                 className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
               >
-                <ChevronLeft size={26} color="#4F46E5"/>
+                <ChevronLeft size={26} color="#4F46E5" />
               </TouchableOpacity>
               <View className="flex-col items-center mr-2 flex-1">
                 <Text className="text-primary-500 text-3xl font-extrabold">
@@ -118,19 +118,16 @@ export default function ListExaminsRadiologiques() {
             <View className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12 m-2 mt-4 ml-4">
               <Search size={26} color="#9CA3AF" />
               <TextInput
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  placeholder="Recherche"
-                  className="flex-1 ml-3 text-lg"
-                  placeholderTextColor="#9CA3AF"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Recherche"
+                className="flex-1 ml-3 text-lg"
+                placeholderTextColor="#9CA3AF"
               />
             </View>
           </View>
           <RadioCategory />
-
         </View>
-
-
       </View>
 
       {/* Radiologies List */}
@@ -187,8 +184,10 @@ export default function ListExaminsRadiologiques() {
                   {/*  </Text>*/}
                   {/*</TouchableOpacity>*/}
 
-                  <TouchableOpacity className="px-4 py-2 bg-primary-500 rounded-xl"
-                                    onPress={() => handleExamenPress(radio)}>
+                  <TouchableOpacity
+                    className="px-4 py-2 bg-primary-500 rounded-xl"
+                    onPress={() => handleExamenPress(radio)}
+                  >
                     <Text className="text-xs font-medium text-secondary">
                       {radio?.uploads?.length
                         ? `${radio.uploads.length} fichier(s)`
@@ -201,7 +200,6 @@ export default function ListExaminsRadiologiques() {
           );
         })}
       </ScrollView>
-
 
       {selectedExamen && slideAnim ? (
         <ExamenDetailPopup
