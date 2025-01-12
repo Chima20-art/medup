@@ -10,7 +10,7 @@ import {
     NativeSyntheticEvent,
     NativeScrollEvent,
     StatusBar,
-    TouchableOpacity
+    TouchableOpacity, SafeAreaView
 } from 'react-native'
 import { useState, useRef } from "react"
 import {Bold} from "lucide-react-native";
@@ -61,12 +61,11 @@ export default function Onboarding() {
     const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
         const contentOffsetX = event.nativeEvent.contentOffset.x
         const newIndex = Math.floor(contentOffsetX / SCREEN_WIDTH)
-        if (newIndex >= 0 && newIndex < onboardingData.length) {
-            setCurrentIndex(newIndex)
-        }
-        if (newIndex === onboardingData.length - 1 && contentOffsetX > SCREEN_WIDTH * (onboardingData.length - 1)) {
+
+        if (currentIndex+1 >= 2) {
             router.push('/sign-in') // Replace '/sign-in' with your actual sign-in route
         }
+        setCurrentIndex(currentIndex+1)
     }
 
     const handleDotPress = (index: number) => {
@@ -75,7 +74,7 @@ export default function Onboarding() {
     }
 
     return (
-        <View className="flex-1">
+        <SafeAreaView className="flex-1">
             <StatusBar barStyle="light-content" />
             <ScrollView
                 ref={scrollViewRef}
@@ -142,7 +141,7 @@ export default function Onboarding() {
                     </View>
                 ))}
             </ScrollView>
-        </View>
+        </SafeAreaView>
     )
 }
 

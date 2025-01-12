@@ -42,6 +42,8 @@ import { supabase } from "@/utils/supabase";
 import { Calendar as RNCalendar, LocaleConfig } from 'react-native-calendars';
 import { Audio } from 'expo-av';
 import ConsultationCategory from "@/assets/images/consultationsCategory.svg";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { decode as atob } from "base-64";
 
 // Configure French locale
 LocaleConfig.locales['fr'] = {
@@ -103,6 +105,25 @@ export default function AddConsultation() {
     const [specialtySearch, setSpecialtySearch] = useState("");
 
     const specialtyInputRef = useRef(null);
+    const [showTimePicker, setShowTimePicker] = useState(false);
+
+    const handleTimeConfirm = (time: Date) => {
+        if (formData.nextAppointment) {
+            const [year, month, day] = formData.nextAppointment.split('-');
+            const nextAppointmentDate = new Date(
+                parseInt(year),
+                parseInt(month) - 1,
+                parseInt(day),
+                time.getHours(),
+                time.getMinutes()
+            );
+            setFormData(prev => ({
+                ...prev,
+                nextAppointment: nextAppointmentDate.toISOString(),
+            }));
+        }
+        setShowTimePicker(false);
+    };
 
     useEffect(() => {
         fetchSpecialties();
@@ -293,17 +314,26 @@ export default function AddConsultation() {
 
     const formatDate = (dateString: string) => {
         if (!dateString) return "Sélectionner une date";
-        const [year, month, day] = dateString.split("-");
-        return `${day}-${month}-${year}`;
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                // If it's not an ISO string, try splitting by dash
+                const [year, month, day] = dateString.split("-");
+                return `${day}-${month}-${year}`;
+            }
+            // Format the ISO date
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        } catch {
+            return "Date invalide";
+        }
     };
 
     const handleSubmit = async () => {
         if (!formData.doctorName || !formData.speciality || !formData.date) {
             Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
-            return;
-        }
-        if (!formData.date) {
-            Alert.alert('Erreur', 'La date est obligatoire');
             return;
         }
 
@@ -316,64 +346,127 @@ export default function AddConsultation() {
             const userId = userData?.user?.id;
             if (!userId) throw new Error("No user id found");
 
-            // Upload files and get their paths
-            const filePaths = await Promise.all(formData.files.map(async (file) => {
-                const fileName = `${userId}/${Date.now()}_${file.name}`;
-                const response = await fetch(file.uri);
-                const blob = await response.blob();
-
-                const { error: uploadError } = await supabase.storage
-                    .from("consultations")
-                    .upload(fileName, blob);
-
-                if (uploadError) throw uploadError;
-                return fileName;
-            }));
-
-            // Upload audio notes
-            const audioNotePaths = await Promise.all(audioNotes.map(async (audio) => {
-                const fileName = `${userId}/${Date.now()}_audio.m4a`;
-                const response = await fetch(audio.uri);
-                const blob = await response.blob();
-
-                const { error: uploadError } = await supabase.storage
-                    .from("consultations")
-                    .upload(fileName, blob);
-
-                if (uploadError) throw uploadError;
-                return fileName;
-            }));
-
-            const formattedDate = new Date(formData.date).toISOString();
-            const formattedNextAppointment = formData.nextAppointment
-                ? new Date(formData.nextAppointment).toISOString()
-                : null;
-
-            const { error } = await supabase
+            // First, create the consultation record
+            const { data, error } = await supabase
                 .from("consultations")
                 .insert({
                     doctorName: formData.doctorName,
                     speciality: formData.speciality,
-                    date: formattedDate,
+                    date: new Date(formData.date).toISOString(),
                     adress: formData.adress,
                     city: formData.city,
                     note: formData.notes,
                     reminder: formData.reminder,
-                    nextAppointment: formattedNextAppointment,
-                    uploads: filePaths,
-                    audio_notes: audioNotePaths,
+                    nextAppointment: formData.nextAppointment ? new Date(formData.nextAppointment).toISOString() : null,
                     created_at: new Date().toISOString(),
                     user_id: userId,
-                });
+                })
+                .select();
 
             if (error) throw error;
 
+            // Handle file uploads
+            let supabaseFilePaths = [];
+            for (let file of formData.files) {
+                try {
+                    const fileName = file.uri.split("/").pop();
+                    if (!fileName) {
+                        console.error("Could not generate filename");
+                        continue;
+                    }
+
+                    const filePath = `${userId}/${Date.now()}_${fileName}`;
+                    console.log("Uploading to path:", filePath);
+
+                    const response = await fetch(file.uri);
+                    const blob = await response.blob();
+
+                    const reader = new FileReader();
+                    const base64Promise = new Promise((resolve) => {
+                        reader.onload = () => resolve(reader.result);
+                    });
+                    reader.readAsDataURL(blob);
+
+                    const base64Data = await base64Promise;
+                    const base64String = String(base64Data).split(",")[1];
+
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from("consultations")
+                        .upload(filePath, decode(base64String), {
+                            contentType: blob.type,
+                            upsert: false,
+                        });
+
+                    if (uploadError) {
+                        console.error("Upload error:", uploadError);
+                    } else {
+                        console.log("File uploaded successfully:", uploadData);
+                        supabaseFilePaths.push(uploadData.path);
+                    }
+                } catch (err) {
+                    console.error("Error processing file:", err, "for file:", file.uri);
+                }
+            }
+
+            // Handle audio note uploads
+            const audioFilePaths = [];
+            for (let audio of audioNotes) {
+                try {
+                    let fileExtension = audio.uri.split(".").pop();
+                    let filePath = `${userId}/${Date.now()}_${fileExtension}`;
+                    console.log("Uploading audio to path:", filePath);
+
+                    const response = await fetch(audio.uri);
+                    const blob = await response.blob();
+
+                    const reader = new FileReader();
+                    const base64Promise = new Promise((resolve) => {
+                        reader.onload = () => resolve(reader.result);
+                    });
+                    reader.readAsDataURL(blob);
+
+                    const base64Data = await base64Promise;
+                    const base64String = String(base64Data).split(",")[1];
+
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from("consultations")
+                        .upload(filePath, decode(base64String), {
+                            contentType: blob.type,
+                            upsert: false,
+                        });
+
+                    if (uploadError) {
+                        console.error("Upload error:", uploadError);
+                    } else {
+                        console.log("Audio file uploaded successfully:", uploadData);
+                        audioFilePaths.push(uploadData.path);
+                    }
+                } catch (error) {
+                    console.error("Error processing audio file:", error, "for file:", audio.id);
+                }
+            }
+
+            // Update the consultation record with file paths
+            if (supabaseFilePaths.length > 0 || audioFilePaths.length > 0) {
+                const { error: updateError } = await supabase
+                    .from("consultations")
+                    .update({
+                        uploads: supabaseFilePaths,
+                        audio_notes: audioFilePaths
+                    })
+                    .eq("id", data[0].id);
+
+                if (updateError) {
+                    console.error("Error updating consultation:", updateError);
+                }
+            }
+
+            setIsLoading(false);
             Alert.alert("Succès", "Consultation ajoutée avec succès");
             router.push("/list-consultations");
         } catch (error) {
             console.error("Error:", error);
-            Alert.alert("Erreur", "Échec de l'enregistrement de la consultation. Veuillez réessayer.");
-        } finally {
+            Alert.alert("Erreur", "Échec de l'enregistrement de la consultation");
             setIsLoading(false);
         }
     };
@@ -598,7 +691,7 @@ export default function AddConsultation() {
                                     >
                                         <Calendar size={20} color={colors.text} className="opacity-50" />
                                         <Text className="flex-1 ml-3 text-gray-700">
-                                            {formatDate(formData.nextAppointment) || "Date du prochain rendez-vous"}
+                                            {formData.nextAppointment ? formatDate(formData.nextAppointment) : "Date du prochain rendez-vous"}
                                         </Text>
                                     </TouchableOpacity>
                                 )}
@@ -608,6 +701,7 @@ export default function AddConsultation() {
                                             onDayPress={(day) => {
                                                 setFormData(prev => ({ ...prev, nextAppointment: day.dateString }));
                                                 setShowNextAppointmentPicker(false);
+                                                setShowTimePicker(true)
                                             }}
                                             markedDates={{
                                                 [formData.nextAppointment]: { selected: true, selectedColor: colors.primary }
@@ -638,6 +732,37 @@ export default function AddConsultation() {
                                             }}
                                         />
                                     </View>
+                                )}
+
+                                <DateTimePickerModal
+                                    isVisible={showTimePicker}
+                                    mode="time"
+                                    onConfirm={handleTimeConfirm}
+                                    onCancel={() => setShowTimePicker(false)}
+                                    locale="fr"
+                                    cancelTextIOS="Annuler"
+                                    confirmTextIOS="Confirmer"
+                                    is24Hour={true}
+                                    themeVariant="light"
+                                    accentColor={colors.primary}
+                                    buttonTextColorIOS={colors.primary}
+                                    // Android specific props
+                                    display={Platform.OS === 'android' ? 'default' : undefined}
+                                    textColor={Platform.OS === 'android' ? colors.text : undefined}
+                                    positiveButton={{label: 'Ok', textColor: 'green'}}
+                                    negativeButton={{label: 'Annuler', textColor: 'red'}}
+                                />
+                                {/* Display selected date and time */}
+                                {formData.nextAppointment && (
+                                    <Text className="pl-2 pt-2">
+                                        La prochaine consultation: {new Date(formData.nextAppointment).toLocaleString('fr-FR', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                    </Text>
                                 )}
                             </View>
                         </View>
@@ -806,12 +931,21 @@ export default function AddConsultation() {
                         isLoading ? "bg-indigo-400" : "bg-indigo-600"
                     }`}
                 >
-                    <Text className="text-white font-semibold text-xl">
-                        {isLoading ? "Chargement..." : "Enregistrer"}
+                    <Text className="text-white font-semibold text-xl">                        {isLoading ? "Chargement..." : "Enregistrer"}
                     </Text>
                 </TouchableOpacity>
             </View>
         </View>
     );
+}
+
+function decode(base64String: string) {
+    const byteCharacters = atob(base64String);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    return byteArray;
 }
 

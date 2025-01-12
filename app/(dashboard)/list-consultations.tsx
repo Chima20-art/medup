@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react'
-import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native'
+import React, { useState, useEffect, useRef } from 'react'
+import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView, Animated } from 'react-native'
 import { useRouter } from 'expo-router'
-import { Search, User2, Building2, ChevronLeft, Plus } from 'lucide-react-native'
+import { Search, User2, Building2, ChevronLeft } from 'lucide-react-native'
 import ConsultationCategory from "@/assets/images/consultationsCategory.svg"
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { supabase } from "@/utils/supabase"
+import ConsultationDetailPopup from '@/components/ConsultationDetailPopup'
 
 interface Consultation {
     id: number;
@@ -32,6 +33,8 @@ export default function ListConsultations() {
     const [consultations, setConsultations] = useState<Consultation[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null)
+    const slideAnim = useRef(new Animated.Value(0)).current
 
     const fetchConsultations = async () => {
         try {
@@ -57,6 +60,25 @@ export default function ListConsultations() {
 
     useEffect(() => {
         fetchConsultations()
+
+        const subscription = supabase
+            .channel('consultations_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'consultations',
+                },
+                () => {
+                    fetchConsultations()
+                }
+            )
+            .subscribe()
+
+        return () => {
+            subscription.unsubscribe()
+        }
     }, [searchQuery])
 
     const formatDate = (dateString: string) => {
@@ -66,6 +88,26 @@ export default function ListConsultations() {
             month: date.toLocaleString('default', { month: 'short' }),
             year: date.getFullYear().toString().slice(2),
         }
+    }
+
+    const handleConsultationPress = async (consultation: Consultation) => {
+        setSelectedConsultation(consultation)
+        await new Promise(resolve => setTimeout(resolve, 100))
+        Animated.spring(slideAnim, {
+            toValue: 1,
+            useNativeDriver: true,
+            tension: 50,
+            friction: 7,
+        }).start()
+    }
+
+    const handleClosePopup = () => {
+        Animated.spring(slideAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 50,
+            friction: 7,
+        }).start(() => setSelectedConsultation(null))
     }
 
     if (isLoading) {
@@ -121,14 +163,15 @@ export default function ListConsultations() {
                     <ConsultationCategory />
                 </View>
             </View>
+
             {/* Consultations List */}
-            <ScrollView className="flex-1 px-4  bg-gray-50 pt-4">
+            <ScrollView className="flex-1 px-4 bg-gray-50 pt-4">
                 {consultations.map((consultation) => {
                     const date = formatDate(consultation.date)
                     return (
                         <TouchableOpacity
                             key={consultation.id}
-                            onPress={() => router.push(`/consultation/${consultation.id}`)}
+                            onPress={() => handleConsultationPress(consultation)}
                             className="mb-4 flex-row items-stretch px-2"
                         >
                             <View className="bg-primary-500 w-16 py-4 items-center justify-center rounded-full my-2 mr-2">
@@ -172,11 +215,13 @@ export default function ListConsultations() {
                                 {/* Action Buttons */}
                                 <View className="flex-row gap-x-2 justify-end">
                                     <TouchableOpacity
-                                        className="bg-primary px-4 py-2 rounded-xl"
-                                        onPress={() => router.push(`/consultation/${consultation.id}`)}
+                                        className="px-4 py-2 bg-primary-500 rounded-xl"
+                                        onPress={() => handleConsultationPress(consultation)}
                                     >
-                                        <Text className="text-white text-sm font-medium">
-                                            Détail
+                                        <Text className="text-xs font-medium text-secondary">
+                                            {consultation?.uploads?.length
+                                                ? `${consultation.uploads.length} fichier(s)`
+                                                : "Aucun fichier"}
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
@@ -186,7 +231,13 @@ export default function ListConsultations() {
                 })}
             </ScrollView>
 
-
+            {selectedConsultation && slideAnim ? (
+                <ConsultationDetailPopup
+                    consultation={selectedConsultation}
+                    slideAnim={slideAnim}
+                    onClose={handleClosePopup}
+                />
+            ) : null}
         </SafeAreaView>
     )
 }

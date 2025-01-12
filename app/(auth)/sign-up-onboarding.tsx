@@ -11,7 +11,7 @@ import {router} from "expo-router";
 export default function SignUpOnboarding() {
 
     return (
-        <SafeAreaView className="flex-1 bg-[#4F46E5]">
+        <SafeAreaView className="flex-1 bg-[#4F46E5] py-10">
             <ScrollView contentContainerClassName="flex-1">
                 <View className="flex-1 px-6 pt-10">
                     {/* Header */}

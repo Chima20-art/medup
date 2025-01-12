@@ -111,7 +111,7 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
               let rowId: number = examen.id;
 
               const { error: deleteError } = await supabase
-                .from("radiologie")
+                .from(bucket)
                 .delete()
                 .eq("id", rowId);
 
@@ -119,7 +119,7 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
 
               for (const upload of uploads) {
                 const { error: removeError } = await supabase.storage
-                  .from("radiologie")
+                  .from(bucket)
                   .remove([upload]);
 
                 if (removeError) throw removeError;
@@ -150,7 +150,7 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
 
       let path = examen.uploads[currentFileIndex];
       const { data, error } = await supabase.storage
-        .from("radiologie")
+        .from(bucket)
         .createSignedUrl(path, 3600);
 
       if (error) throw error;
@@ -195,7 +195,7 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
 
       let path = examen.uploads[currentFileIndex];
       const { data, error } = await supabase.storage
-        .from("radiologie")
+        .from(bucket)
         .createSignedUrl(path, 3600);
 
       if (error) throw error;

@@ -6,7 +6,7 @@ import * as Notifications from "expo-notifications";
 // the function will schedule the notification at that date with the id  
 
 export async function scheduleNotification(id:string,title: string, body: string,date: Date) {
-
+    console.log('adding notifaction');
     try {
 
         let secondsToWait = Math.max(1, Math.floor((date.getTime() - new Date().getTime()) / 1000));
