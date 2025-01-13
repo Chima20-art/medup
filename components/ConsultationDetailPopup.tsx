@@ -35,9 +35,28 @@ import SupabaseAudioPlayer from "./supabaseAudioPlayer";
 import EmptyImage from "@/assets/images/EmptyImage.svg";
 
 const { height } = Dimensions.get("window");
-
+interface Consultation {
+    id: number;
+    doctorName: string;
+    speciality: number;
+    date: string;
+    adress: string;
+    city: string;
+    note: string | null;
+    reminder: boolean;
+    nextConsultationDate: string | null;
+    nextConsultationDateReminder: string | null;
+    uploads: string[] | null;
+    audio_notes: string[] | null;
+    created_at: string;
+    user_id: string;
+    specialties: {
+        name: string;
+        hexColor: string;
+    };
+}
 interface ConsultationDetailPopupProps {
-    consultation: any;
+    consultation: Consultation;
     slideAnim?: Animated.Value;
     onClose: () => void;
 }
@@ -375,11 +394,11 @@ const ConsultationDetailPopup: React.FC<ConsultationDetailPopupProps> = ({
                                 </Text>
                             </View>
 
-                            {consultation.nextAppointment && (
+                            {consultation.nextConsultationDate && (
                                 <View className="flex-row items-center gap-x-2">
                                     <Bell size={20} color="#4B5563" className="mr-2" />
                                     <Text className="text-gray-700">
-                                        Prochain rendez-vous: {formatDate(consultation.nextAppointment)}
+                                        Prochain rendez-vous: {formatDate(consultation.nextConsultationDate)}
                                     </Text>
                                 </View>
                             )}
