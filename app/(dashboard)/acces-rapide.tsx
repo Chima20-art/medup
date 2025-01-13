@@ -61,31 +61,24 @@ export default function AccesRapide() {
     return (
         <SafeAreaView className="flex-1 bg-gray-50">
             {/* Header */}
-            <View className="bg-white px-2 pb-4">
-                <View className="flex-row items-center justify-between mb-2">
-                    <View className="flex-1 mr-2">
-                        <View className="flex-row items-start">
-                            <TouchableOpacity
-                                onPress={() => router.back()}
-                                className="w-10 h-10 items-center justify-center rounded-full"
-                            >
-                                <ChevronLeft size={24} color="#4F46E5" />
-                            </TouchableOpacity>
-                            <View className="flex-col items-center mr-2">
-                                <Text className="text-primary-500 text-3xl font-bold">
-                                    Accès
-                                </Text>
-                                <Text className="text-primary-500 text-3xl font-bold ml-1">
-                                    rapide
-                                </Text>
-                            </View>
-                        </View>
+            <View className="px-6 pt-14 pb-2 bg-white">
+                <View className="flex-row items-start">
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
+                    >
+                        <ChevronLeft size={34} color="#4F46E5" />
+                    </TouchableOpacity>
+                    <View className="flex-1 ml-4">
+                        <Text className="text-primary-500 text-3xl font-extrabold">
+                            Accès rapide
+                        </Text>
                     </View>
-                    <QuickAccess className="" />
+                    <QuickAccess />
                 </View>
 
                 {/* Search Bar */}
-                <View className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12 mt-2">
+                <View className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12 w-[80%]">
                     <Search size={20} color="#9CA3AF" />
                     <TextInput
                         placeholder="Recherche"

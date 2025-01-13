@@ -14,6 +14,7 @@ const addPageMapping: Record<RouteKey, AddPageKey> = {
   '/list-examins-radiologiques': '/add-examin-radiologique',
   '/list-medicaments': '/add-medicament',
 };
+
 export default function DashboardLayout() {
   const { colors } = useTheme();
   const router = useRouter();
@@ -50,8 +51,10 @@ export default function DashboardLayout() {
   }, []);
 
   return (
-      <View className="flex-1">
-        <Slot />
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <Slot />
+        </View>
         {!isAddPage && (
             <View className="flex-row items-center justify-between px-6 py-4 bg-white border-t border-gray-200">
               <TouchableOpacity
@@ -69,12 +72,12 @@ export default function DashboardLayout() {
                 <Text className="text-xs mt-1 text-gray-600">Catégories</Text>
               </TouchableOpacity>
 
-                  <TouchableOpacity
-                      className="items-center justify-center w-16 h-16 bg-indigo-600 rounded-full -mt-8 shadow-lg"
-                      onPress={handlePlusPress}
-                  >
-                    <Plus size={32} color="#ffffff" />
-                  </TouchableOpacity>
+              <TouchableOpacity
+                  className="items-center justify-center w-16 h-16 bg-indigo-600 rounded-full -mt-8 shadow-lg"
+                  onPress={handlePlusPress}
+              >
+                <Plus size={32} color="#ffffff" />
+              </TouchableOpacity>
 
               <TouchableOpacity
                   className="items-center"
