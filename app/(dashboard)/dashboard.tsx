@@ -25,7 +25,7 @@ import { supabase } from "@/utils/supabase";
 import { AvatarSelectionModal } from "@/components/avatar-selection-modal";
 import { avatars, DefaultAvatar, type AvatarType } from "@/constants/avatars";
 import { notificationStore$ } from "@/store/notification";
-import { Consultation } from "./list-consultations";
+import ListConsultations from "./list-consultations";
 
 // Constants
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -419,7 +419,7 @@ export default function Dashboard() {
             className="flex flex-row gap-4"
           >
             {consultations.length > 0 ? (
-              consultations.map((consultations:any) => (
+              consultations.map((consultations: any) => (
                 <View
                   key={consultations.id}
                   className={`w-64   bg-blue-300  rounded-3xl p-4 mr-4`}

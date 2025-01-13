@@ -43,6 +43,7 @@ import { Calendar as RNCalendar, LocaleConfig } from "react-native-calendars";
 import { Audio } from "expo-av";
 import ConsultationCategory from "@/assets/images/consultationsCategory.svg";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+//@ts-ignore
 import { decode as atob } from "base-64";
 import { scheduleNotification } from "@/utils/notifcations";
 
@@ -226,7 +227,7 @@ export default function AddConsultation() {
       const newAudioNote: AudioNote = {
         id: Date.now().toString(),
         uri,
-        duration: status.durationMillis ?? 0,
+        duration: 0,
         currentTime: 0,
         sound,
       };
@@ -699,7 +700,7 @@ export default function AddConsultation() {
               {showDatePicker && (
                 <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
                   <RNCalendar
-                    onDayPress={(day) => {
+                    onDayPress={(day: any) => {
                       setFormData((prev) => ({
                         ...prev,
                         date: day.dateString,
@@ -810,7 +811,7 @@ export default function AddConsultation() {
               {showNextConsultationDatePicker && (
                 <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
                   <RNCalendar
-                    onDayPress={(day) => {
+                    onDayPress={(day: any) => {
                       setFormData((prev) => ({
                         ...prev,
                         nextConsultationDate: day.dateString,
@@ -893,7 +894,7 @@ export default function AddConsultation() {
                       {showNextAppointmentPicker && (
                         <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
                           <RNCalendar
-                            onDayPress={(day) => {
+                            onDayPress={(day: any) => {
                               setFormData((prev) => ({
                                 ...prev,
                                 nextConsultationDateReminder: day.dateString,
@@ -1205,7 +1206,7 @@ export default function AddConsultation() {
                 {showNextAppointmentPicker && (
                   <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
                     <RNCalendar
-                      onDayPress={(day) => {
+                      onDayPress={(day: any) => {
                         setFormData((prev) => ({
                           ...prev,
                           nextConsultationDateReminder: day.dateString,
