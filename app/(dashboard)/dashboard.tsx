@@ -25,6 +25,7 @@ import { supabase } from "@/utils/supabase";
 import { AvatarSelectionModal } from "@/components/avatar-selection-modal";
 import { avatars, DefaultAvatar, type AvatarType } from "@/constants/avatars";
 import { notificationStore$ } from "@/store/notification";
+import ListConsultations from "./list-consultations";
 
 // Constants
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -82,9 +83,7 @@ export default function Dashboard() {
   // Hooks
   const { colors } = useTheme();
   const router = useRouter();
-
-  const unreadNotificationsNumber =
-    use$(() => notificationStore$.unreadNotificationsNumber.get()) ?? 0;
+  const [unreadNotificationsNumber, setUnreadNotificationsNumber] = useState(0);
 
   console.log("unreadNotificationsNumber", unreadNotificationsNumber);
 
@@ -95,6 +94,7 @@ export default function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [consultations, setConsultations] = useState<any>([]);
 
   //     [
   //   {
@@ -117,6 +117,49 @@ export default function Dashboard() {
   // ]
 
   const shimmerAnimation = useRef(new Animated.Value(0)).current;
+
+  const fetchConsultations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("consultations")
+        .select("*, specialties(name, hexColor)")
+        .order("date", { ascending: true });
+
+      if (error) throw error;
+
+      let filtredData = data.filter(
+        (consultation) =>
+          new Date(consultation.date).getTime() > new Date().getTime()
+      );
+
+      setConsultations(filtredData || []);
+    } catch (e) {
+      console.error("Error fetching consultations:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchConsultations();
+
+    const subscription = supabase
+      .channel("consultations_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "consultations",
+        },
+        () => {
+          fetchConsultations();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   // Add shimmer animation effect
   useEffect(() => {
@@ -143,6 +186,21 @@ export default function Dashboard() {
 
     return () => shimmer.stop();
   }, [isLoading, shimmerAnimation]);
+
+  useEffect(() => {
+    setUnreadNotificationsNumber(
+      notificationStore$.unreadNotificationsNumber.get()
+    );
+    const interval = setInterval(() => {
+      console.log("interval");
+
+      setUnreadNotificationsNumber(
+        notificationStore$.unreadNotificationsNumber.get()
+      );
+    }, 20000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const renderSkeletonCard = () => (
     <View
@@ -360,11 +418,11 @@ export default function Dashboard() {
             showsHorizontalScrollIndicator={false}
             className="flex flex-row gap-4"
           >
-            {appointments.length > 0 ? (
-              appointments.map((appointment) => (
+            {consultations.length > 0 ? (
+              consultations.map((consultations: any) => (
                 <View
-                  key={appointment.id}
-                  className={`w-64 ${appointment.color} rounded-3xl p-4 mr-4`}
+                  key={consultations.id}
+                  className={`w-64   bg-blue-300  rounded-3xl p-4 mr-4`}
                 >
                   <View className="flex-row items-center justify-between mb-10">
                     <View className="flex flex-row items-start gap-x-3">
@@ -374,14 +432,14 @@ export default function Dashboard() {
                       />
                       <View>
                         <Text className="text-white font-medium">
-                          {appointment.doctorName}
+                          {consultations.doctorName}
                         </Text>
                         <Text className="text-indigo-200">
-                          {appointment.specialty}
+                          {consultations.speciality}
                         </Text>
                         <View className="flex-row items-center">
                           <Text className="text-white mr-1">
-                            {appointment.rating}
+                            there is no reating
                           </Text>
                           <Star size={16} color="#FCD34D" fill="#FCD34D" />
                         </View>
@@ -392,13 +450,18 @@ export default function Dashboard() {
                     <View className="flex-row items-center gap-x-2">
                       <Calendar size={16} color="#E0E7FF" className="mr-2" />
                       <Text className="text-indigo-100">
-                        {appointment.date}
+                        {new Date(consultations.date).toLocaleDateString(
+                          "fr-FR"
+                        )}
                       </Text>
                     </View>
                     <View className="flex-row items-center gap-x-2">
                       <Clock size={16} color="#E0E7FF" className="mr-2" />
                       <Text className="text-indigo-100">
-                        {appointment.time}
+                        {new Date(consultations.date).toLocaleTimeString(
+                          "fr-FR",
+                          { hour: "2-digit", minute: "2-digit" }
+                        )}
                       </Text>
                     </View>
                   </View>
