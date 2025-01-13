@@ -6,7 +6,7 @@ import { ObservablePersistAsyncStorage } from "@legendapp/state/persist-plugins/
 
 
 // Type your Store interface
-interface Notification {
+export interface Notification {
   id: string;
   title: string;
   body:string;
@@ -28,8 +28,9 @@ export const notificationStore$ = observable<NotificationStore>({
   notification: [],
   unreadNotificationsNumber: (): number => {
    
-    let pastNotifications = notificationStore$.pastNotifications.get();
-    return pastNotifications.filter((notification) => !notification.isRead).length;  
+    let unreadNotifications = notificationStore$.notification.get().filter((notification) => notification.date.getTime() <= new Date().getTime() && !notification.isRead);
+
+    return unreadNotifications.length;  
 
   },
   markAsRead: (id: string) => {

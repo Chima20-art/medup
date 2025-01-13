@@ -24,26 +24,6 @@ export default function MedicationCard({ medication }: MedicationCardProps) {
 
   const toggleSwitch = () => {
     setIsEnabled((previousState) => !previousState);
-    console.log("medication", medication);
-
-    let id = medication.startDate;
-    let title = "Rappel de  medication ";
-    let body =
-      "Il est temps de prendre " +
-      medication.name +
-      " " +
-      medication.dosage +
-      " mg";
-    let date = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes from now
-    let isRead = false;
-    console.log("id", id);
-    console.log("title", title);
-    console.log("body", body);
-    console.log("date", date);
-    console.log("isRead", isRead);
-
-    scheduleNotification(id, title, body, date);
-    //notificationStore$.addNotification({id, title, body, date, isRead});
   };
 
   // Calculate remaining pills as a number from stock string
