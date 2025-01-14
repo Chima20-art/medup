@@ -262,6 +262,13 @@ const ConsultationDetailPopup: React.FC<ConsultationDetailPopupProps> = ({
             minute: '2-digit'
         });
     };
+    const formatTONormalDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('fr-FR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        });
+    };
 
     const MemoizedFileView = useMemo(() => {
         if (!consultation.uploads || consultation.uploads.length === 0) {
@@ -376,7 +383,7 @@ const ConsultationDetailPopup: React.FC<ConsultationDetailPopupProps> = ({
                             <View className="flex-row items-center gap-x-2">
                                 <Calendar size={20} color="#4B5563" className="mr-2" />
                                 <Text className="text-gray-700">
-                                    {formatDate(consultation.date)}
+                                    {formatTONormalDate(consultation.date)}
                                 </Text>
                             </View>
 
