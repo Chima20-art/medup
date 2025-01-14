@@ -3,21 +3,37 @@ import { Switch, Text, View } from "react-native";
 import PillIcon from "@/assets/images/pillIcon.svg";
 import { differenceInDays } from "date-fns";
 import { scheduleNotification } from "@/utils/notifcations";
+import {useTheme} from "@react-navigation/native";
+
+interface UploadedFile {
+  uri: string;
+  name: string;
+}
 
 interface MedicationCardProps {
-  medication: {
-    id: string;
-    name: string;
-    dosage: string;
-    startDate: string;
-    endDate: string;
-    stock: string; // Changed from remainingPills
-    notes: string; // Changed from instructions
-    schedule: any;
-    momentDePrise: string;
-    isActive?: boolean;
+medication: {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  dosage: string;
+  stock: string;
+  duration: string;
+  frequency: string;
+  notes: string;
+  schedule: {
+    matin: boolean;
+    apres_midi: boolean;
+    soir: boolean;
+    nuit: boolean;
   };
+  isActive: boolean;
+  reminders: string[];
+  file: UploadedFile | null;
+  image: UploadedFile | null
 }
+}
+
 
 export default function MedicationCard({ medication }: MedicationCardProps) {
   const [isEnabled, setIsEnabled] = useState(medication.isActive);
@@ -26,6 +42,8 @@ export default function MedicationCard({ medication }: MedicationCardProps) {
     setIsEnabled((previousState) => !previousState);
   };
 
+
+  const { colors } = useTheme();
   // Calculate remaining pills as a number from stock string
   const remainingPills = parseInt(medication.stock) || 0;
 
@@ -71,13 +89,13 @@ export default function MedicationCard({ medication }: MedicationCardProps) {
       <View className="flex-row items-center mb-4">
         <Text
           style={{ fontFamily: "Poppins_800ExtraBold" }}
-          className="text-xl text-starts"
+          className="text-3xl font-black text-starts"
         >
           {medication.name}
         </Text>
         <Switch
-          trackColor={{ false: "primary", true: "primary" }}
-          thumbColor={isEnabled ? "primary" : "#primary"}
+          trackColor={{ false: "primary", true: colors.primary }}
+          thumbColor={"#fff"}
           onValueChange={toggleSwitch}
           value={isEnabled}
           className="ml-4"
@@ -86,46 +104,45 @@ export default function MedicationCard({ medication }: MedicationCardProps) {
 
       <View className="mb-2 space-y-1">
         <Text
-          style={{ fontFamily: "Poppins_400Regular" }}
-          className="text-gray-600"
-        >
-          • {medication.dosage} mg
-        </Text>
-        <Text
-          style={{ fontFamily: "Poppins_400Regular" }}
-          className="text-gray-600"
+            style={{ fontFamily: "Poppins_400Regular" }}
+            className="text-gray-600 font-bold"
         >
           • début: {new Date(medication.startDate).toLocaleDateString()}, fin:{" "}
           {new Date(medication.endDate).toLocaleDateString()}
         </Text>
+
         <Text
           style={{ fontFamily: "Poppins_400Regular" }}
-          className="text-gray-600"
+          className="text-gray-600 font-bold"
+        >
+          • {medication.dosage} mg
+        </Text>
+
+        <Text
+          style={{ fontFamily: "Poppins_400Regular" }}
+          className="text-gray-600 font-bold"
         >
           • Il reste {medication.stock} comprimés
         </Text>
-        <Text
-          style={{ fontFamily: "Poppins_400Regular" }}
-          className="text-gray-600"
-        >
-          • {formatSchedule(medication.schedule)}
-        </Text>
+
       </View>
 
-      <View className="flex flex-row items-end justify-end">
         {/* Duration pill - Calculate duration from start and end date */}
-        <View className="bg-primary-400 rounded-full px-4 py-1.5">
+        <View className="relative bg-secondary rounded-xl py-2 pt-4 px-4">
+
+          <Text  className="text-secondary font-semibold w-fit bg-primary-500 text-sm absolute right-0 -top-2 p-2 rounded-lg">
+            Pendant{ medication.duration}  jours
+          </Text>
           <Text
             style={{ fontFamily: "Poppins_500Medium" }}
-            className="text-secondary text-sm"
+            className="text-black font-semibold text-md"
           >
-            {calculateDuration(medication.startDate, medication.endDate)}
+            { medication.frequency} foix/jour, le matin, le soir
           </Text>
         </View>
-      </View>
 
       {/* Position pill icon in top right, rotated horizontally */}
-      <View className="absolute -top-8 right-4 transform scale-x-[-1]">
+      <View className="absolute -top-8 right-4 transform -scale-x-[-1]">
         <PillIcon size={10} />
       </View>
     </View>

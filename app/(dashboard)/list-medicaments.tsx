@@ -1,25 +1,42 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native'
 import { Link, router } from 'expo-router'
-import { ChevronLeft } from "lucide-react-native"
+import {ChevronLeft, Search} from "lucide-react-native"
 import { useTheme } from "@react-navigation/native"
 import { supabase } from "@/utils/supabase"
 
 import PillIcon from '@/assets/images/pillIcon.svg'
 import Medicine from '@/assets/images/medicine.svg'
 import MedicationCard from "@/components/MedicationCard"
+import BioCategory from "@/assets/images/bioCategory.svg";
+
+
+interface UploadedFile {
+    uri: string;
+    name: string;
+}
+
 
 interface Medication {
-    id: string
-    name: string
-    dosage: string
-    startDate: string
-    endDate: string
-    stock: string
-    momentDePrise: string
-    notes: string
-    schedule: any
-    isActive?: boolean
+    id: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+    dosage: string;
+    stock: string;
+    duration: string;
+    frequency: string;
+    notes: string;
+    schedule: {
+        matin: boolean;
+        apres_midi: boolean;
+        soir: boolean;
+        nuit: boolean;
+    };
+    reminders: string[];
+    file: UploadedFile | null;
+    image: UploadedFile | null;
+    momentDePrise: string;
 }
 
 export default function ListMedicaments() {
@@ -87,30 +104,40 @@ export default function ListMedicaments() {
     return (
         <View className="flex-1 bg-gray-50">
             {/* Header */}
-            <View className="pt-14 px-4 bg-white pb-6">
-                <View className="flex-row items-center mb-6">
-                    <TouchableOpacity onPress={() => router.back()} className="mr-4">
-                        <ChevronLeft size={24} color={colors.text} />
-                    </TouchableOpacity>
-                    <Text style={{ fontFamily: 'Poppins_800ExtraBold' }} className="text-2xl text-primary-600">
-                        Mes{'\n'}Medicaments
-                    </Text>
-                    <View className="absolute right-0">
-                        <Medicine />
+            <View className="pt-4 px-4 bg-white ">
+                {/*header*/}
+                <View className="bg-white px-2 ">
+                    <View className="flex-row items-center justify-between shadow-2xlo">
+                        <View className="flex-col flex-1 mr-2">
+                            <View className="flex-row items-start gap-x-2">
+                                <TouchableOpacity
+                                    onPress={() => router.back()}
+                                    className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
+                                >
+                                    <ChevronLeft size={24} color="#4F46E5" />
+                                </TouchableOpacity>
+                                <View className="flex-col items-start mr-2 flex-1">
+                                    <Text className="text-primary-500 text-3xl font-extrabold">
+                                        Mes{'\n'}Medicaments
+                                    </Text>
+                                </View>
+                            </View>
+                            {/* Search Bar */}
+                            <View className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12 m-2 mt-4 ml-4">
+                                <Search size={26} color="#9CA3AF" />
+                                <TextInput
+                                    value={searchQuery}
+                                    onChangeText={setSearchQuery}
+                                    placeholder="Recherche"
+                                    className="flex-1 ml-3 text-lg"
+                                    placeholderTextColor="#9CA3AF"
+                                />
+                            </View>
+                        </View>
+                            <Medicine  width={116} height={160}/>
                     </View>
                 </View>
 
-                {/* Search Bar */}
-                <View className="bg-primary-50 rounded-full flex-row items-center px-6">
-                    <TextInput
-                        placeholder="Rechercher un médicament..."
-                        placeholderTextColor="#6B7280"
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                        className="flex-1 py-4"
-                        style={{ fontFamily: 'Poppins_400Regular', fontSize: 16 }}
-                    />
-                </View>
             </View>
 
             {/* Medication List */}
@@ -121,8 +148,6 @@ export default function ListMedicaments() {
                     >
                         <MedicationCard medication={medication} />
                     </TouchableOpacity>
-
-
                 ))}
             </ScrollView>
         </View>

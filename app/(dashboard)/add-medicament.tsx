@@ -9,10 +9,13 @@ import {
   TouchableWithoutFeedback,
   Modal,
   Animated,
-  StyleSheet
+  StyleSheet,
+  Image as RNImage,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "@react-navigation/native";
+import Medicine from '@/assets/images/medicine.svg'
+
 import {
   ChevronLeft,
   FileText,
@@ -26,13 +29,16 @@ import {
   Image,
   Timer,
   Repeat,
-  Plus
+  Plus,
+  Upload,
+  ImageIcon,
 } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { supabase } from "@/utils/supabase";
 import { Calendar as RNCalendar, LocaleConfig } from "react-native-calendars";
 import { Calendar as LucideCalendar } from "lucide-react-native";
+import BioCategory from "@/assets/images/bioCategory.svg";
 
 
 // Configure French locale
@@ -55,6 +61,7 @@ LocaleConfig.defaultLocale = "fr";
 
 interface UploadedFile {
   uri: string;
+  type: "image" | "document";
   name: string;
 }
 
@@ -81,8 +88,7 @@ interface MedicationFormData {
     nuit: boolean;
   };
   reminders: string[];
-  file: UploadedFile | null;
-  image: UploadedFile | null;
+  files: UploadedFile[];
   momentDePrise: string;
 }
 
@@ -216,8 +222,7 @@ export default function AddMedicament() {
       nuit: false,
     },
     reminders: [],
-    file: null,
-    image: null,
+    files: [] as UploadedFile[],
     momentDePrise: "",
   });
 
@@ -248,12 +253,14 @@ export default function AddMedicament() {
     });
 
     if (!result.canceled && result.assets[0]) {
+      const newFile: UploadedFile = {
+        uri: result.assets[0].uri,
+        type: "image",
+        name: result.assets[0].uri.split('/').pop() || 'image'
+      };
       setFormData(prev => ({
         ...prev,
-        image: {
-          uri: result.assets[0].uri,
-          name: result.assets[0].uri.split('/').pop() || 'image'
-        }
+        files: [...prev.files, newFile],
       }));
     }
   };
@@ -264,14 +271,46 @@ export default function AddMedicament() {
     });
 
     if (!result.canceled && result.assets[0]) {
+      const newFile: UploadedFile = {
+        uri: result.assets[0].uri,
+        type: "document",
+        name: result.assets[0].name,
+      };
       setFormData(prev => ({
         ...prev,
-        file: {
-          uri: result.assets[0].uri,
-          name: result.assets[0].name
-        }
+        files: [...prev.files, newFile],
       }));
     }
+  };
+
+  const takePicture = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (permission.granted) {
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        const newFile: UploadedFile = {
+          uri: result.assets[0].uri,
+          type: "image",
+          name: result.assets[0].uri.split("/").pop() || "image",
+        };
+        setFormData(prev => ({
+          ...prev,
+          files: [...prev.files, newFile],
+        }));
+      }
+    }
+  };
+
+  const deleteFile = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      files: prev.files.filter((_, i) => i !== index),
+    }));
   };
 
   const handleSubmit = async () => {
@@ -322,18 +361,20 @@ export default function AddMedicament() {
       }}>
         <View className="flex-1 bg-gray-50">
           {/* Header */}
-          <View className="px-6 pt-14 pb-6 bg-white">
-            <View className="flex-row items-center">
+
+          <View className=" flex-row justify-between  items-start px-6 pt-14 bg-white">
+            <View className="flex-row items-start">
               <TouchableOpacity
                   onPress={() => router.back()}
                   className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
               >
-                <ChevronLeft size={24} color={colors.text} />
+                <ChevronLeft size={34} color={colors.primary} />
               </TouchableOpacity>
-              <Text className="font-bold text-xl text-gray-900 ml-4">
-                Ajouter un médicament
+              <Text className="text-primary-500 text-3xl font-extrabold ml-4">
+                Ajouter {`\n`}un médicament
               </Text>
             </View>
+            <Medicine />
           </View>
 
           <ScrollView className="flex-1 p-6">
@@ -642,66 +683,74 @@ export default function AddMedicament() {
                 <Text className="text-sm font-medium text-gray-700 mb-1">
                   Ordonnance
                 </Text>
-                <View className="space-y-4">
-                  {/* PDF Upload */}
-                  <View className="bg-white rounded-xl border border-gray-200 p-4">
-                    {formData.file ? (
-                        <View className="flex-row items-center justify-between">
-                          <View className="flex-row items-center">
-                            <FileText size={20} color={colors.text} />
-                            <Text className="ml-2 text-sm text-gray-600">
-                              {formData.file.name}
-                            </Text>
-                          </View>
-                          <TouchableOpacity
-                              onPress={() => setFormData(prev => ({ ...prev, file: null }))}
-                              className="p-2"
-                          >
-                            <X size={20} color={colors.text} />
-                          </TouchableOpacity>
-                        </View>
-                    ) : (
-                        <TouchableOpacity
-                            onPress={pickDocument}
-                            className="flex-row items-center justify-center py-4 border-2 border-dashed border-gray-300 rounded-lg"
-                        >
-                          <FileUp size={20} color={colors.text} className="opacity-50" />
-                          <Text className="ml-2 text-sm text-gray-600">
-                            Ajouter une ordonnance (PDF)
-                          </Text>
-                        </TouchableOpacity>
-                    )}
+                <View className="bg-white rounded-xl border border-gray-200 p-4">
+                  <View className="flex-row justify-around mb-4">
+                    <TouchableOpacity
+                        onPress={pickImage}
+                        className="items-center"
+                    >
+                      <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
+                        <ImageIcon size={24} color={colors.primary} />
+                      </View>
+                      <Text className="text-sm text-gray-600">Galerie</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        onPress={takePicture}
+                        className="items-center"
+                    >
+                      <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
+                        <Upload size={24} color={colors.primary} />
+                      </View>
+                      <Text className="text-sm text-gray-600">Camera</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        onPress={pickDocument}
+                        className="items-center"
+                    >
+                      <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
+                        <FileText size={24} color={colors.primary} />
+                      </View>
+                      <Text className="text-sm text-gray-600">Document</Text>
+                    </TouchableOpacity>
                   </View>
 
-                  {/* Image Upload */}
-                  <View className="bg-white rounded-xl border border-gray-200 p-4">
-                    {formData.image ? (
-                        <View className="flex-row items-center justify-between">
-                          <View className="flex-row items-center">
-                            <Image size={20} color={colors.text} />
-                            <Text className="ml-2 text-sm text-gray-600">
-                              {formData.image.name}
-                            </Text>
-                          </View>
-                          <TouchableOpacity
-                              onPress={() => setFormData(prev => ({ ...prev, image: null }))}
-                              className="p-2"
-                          >
-                            <X size={20} color={colors.text} />
-                          </TouchableOpacity>
-                        </View>
-                    ) : (
-                        <TouchableOpacity
-                            onPress={pickImage}
-                            className="flex-row items-center justify-center py-4 border-2 border-dashed border-gray-300 rounded-lg"
-                        >
-                          <Image size={20} color={colors.text} className="opacity-50" />
-                          <Text className="ml-2 text-sm text-gray-600">
-                            Ajouter une ordonnance (Image)
-                          </Text>
-                        </TouchableOpacity>
-                    )}
-                  </View>
+                  {formData.files.length > 0 && (
+                      <ScrollView
+                          horizontal
+                          showsHorizontalScrollIndicator={false}
+                          className="flex-row gap-2"
+                      >
+                        {formData.files.map((file, index) => (
+                            <View key={index} className="relative">
+                              {file.type === "image" ? (
+                                  <RNImage
+                                      source={{ uri: file.uri }}
+                                      className="w-20 h-20 rounded-lg"
+                                  />
+                              ) : (
+                                  <View className="w-20 h-20 bg-gray-200 rounded-lg items-center justify-center">
+                                    <FileText size={24} color={colors.primary} />
+                                    <Text
+                                        className="text-xs text-gray-600 mt-1"
+                                        numberOfLines={1}
+                                    >
+                                      {file.name}
+                                    </Text>
+                                  </View>
+                              )}
+                              <TouchableOpacity
+                                  onPress={() => deleteFile(index)}
+                                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full items-center justify-center"
+                                  hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                              >
+                                <X size={12} color="white" />
+                              </TouchableOpacity>
+                            </View>
+                        ))}
+                      </ScrollView>
+                  )}
                 </View>
               </View>
             </View>
