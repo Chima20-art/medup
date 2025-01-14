@@ -45,6 +45,16 @@ const ConsultationCards = memo(
       return `${day}/${month}/${year}`;
     };
 
+      const formatDateTime = (dateString: string) => {
+          return new Date(dateString).toLocaleDateString('fr-FR', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+          });
+      };
+
     const fetchConsultations = useCallback(async () => {
       try {
         setIsLoading(true);
@@ -168,7 +178,7 @@ const ConsultationCards = memo(
                       <View className="flex-row items-start mb-3">
                         <Text className="text-sm text-gray-600 ml-2">
                           Prochaine consultation programée le{" "}
-                          {formatToFrenchDate(
+                          {formatDateTime(
                             consultation.nextConsultationDate
                           )}
                         </Text>

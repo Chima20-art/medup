@@ -26,9 +26,31 @@ import { AvatarSelectionModal } from "@/components/avatar-selection-modal";
 import { avatars, DefaultAvatar, type AvatarType } from "@/constants/avatars";
 import { notificationStore$ } from "@/store/notification";
 import ListConsultations from "./list-consultations";
+import Doctor from "@/assets/images/doctor.svg";
 
 // Constants
 const SCREEN_WIDTH = Dimensions.get("window").width;
+interface Consultation {
+  id: number;
+  doctorName: string;
+  speciality: number;
+  date: string;
+  adress: string;
+  city: string;
+  note: string | null;
+  reminder: boolean;
+  nextConsultationDate: string | null;
+  nextConsultationDateReminder: string | null;
+  uploads: string[] | null;
+  audio_notes: string[] | null;
+  created_at: string;
+  user_id: string;
+  specialties: {
+    name: string;
+    hexColor: string;
+  };
+}
+
 
 // Styles
 const categoryCardStyle = {
@@ -94,7 +116,7 @@ export default function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [consultations, setConsultations] = useState<any>([]);
+  const [consultations, setConsultations] = useState<Consultation[]>([]);
 
   //     [
   //   {
@@ -423,24 +445,23 @@ export default function Dashboard() {
               consultations.map((consultations: any) => (
                 <View
                   key={consultations.id}
-                  className={`w-64   bg-blue-300  rounded-3xl p-4 mr-4`}
+                  className={`w-64 bg-primary-500 rounded-3xl flex-col justify-between p-4 pb-5 mr-4`}
                 >
-                  <View className="flex-row items-center justify-between mb-10">
+                  <View className="flex-row items-center justify-between mb-6">
                     <View className="flex flex-row items-start gap-x-3">
-                      <Image
-                        source={{ uri: "/placeholder.svg?height=40&width=40" }}
-                        className="w-10 h-10 rounded-full bg-white"
-                      />
+                      <View className="bg-gray-100 rounded-full h-12 w-12 justify-center items-center">
+                        <Doctor width={24} height={24} />
+                      </View>
                       <View>
                         <Text className="text-white font-medium">
                           {consultations.doctorName}
                         </Text>
                         <Text className="text-indigo-200">
-                          {consultations.speciality}
+                          {consultations.specialties.name}
                         </Text>
                         <View className="flex-row items-center">
                           <Text className="text-white mr-1">
-                            there is no reating
+                            consultation
                           </Text>
                           <Star size={16} color="#FCD34D" fill="#FCD34D" />
                         </View>

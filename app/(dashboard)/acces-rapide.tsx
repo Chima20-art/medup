@@ -1,22 +1,29 @@
 import React from 'react'
 import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native'
 import { useRouter } from 'expo-router'
-import { Search, ChevronLeft, Heart, Droplets, Ruler, Weight } from 'lucide-react-native'
+import { Search, ChevronLeft } from 'lucide-react-native'
 import QuickAccess from "@/assets/images/QuickAcess.svg"
+import Frequence from "@/assets/images/frequence.svg"
+import Glucose from "@/assets/images/glucose.svg"
+import Tension from "@/assets/images/tension.svg"
+import FrequenceCardiaque from "@/assets/images/frequence-cardiaque.svg"
+import Taille from "@/assets/images/taille.svg"
+import Weight from "@/assets/images/poids.svg"
 
 const quickAccessItems = [
     {
         id: 1,
         title: 'Fréquence\ncardiaque',
-        icon: Heart,
+        icon: Frequence,
         route: '/heart-rate',
         bgColor: 'bg-purple-100',
         iconColor: '#6B46C1'
     },
+
     {
         id: 2,
         title: 'Glucose\nsanguin',
-        icon: Droplets,
+        icon: Glucose,
         route: '/blood-glucose',
         bgColor: 'bg-blue-100',
         iconColor: '#3B82F6'
@@ -24,7 +31,7 @@ const quickAccessItems = [
     {
         id: 3,
         title: 'Fréquence\nrespiratoire',
-        icon: Heart,
+        icon: FrequenceCardiaque,
         route: '/respiratory-rate',
         bgColor: 'bg-indigo-100',
         iconColor: '#4F46E5'
@@ -32,7 +39,7 @@ const quickAccessItems = [
     {
         id: 4,
         title: 'Tension\nartérielle',
-        icon: Heart,
+        icon: Tension,
         route: '/blood-pressure',
         bgColor: 'bg-pink-100',
         iconColor: '#DB2777'
@@ -40,7 +47,7 @@ const quickAccessItems = [
     {
         id: 5,
         title: 'Taille',
-        icon: Ruler,
+        icon: Taille,
         route: '/height',
         bgColor: 'bg-violet-100',
         iconColor: '#7C3AED'
@@ -78,7 +85,7 @@ export default function AccesRapide() {
                 </View>
 
                 {/* Search Bar */}
-                <View className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12 w-[80%]">
+                <View className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12 w-[80%] mx-auto" >
                     <Search size={20} color="#9CA3AF" />
                     <TextInput
                         placeholder="Recherche"
@@ -99,10 +106,13 @@ export default function AccesRapide() {
                                 onPress={() => router.push(item.route as any)}
                                 className={`w-[48%] aspect-square mb-4 rounded-3xl ${item.bgColor} p-4 justify-between`}
                             >
-                                <IconComponent size={28} color={item.iconColor} />
-                                <Text className="text-gray-900 text-lg font-medium">
+                                <Text className="text-gray-900 text-[26px] font-extrabold">
                                     {item.title}
                                 </Text>
+                                <View className="flex-row justify-end">
+                                    <IconComponent width={56} height={56}  />
+                                </View>
+
                             </TouchableOpacity>
                         )
                     })}

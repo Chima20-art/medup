@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { View, TouchableOpacity, Text } from "react-native";
 import { Slot, useRouter, usePathname } from "expo-router";
@@ -51,51 +52,50 @@ export default function DashboardLayout() {
   }, []);
 
   return (
+    <View style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
-        <View style={{ flex: 1 }}>
-          <Slot />
-        </View>
-        {!isAddPage && (
-            <View className="flex-row items-center justify-between px-6 py-4 bg-white border-t border-gray-200">
-              <TouchableOpacity
-                  className="items-center"
-                  onPress={() => router.push("/dashboard")}
-              >
-                <Home size={24} color={colors.primary} />
-                <Text className="text-xs mt-1 text-gray-600">Accueil</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                  className="items-center"
-                  onPress={() => router.push("/categories")}
-              >
-                <Grid size={24} color={colors.text} />
-                <Text className="text-xs mt-1 text-gray-600">Catégories</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                  className="items-center justify-center w-16 h-16 bg-indigo-600 rounded-full -mt-8 shadow-lg"
-                  onPress={handlePlusPress}
-              >
-                <Plus size={32} color="#ffffff" />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                  className="items-center"
-                  onPress={() => router.push("/contact")}
-              >
-                <Phone size={24} color={colors.text} />
-                <Text className="text-xs mt-1 text-gray-600">Contact</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                  className="items-center"
-                  onPress={() => router.push("/more")}
-              >
-                <MoreHorizontal size={24} color={colors.text} />
-                <Text className="text-xs mt-1 text-gray-600">Plus</Text>
-              </TouchableOpacity>
-            </View>
-        )}
+        <Slot />
       </View>
+      {!isAddPage && (
+        <View className="flex-row items-center justify-between px-6 py-4 bg-white border-t border-gray-200">
+          <TouchableOpacity
+            className="items-center"
+            onPress={() => router.push("/dashboard")}
+          >
+            <Home size={24} color={colors.primary} />
+            <Text className="text-xs mt-1 text-gray-600">Accueil</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="items-center"
+            onPress={() => router.push("/categories")}
+          >
+            <Grid size={24} color={colors.primary} />
+            <Text className="text-xs mt-1 text-gray-600">Annuaire</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="items-center justify-center w-16 h-16 bg-indigo-600 rounded-full -mt-8 shadow-lg"
+            onPress={handlePlusPress}
+          >
+            <Plus size={32} color="#ffffff" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="items-center"
+            onPress={() => router.push("/contact")}
+          >
+            <Phone size={24} color={colors.primary} />
+            <Text className="text-xs mt-1 text-gray-600">Contact</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="items-center"
+            onPress={() => router.push("/more")}
+          >
+            <MoreHorizontal size={24} color={colors.primary} />
+            <Text className="text-xs mt-1 text-gray-600">Plus</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
   );
 }
-

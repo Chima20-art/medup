@@ -37,7 +37,7 @@ export default function Add() {
         {
             title: "\nRapide",
             image: QuickAccess,
-            route: '/add-consultation'
+            route: '/acces-rapide'
         },
     ] as const;
 
