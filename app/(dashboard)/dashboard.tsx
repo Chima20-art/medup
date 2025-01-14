@@ -129,7 +129,8 @@ export default function Dashboard() {
 
       let filtredData = data.filter(
         (consultation) =>
-          new Date(consultation.date).getTime() > new Date().getTime()
+          new Date(consultation.nextConsultationDate).getTime() >
+          new Date().getTime()
       );
 
       setConsultations(filtredData || []);
@@ -450,18 +451,20 @@ export default function Dashboard() {
                     <View className="flex-row items-center gap-x-2">
                       <Calendar size={16} color="#E0E7FF" className="mr-2" />
                       <Text className="text-indigo-100">
-                        {new Date(consultations.date).toLocaleDateString(
-                          "fr-FR"
-                        )}
+                        {new Date(
+                          consultations.nextConsultationDate
+                        ).toLocaleDateString("fr-FR")}
                       </Text>
                     </View>
                     <View className="flex-row items-center gap-x-2">
                       <Clock size={16} color="#E0E7FF" className="mr-2" />
                       <Text className="text-indigo-100">
-                        {new Date(consultations.date).toLocaleTimeString(
-                          "fr-FR",
-                          { hour: "2-digit", minute: "2-digit" }
-                        )}
+                        {new Date(
+                          consultations.nextConsultationDate
+                        ).toLocaleTimeString("fr-FR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </Text>
                     </View>
                   </View>

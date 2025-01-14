@@ -7,6 +7,10 @@ export default function Notifaction() {
     notificationStore$.pastNotifications.get()
   );
 
+  const sortedNotifications = pastNotifications.sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
   const renderNotification = ({
     item: notification,
   }: {
