@@ -106,7 +106,7 @@ export default function NameStep({
               }}
               value={name}
               onChangeText={handleTextChange}
-              placeholder="Sofia"
+              placeholder="Nom d'utilisateur"
               placeholderTextColor={Colors.light.placeholder}
             />
             <View className="absolute right-3 top-5">

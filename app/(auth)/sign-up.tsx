@@ -201,6 +201,15 @@ export default function SignUpScreen() {
           padding: 20,
         }}
       >
+        {step === 1 && (
+            <TouchableOpacity
+                className="absolute top-20 left-5 z-10"
+                onPress={() => router.push("/sign-up-onboarding")}
+            >
+              <ChevronLeft size={34} color={colors.primary} />
+            </TouchableOpacity>
+        )}
+
         {step > 1 && step < 7 && (
           <TouchableOpacity
             className="absolute top-20 left-5 z-10"

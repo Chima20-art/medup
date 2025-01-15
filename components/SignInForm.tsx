@@ -40,7 +40,7 @@ export default function SignInForm() {
           E-mail
         </Text>
         <TextInput
-          className="bg-gray-100 p-5 rounded-lg mb-4"
+          className="bg-gray-100 p-5 rounded-xl mb-4"
           style={{ color: colors.text }}
           value={emailAddress}
           onChangeText={setEmailAddress}
@@ -56,7 +56,7 @@ export default function SignInForm() {
         <Text className="font-sans mb-2" style={{ color: colors.text }}>
           Password
         </Text>
-        <View className="flex-row items-center bg-gray-100 rounded-lg">
+        <View className="flex-row items-center bg-gray-100 rounded-xl">
           <TextInput
             className="flex-1 p-5"
             style={{ color: colors.text }}

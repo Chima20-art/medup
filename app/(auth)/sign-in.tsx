@@ -28,10 +28,6 @@ export default function Page() {
   }, []);
 
   return (
-      <LinearGradient
-          colors={['#ddb6f1', '#90CAF933']}
-          style={{ flex: 1 }}
-      >
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={{ flex: 1 }}
@@ -55,18 +51,11 @@ export default function Page() {
 
             <View className="flex-row items-end justify-between mb-4 mt-10">
               <Text
-                  className="font-bold text-3xl font-semibold"
+                  className="font-extrabold text-3xl"
                   style={{ color: colors.text }}
               >
                 Connexion
               </Text>
-              <Link href="/sign-up-onboarding" asChild>
-                <TouchableOpacity>
-                  <Text className="text-base" style={{ color: colors.primary }}>
-                    S'inscrire
-                  </Text>
-                </TouchableOpacity>
-              </Link>
             </View>
 
             <SignInForm />
@@ -78,9 +67,13 @@ export default function Page() {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity>
-                <Text className="text-sm" style={{ color: colors.text }}>
-                  Changer le mot de passe
-                </Text>
+                <Link href="/sign-up-onboarding" asChild>
+                  <TouchableOpacity>
+                    <Text className="text-base" style={{ color: colors.primary }}>
+                      S'inscrire
+                    </Text>
+                  </TouchableOpacity>
+                </Link>
               </TouchableOpacity>
             </View>
             <View className="space-y-4">
@@ -99,7 +92,6 @@ export default function Page() {
             </View>
           </Animated.ScrollView>
         </KeyboardAvoidingView>
-      </LinearGradient>
   );
 }
 

@@ -9,11 +9,10 @@ import {
     ScrollView,
     NativeSyntheticEvent,
     NativeScrollEvent,
-    StatusBar,
-    TouchableOpacity, SafeAreaView
+    TouchableOpacity,
+    SafeAreaView
 } from 'react-native'
-import { useState, useRef } from "react"
-import {Bold} from "lucide-react-native";
+import { useState, useRef, useEffect } from "react"
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 
@@ -26,21 +25,17 @@ const onboardingData = [
             </Text>
         ),
         Image: OnboardingImage1,
-        backgroundColor: '#4F46E5'
+        backgroundColor: '#fff'
     },
     {
-        title:  (
-            <Text style={{ fontFamily: 'Poppins-Regular' }}>
-                Gardez un œil {"\n"} sur vos examens
-            </Text>
-        ),
+        title: "Gardez un œil \nsur vos examens",
         description: (
             <Text className="font-semibold text-right" style={{ fontFamily: 'Poppins-Regular' }}>
                 "Suivez vos  <Text className="font-extrabold"> analyses biologiques, radiologiques</Text> et vos <Text className="font-extrabold">consultations</Text> pour une meilleure prise en charge."
             </Text>
         ),
         Image: OnboardingImage2,
-        backgroundColor: '#818CF8'
+        backgroundColor: '#fff'
     },
     {
         title: "Prenez soin de votre santé en toute simplicité",
@@ -50,23 +45,47 @@ const onboardingData = [
             </Text>
         ),
         Image: OnboardingImage3,
-        backgroundColor: '#06B6D4'
+        backgroundColor: '#fff'
     }
 ]
 
 export default function Onboarding() {
     const [currentIndex, setCurrentIndex] = useState(0)
     const scrollViewRef = useRef<ScrollView>(null)
+    const [isScrollingToSignIn, setIsScrollingToSignIn] = useState(false)
 
     const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
         const contentOffsetX = event.nativeEvent.contentOffset.x
-        const newIndex = Math.floor(contentOffsetX / SCREEN_WIDTH)
+        const newIndex = Math.round(contentOffsetX / SCREEN_WIDTH)
 
-        if (currentIndex+1 >= 2) {
-            router.push('/sign-in') // Replace '/sign-in' with your actual sign-in route
+        if (newIndex !== currentIndex && newIndex >= 0 && newIndex < onboardingData.length) {
+            setCurrentIndex(newIndex)
         }
-        setCurrentIndex(currentIndex+1)
+
+        // Check if we've scrolled past the last slide
+        if (contentOffsetX > SCREEN_WIDTH * (onboardingData.length - 0.5)) {
+            setIsScrollingToSignIn(true)
+        }
     }
+
+    const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const contentOffsetX = event.nativeEvent.contentOffset.x
+        const newIndex = Math.round(contentOffsetX / SCREEN_WIDTH)
+
+        if (newIndex >= 0 && newIndex < onboardingData.length) {
+            setCurrentIndex(newIndex)
+            scrollViewRef.current?.scrollTo({ x: newIndex * SCREEN_WIDTH, animated: true })
+        } else if (newIndex >= onboardingData.length) {
+            setIsScrollingToSignIn(true)
+        }
+    }
+
+    useEffect(() => {
+        if (isScrollingToSignIn) {
+            // Redirect to sign-in page
+            router.push('/sign-in')
+        }
+    }, [isScrollingToSignIn])
 
     const handleDotPress = (index: number) => {
         setCurrentIndex(index)
@@ -75,15 +94,18 @@ export default function Onboarding() {
 
     return (
         <SafeAreaView className="flex-1">
-            <StatusBar barStyle="light-content" />
             <ScrollView
                 ref={scrollViewRef}
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
                 onScroll={handleScroll}
+                onMomentumScrollEnd={handleMomentumScrollEnd}
                 scrollEventThrottle={16}
-                onMomentumScrollEnd={handleScroll}
+                decelerationRate="fast"
+                snapToInterval={SCREEN_WIDTH}
+                snapToAlignment="center"
+                contentContainerStyle={{ width: SCREEN_WIDTH * (onboardingData.length + 1) }}
             >
                 {onboardingData.map((step, index) => (
                     <View
@@ -95,32 +117,28 @@ export default function Onboarding() {
                         }}
                         className="flex-1 py-10"
                     >
-                        {/* Title at the top */}
-                      <View className="flex-1">
-                          <View className="pt-16 px-6 mb-2">
-                              <Text className="text-white text-[46px] font-extrabold leading-tight">
-                                  {step.title}
-                              </Text>
-                          </View>
+                        <View className="flex-1 justify-between flex-col">
+                            <View className="pt-16 px-6 mb-2">
+                                <Text className="text-primary-500 text-[46px] font-extrabold leading-tight">
+                                    {step.title}
+                                </Text>
+                            </View>
 
-                          {/* Centered Image */}
-                          <View className=" items-center justify-center mb-6">
-                              <step.Image
-                                  width={SCREEN_WIDTH * 0.87}
-                                  height={SCREEN_HEIGHT * 0.4}
-                              />
-                          </View>
-                      </View>
+                            <View className="items-center justify-center mb-6">
+                                <step.Image
+                                    width={SCREEN_WIDTH * 0.87}
+                                    height={SCREEN_HEIGHT * 0.4}
+                                />
+                            </View>
+                        </View>
 
-                        {/* Description at the bottom */}
                         <View className="px-6 pl-8 mb-20">
-                            <Text className="text-white text-2xl w-[90%] flex-col justify-end justify-items-end text-end opacity-90 leading-9">
+                            <Text className="text-primary-500 text-2xl w-[90%] flex-col justify-end justify-items-end text-end opacity-90 leading-9">
                                 {step.description}
                             </Text>
                         </View>
 
-                        {/* Dots at the bottom */}
-                        <View className="absolute bottom-12 left-0 right-0">
+                        <View className="absolute bottom-20 left-0 right-0">
                             <View className="flex-row justify-center gap-x-3">
                                 {onboardingData.map((_, dotIndex) => (
                                     <TouchableOpacity
@@ -130,8 +148,8 @@ export default function Onboarding() {
                                         <View
                                             className={`h-3 w-3 rounded-full ${
                                                 currentIndex === dotIndex
-                                                    ? 'bg-blue-900'
-                                                    : 'bg-white/30'
+                                                    ? 'bg-blue-800'
+                                                    : 'bg-gray-600/30'
                                             }`}
                                         />
                                     </TouchableOpacity>
@@ -140,6 +158,8 @@ export default function Onboarding() {
                         </View>
                     </View>
                 ))}
+                {/* Empty view for detecting scroll past last slide */}
+                <View style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }} />
             </ScrollView>
         </SafeAreaView>
     )
