@@ -31,7 +31,7 @@ const onboardingData = [
         title: "Gardez un œil \nsur vos examens",
         description: (
             <Text className="font-semibold text-right" style={{ fontFamily: 'Poppins-Regular' }}>
-                "Suivez vos  <Text className="font-extrabold"> analyses biologiques, radiologiques</Text> et vos <Text className="font-extrabold">consultations</Text> pour une meilleure prise en charge."
+                "Suivez vos  <Text className="font-extrabold">analyses biologiques, radiologiques</Text> et vos <Text className="font-extrabold">consultations</Text> pour une meilleure prise en charge."
             </Text>
         ),
         Image: OnboardingImage2,
