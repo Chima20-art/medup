@@ -1,315 +1,242 @@
-import * as React from 'react'
+import * as React from "react";
 import {
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-    StyleSheet,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    Dimensions,
-    Image
-} from 'react-native'
-import { useSignUp } from '@clerk/clerk-expo'
-import { router, Link } from "expo-router"
-import { ChevronLeft } from 'lucide-react-native'
+  Text,
+  TouchableOpacity,
+  View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Alert,
+} from "react-native";
+import { router, Link } from "expo-router";
+import { ChevronLeft } from "lucide-react-native";
+import { useTheme } from "@react-navigation/native";
 import DateOfBirthStep from "@/components/age-step";
 import NameStep from "@/components/name-step";
+import EmailStep from "@/components/email-step";
+import PhoneStep from "@/components/phone-step";
+import PasswordStep from "@/components/pasword-step";
+import VerificationStep from "@/components/verification-step";
+import ConfirmationStep from "@/components/confirmation-step";
+import { supabase } from "@/utils/supabase";
 
 export default function SignUpScreen() {
-    const { isLoaded, signUp, setActive } = useSignUp()
-    const [step, setStep] = React.useState(1)
+  const { colors } = useTheme();
+  const [step, setStep] = React.useState(1);
 
-    // Form state
-    const [firstName, setFirstName] = React.useState('')
-    const [lastName, setLastName] = React.useState('')
-    const [age, setAge] = React.useState(30)
-    const [emailAddress, setEmailAddress] = React.useState('')
-    const [phoneNumber, setPhoneNumber] = React.useState('')
-    const [password, setPassword] = React.useState('')
+  // Form state
+  const [firstName, setFirstName] = React.useState("");
+  const [lastName, setLastName] = React.useState("");
+  const [dateOfBirth, setDateOfBirth] = React.useState<Date | null>(null);
+  const [emailAddress, setEmailAddress] = React.useState("");
+  const [phoneNumber, setPhoneNumber] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [verifingError, setVerifingError] = React.useState("");
 
-    // Verification state
-    const [pendingVerification, setPendingVerification] = React.useState(false)
-    const [code, setCode] = React.useState('')
-    const [isSigningUp, setIsSigningUp] = React.useState(false)
-    const [isVerifying, setIsVerifying] = React.useState(false)
+  // Verification state
+  const [code, setCode] = React.useState("");
+  const [isVerifying, setIsVerifying] = React.useState(false);
 
-    const onSignUpPress = async () => {
-        if (!isLoaded) return
-        setIsSigningUp(true)
-        try {
-            await signUp.create({
-                emailAddress,
-                password,
-                firstName,
-                lastName,
-            })
-            await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
-            setPendingVerification(true)
-        } catch (err: any) {
-            console.error(JSON.stringify(err, null, 2))
-        } finally {
-            setIsSigningUp(false)
-        }
+  const onEmailSubmit = async () => {
+    setStep(3);
+  };
+
+  const onPressVerify = async () => {
+    console.log("onPressVerify");
+    setIsVerifying(true);
+    const { error, data } = await supabase.auth.signInWithPassword({
+      email: emailAddress,
+      password: password,
+    });
+    console.log("error", error);
+    console.log("data", data);
+    setIsVerifying(false);
+    if (error) {
+      setVerifingError(error.message);
+    } else {
+      setStep(7);
     }
+  };
 
-    const onPressVerify = async () => {
-        if (!isLoaded) return
-        setIsVerifying(true)
-        try {
-            const signUpAttempt = await signUp.attemptEmailAddressVerification({
-                code,
-            })
-            if (signUpAttempt.status === 'complete') {
-                await setActive({ session: signUpAttempt.createdSessionId })
-                router.replace("/dashboard")
-            }
-        } catch (err: any) {
-            console.error(JSON.stringify(err, null, 2))
-        } finally {
-            setIsVerifying(false)
-        }
+  const resendVerificationCode = async () => {
+    console.log("resendVerificationCode");
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: emailAddress,
+    });
+
+    if (error) {
+      console.error("Error resending verification email:", error);
+      Alert.alert(
+        "Error",
+        "Failed to resend verification email. Please try again."
+      );
+    } else {
+      Alert.alert(
+        "Success",
+        "Verification email has been resent. Please check your inbox."
+      );
     }
+  };
 
-    const renderStepContent = () => {
-        if (pendingVerification) {
-            return (
-                <View style={styles.formContainer}>
-                    <TextInput
-                        style={styles.input}
-                        value={code}
-                        placeholder="Code de vérification"
-                        onChangeText={setCode}
-                        keyboardType="number-pad"
-                        placeholderTextColor="#999"
-                    />
-                    <TouchableOpacity
-                        style={styles.button}
-                        onPress={onPressVerify}
-                        disabled={isVerifying}
+  const onSignUpPress = async () => {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    router.push("/dashboard");
+    console.log("user", user);
+    console.log("error", error);
+  };
+
+  const signUserUp = async () => {
+    console.log("signUserUp");
+    console.log(firstName, dateOfBirth, emailAddress, phoneNumber, password);
+    const { data, error } = await supabase.auth.signUp({
+      email: emailAddress,
+      password: password,
+
+      options: {
+        data: {
+          displayName: firstName,
+          dateOfBirth: dateOfBirth,
+          age: dateOfBirth
+            ? Math.floor(
+                (new Date().getTime() - new Date(dateOfBirth).getTime()) /
+                  (1000 * 60 * 60 * 24 * 365.25)
+              )
+            : null,
+          phone: "+212" + phoneNumber,
+        },
+      },
+    });
+    console.log("data", data);
+    console.log("error", error);
+  };
+
+  const renderStepContent = () => {
+    const totalSteps = 7;
+    switch (step) {
+      case 1:
+        return (
+          <NameStep
+            name={firstName}
+            onNameChange={setFirstName}
+            onContinue={() => setStep(2)}
+            currentStep={step}
+            totalSteps={totalSteps}
+          />
+        );
+      case 2:
+        return (
+          <EmailStep
+            emailAddress={emailAddress}
+            onEmailChange={setEmailAddress}
+            onContinue={onEmailSubmit}
+            currentStep={step}
+            totalSteps={totalSteps}
+          />
+        );
+      case 3:
+        return (
+          <PasswordStep
+            password={password}
+            onPasswordChange={setPassword}
+            onContinue={() => setStep(4)}
+            currentStep={step}
+            totalSteps={totalSteps}
+          />
+        );
+      case 4:
+        return (
+          <PhoneStep
+            phoneNumber={phoneNumber}
+            onPhoneChange={setPhoneNumber}
+            onContinue={() => setStep(5)}
+            currentStep={step}
+            totalSteps={totalSteps}
+          />
+        );
+      case 5:
+        return (
+          <DateOfBirthStep
+            onContinue={(date: Date) => {
+              setDateOfBirth(date);
+              console.log("onSignUpPress");
+              signUserUp();
+              setStep(6);
+            }}
+            currentStep={step}
+            totalSteps={totalSteps}
+          />
+        );
+      case 6:
+        return (
+          <VerificationStep
+            code={"123456"}
+            onCodeChange={setCode}
+            onVerify={onPressVerify}
+            isVerifying={isVerifying}
+            resendCode={resendVerificationCode}
+            verifingError={verifingError}
+            currentStep={step}
+            totalSteps={totalSteps}
+          />
+        );
+      case 7:
+        return <ConfirmationStep onContinue={onSignUpPress} />;
+    }
+  };
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
+    >
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          padding: 20,
+        }}
+      >
+        {step === 1 && (
+            <TouchableOpacity
+                className="absolute top-20 left-5 z-10"
+                onPress={() => router.push("/sign-up-onboarding")}
+            >
+              <ChevronLeft size={34} color={colors.primary} />
+            </TouchableOpacity>
+        )}
+
+        {step > 1 && step < 7 && (
+          <TouchableOpacity
+            className="absolute top-20 left-5 z-10"
+            onPress={() => setStep(step - 1)}
+          >
+            <ChevronLeft size={34} color={colors.primary} />
+          </TouchableOpacity>
+        )}
+
+        {renderStepContent()}
+
+        {/* {step !== 3 && step !== 7 && (
+              <View className="flex-row justify-center mt-5 mb-10">
+                <Text style={{ color: colors.text }}>Déjà un compte ?</Text>
+                <Link href="/sign-in" asChild>
+                  <TouchableOpacity>
+                    <Text
+                        className="ml-1 font-bold"
+                        style={{ color: colors.primary }}
                     >
-                        <Text style={styles.buttonText}>
-                            {isVerifying ? "Vérification..." : "Vérifier l'email"}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-            )
-        }
-
-        switch (step) {
-            case 1:
-                return (
-                    <NameStep name={firstName} onNameChange={setFirstName} onContinue={()=> setStep(2)}/>
-                )
-            case 2:
-                return (
-                    <DateOfBirthStep
-                        selectedAge={age}
-                        onAgeChange={setAge}
-                        onContinue={() => setStep(3)}
-                    />
-                )
-            case 3:
-                return (
-                    <View style={styles.formContainer}>
-                        <Text style={styles.stepTitle}>Contact</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={emailAddress}
-                            placeholder="Email"
-                            onChangeText={setEmailAddress}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            placeholderTextColor="#999"
-                        />
-                        <TextInput
-                            style={styles.input}
-                            value={phoneNumber}
-                            placeholder="Numéro de téléphone"
-                            onChangeText={setPhoneNumber}
-                            keyboardType="phone-pad"
-                            placeholderTextColor="#999"
-                        />
-                        <TouchableOpacity
-                            style={styles.button}
-                            onPress={() => setStep(4)}
-                            disabled={!emailAddress || !phoneNumber}
-                        >
-                            <Text style={styles.buttonText}>Continuer</Text>
-                        </TouchableOpacity>
-                    </View>
-                )
-            case 4:
-                return (
-                    <View style={styles.formContainer}>
-                        <Text style={styles.stepTitle}>Mot de passe</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={password}
-                            placeholder="Mot de passe"
-                            onChangeText={setPassword}
-                            secureTextEntry
-                            placeholderTextColor="#999"
-                        />
-                        <TouchableOpacity
-                            style={styles.button}
-                            onPress={onSignUpPress}
-                            disabled={isSigningUp || !password}
-                        >
-                            <Text style={styles.buttonText}>
-                                {isSigningUp ? "Inscription..." : "S'inscrire"}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                )
-        }
-    }
-
-    return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.container}
-        >
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-                {step > 1 && !pendingVerification && (
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => setStep(step - 1)}
-                    >
-                        <ChevronLeft size={24} color="#666" />
-                    </TouchableOpacity>
-                )}
-                <Image
-                    source={require('@/assets/images/Logo.png')}
-                    className="h-28"
-                    resizeMode="contain"
-                />
-
-                <Text style={styles.subtitle}>
-                    {pendingVerification ? "Vérifiez votre email" : ""}
-                </Text>
-                {renderStepContent()}
-                {!pendingVerification && (
-                    <View style={styles.footer}>
-                        <Text style={styles.footerText}>Déjà un compte ?</Text>
-                        <Link href="/sign-in" asChild>
-                            <TouchableOpacity>
-                                <Text style={styles.link}>Se connecter</Text>
-                            </TouchableOpacity>
-                        </Link>
-                    </View>
-                )}
-            </ScrollView>
-        </KeyboardAvoidingView>
-    )
+                      Se connecter
+                    </Text>
+                  </TouchableOpacity>
+                </Link>
+              </View>
+          )} */}
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
 }
-
-const { width } = Dimensions.get('window')
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f0f2f5',
-    },
-    scrollContainer: {
-        flexGrow: 1,
-        justifyContent: 'center',
-        padding: 20,
-    },
-    backButton: {
-        position: 'absolute',
-        top: 40,
-        left: 20,
-        zIndex: 1,
-    },
-    logoContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginBottom: 20,
-    },
-    logoTextBold: {
-        fontSize: 32,
-        fontWeight: '700',
-        color: '#1A1A1A',
-        letterSpacing: -0.5,
-    },
-    logoTextLight: {
-        fontSize: 32,
-        fontWeight: '400',
-        color: '#1A1A1A',
-        letterSpacing: -0.5,
-    },
-    subtitle: {
-        fontSize: 20,
-        color: '#666666',
-        fontWeight: '400',
-        textAlign: 'center',
-        marginBottom: 30,
-    },
-    stepTitle: {
-        fontSize: 18,
-        color: '#333',
-        fontWeight: '600',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    formContainer: {
-        width: '100%',
-        alignItems: 'center',
-    },
-    input: {
-        width: width * 0.85,
-        height: 50,
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        marginBottom: 15,
-        paddingHorizontal: 15,
-        fontSize: 16,
-        color: '#333',
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    button: {
-        width: width * 0.85,
-        height: 50,
-        backgroundColor: '#4a90e2',
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 10,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    buttonText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    footer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginTop: 20,
-    },
-    footerText: {
-        fontSize: 14,
-        color: '#666',
-    },
-    link: {
-        marginLeft: 5,
-        color: '#4a90e2',
-        fontWeight: 'bold',
-    },
-})

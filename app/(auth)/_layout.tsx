@@ -1,12 +1,31 @@
-import { Redirect, Stack } from 'expo-router'
-import { useAuth } from '@clerk/clerk-expo'
+import { supabase } from "@/utils/supabase";
+import { Redirect, Stack, useRouter } from "expo-router";
+import { useEffect } from "react";
 
 export default function GuestLayout() {
-    const { isSignedIn } = useAuth()
+  const router = useRouter();
 
-    if (isSignedIn) {
-        return <Redirect href={'/dashboard'} />
-    }
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+      console.log("user", user);
+      console.log("error", error);
 
-    return <Stack />
+      if (!error && user) {
+        router.replace("/dashboard");
+      }
+    };
+    getUser();
+  });
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}
+    />
+  );
 }
