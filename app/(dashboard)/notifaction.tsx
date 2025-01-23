@@ -1,8 +1,12 @@
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import { use$ } from "@legendapp/state/react";
 import { Notification, notificationStore$ } from "@/store/notification";
+import { ChevronLeft } from "lucide-react-native";
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
 
 export default function Notifaction() {
+  const router = useRouter();
   const pastNotifications = use$(() =>
     notificationStore$.pastNotifications.get()
   );
@@ -41,19 +45,22 @@ export default function Notifaction() {
     });
   };
 
+  useEffect(() => {
+    return () => {
+      handleMarkAllAsRead();
+    };
+  }, []);
+
   return (
     <View className="flex-1 bg-gray-50">
       <View className="px-6 pt-14 pb-4 bg-white shadow-sm">
         <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-2xl font-bold text-gray-900">
+          <TouchableOpacity onPress={() => router.back()} className="">
+            <ChevronLeft size={24} color="#000" />
+          </TouchableOpacity>
+          <Text className="text-2xl flex-1 ml-2.5 font-bold text-gray-900">
             Notifications
           </Text>
-          <TouchableOpacity
-            onPress={handleMarkAllAsRead}
-            className="bg-blue-500 px-4 py-2 rounded-lg"
-          >
-            <Text className="text-white font-medium">Mark all as read</Text>
-          </TouchableOpacity>
         </View>
       </View>
 

@@ -14,6 +14,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  SafeAreaView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "@react-navigation/native";
@@ -148,8 +149,8 @@ export default function AddConsultation() {
 
   const specialtyInputRef = useRef(null);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [showNextConsultationTimePicker, setShowNextConsultationTimePicker] = useState(false);
-
+  const [showNextConsultationTimePicker, setShowNextConsultationTimePicker] =
+    useState(false);
 
   const handleTimeConfirm = (time: Date) => {
     if (formData.nextConsultationDateReminder) {
@@ -170,7 +171,6 @@ export default function AddConsultation() {
     setShowTimePicker(false);
   };
 
-
   const handleNextConsultationTimeCancel = () => {
     setShowNextConsultationDatePicker(false);
     setShowNextConsultationTimePicker(false);
@@ -178,15 +178,15 @@ export default function AddConsultation() {
 
   const handleNextConsultationTimeConfirm = (time: Date) => {
     if (formData.nextConsultationDate) {
-      const [year, month, day] = formData.nextConsultationDate.split('-');
+      const [year, month, day] = formData.nextConsultationDate.split("-");
       const nextConsultationDateTime = new Date(
-          parseInt(year),
-          parseInt(month) - 1,
-          parseInt(day),
-          time.getHours(),
-          time.getMinutes()
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day),
+        time.getHours(),
+        time.getMinutes()
       );
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         nextConsultationDate: nextConsultationDateTime.toISOString(),
       }));
@@ -217,7 +217,13 @@ export default function AddConsultation() {
         .order("name");
 
       if (error) throw error;
-      if (data) setSpecialties(data);
+      if (data) {
+        let trimmedData = data.map((specialty) => ({
+          ...specialty,
+          hexColor: specialty.hexColor.trim(),
+        }));
+        setSpecialties(trimmedData);
+      }
     } catch (error) {
       console.error("Error fetching specialties:", error);
       Alert.alert("Erreur", "Impossible de charger les spécialités");
@@ -623,21 +629,20 @@ export default function AddConsultation() {
     </View>
   );
 
-
+  console.log("specialties", JSON.stringify(specialties, null, 2));
   return (
-    <View className="flex-1 bg-gray-50 pt-4 pb-0">
-      <View className="px-6 pt-14 pb-2 bg-white">
-        <View className="flex-row items-start">
+    <SafeAreaView className="flex-1 bg-gray-50  pb-0">
+      <View className="px-6 pt-2 pb-2 bg-white">
+        <View className="flex flex-row items-center">
           <TouchableOpacity
             onPress={() => router.back()}
             className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
           >
             <ChevronLeft size={34} color={colors.primary} />
           </TouchableOpacity>
-          <Text className="text-primary-500 text-3xl font-extrabold ml-4">
-            Ajouter {"\n"} une consultation
+          <Text className="text-primary-500 text-2xl font-extrabold ml-4">
+            Ajouter une consultation
           </Text>
-          <ConsultationCategory />
         </View>
       </View>
 
@@ -646,8 +651,8 @@ export default function AddConsultation() {
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
-        <ScrollView className="flex-1 p-6 pb-16">
-          <View className="gap-y-4">
+        <ScrollView className="flex-1 p-6 pb-16 ">
+          <View className="flex flex-col gap-y-4 pb-10">
             {/* Doctor Name Input */}
             <View>
               <Text className="text-md font-medium text-gray-700 mb-1">
@@ -821,51 +826,481 @@ export default function AddConsultation() {
               </View>
             </View>
             {/*next appointment data*/}
-          <View className="mt-4 bg-indigo-100 rounded-2xl p-2 flex-xol gap-y-2">
-            {/* Date de la prochaine consultation */}
-            <View >
-              <Text className="text-md font-medium text-gray-700 mb-1">
-                Date de la prochaine consultation
-              </Text>
-              <TouchableOpacity
+            <View className="mt-4 bg-indigo-100 rounded-2xl p-2 flex-xol gap-y-2">
+              {/* Date de la prochaine consultation */}
+              <View>
+                <Text className="text-md font-medium text-gray-700 mb-1">
+                  Date de la prochaine consultation
+                </Text>
+                <TouchableOpacity
                   onPress={() =>
-                      setShowNextConsultationDatePicker(
-                          !showNextConsultationDatePicker
-                      )
+                    setShowNextConsultationDatePicker(
+                      !showNextConsultationDatePicker
+                    )
                   }
                   className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-14"
-              >
-                <Calendar
+                >
+                  <Calendar
                     size={20}
                     color={colors.text}
                     className="opacity-50"
-                />
-                <Text className="flex-1 ml-3 text-gray-700">
-                  {formData.nextConsultationDate
-                      ? new Date(
-                          formData.nextConsultationDate
-                      ).toLocaleString("fr-FR", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
+                  />
+                  <Text className="flex-1 ml-3 text-gray-700">
+                    {formData.nextConsultationDate
+                      ? new Date(formData.nextConsultationDate).toLocaleString(
+                          "fr-FR",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )
                       : "Sélectionnez une date"}
-                </Text>
-              </TouchableOpacity>
-              {showNextConsultationDatePicker && (
+                  </Text>
+                </TouchableOpacity>
+                {showNextConsultationDatePicker && (
                   <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
                     <RNCalendar
+                      onDayPress={(day: any) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          nextConsultationDate: day.dateString,
+                        }));
+                        setShowNextConsultationTimePicker(true);
+                      }}
+                      markedDates={{
+                        [formData.nextConsultationDate]: {
+                          selected: true,
+                          selectedColor: colors.primary,
+                        },
+                      }}
+                      theme={{
+                        backgroundColor: "#ffffff",
+                        calendarBackground: "#ffffff",
+                        textSectionTitleColor: colors.text,
+                        selectedDayBackgroundColor: colors.primary,
+                        selectedDayTextColor: "#ffffff",
+                        todayTextColor: colors.primary,
+                        dayTextColor: colors.text,
+                        textDisabledColor: "#d9e1e8",
+                        dotColor: colors.primary,
+                        selectedDotColor: "#ffffff",
+                        arrowColor: colors.text,
+                        monthTextColor: colors.text,
+                        indicatorColor: "blue",
+                        textDayFontFamily: "System",
+                        textMonthFontFamily: "System",
+                        textDayHeaderFontFamily: "System",
+                        textDayFontWeight: "300",
+                        textMonthFontWeight: "bold",
+                        textDayHeaderFontWeight: "300",
+                        textDayFontSize: 16,
+                        textMonthFontSize: 16,
+                        textDayHeaderFontSize: 16,
+                      }}
+                    />
+                    <DateTimePickerModal
+                      isVisible={showNextConsultationTimePicker}
+                      mode="time"
+                      onConfirm={handleNextConsultationTimeConfirm}
+                      onCancel={() => setShowNextConsultationTimePicker(false)}
+                      locale="fr"
+                      cancelTextIOS="Annuler"
+                      confirmTextIOS="Confirmer"
+                      is24Hour={true}
+                      themeVariant="light"
+                      accentColor={colors.primary}
+                      buttonTextColorIOS={colors.primary}
+                      // Android specific props
+                      display={
+                        Platform.OS === "android" ? "default" : undefined
+                      }
+                      textColor={
+                        Platform.OS === "android" ? colors.text : undefined
+                      }
+                      positiveButton={{ label: "Ok", textColor: "green" }}
+                      negativeButton={{ label: "Annuler", textColor: "red" }}
+                    />
+                    {/* Reminder Section */}
+                    <View>
+                      <Text className="text-md font-medium text-gray-700 mb-1">
+                        Rappel pour la prochaine consultation
+                      </Text>
+                      <View className="bg-white rounded-xl border border-gray-200 p-4">
+                        <View className="flex-row items-center justify-between mb-4">
+                          <Text className="text-gray-700">
+                            Activer le rappel
+                          </Text>
+                          <Switch
+                            value={formData.reminder}
+                            onValueChange={(value) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                reminder: value,
+                              }))
+                            }
+                          />
+                        </View>
+                        {formData.reminder && (
+                          <TouchableOpacity
+                            onPress={() =>
+                              setShowNextAppointmentPicker(
+                                !showNextAppointmentPicker
+                              )
+                            }
+                            className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12"
+                          >
+                            <Calendar
+                              size={20}
+                              color={colors.text}
+                              className="opacity-50"
+                            />
+                            <Text className="flex-1 ml-3 text-gray-700">
+                              {formData.nextConsultationDateReminder
+                                ? formatDate(
+                                    formData.nextConsultationDateReminder
+                                  )
+                                : "Date du prochain rappel"}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                        {showNextAppointmentPicker && (
+                          <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
+                            <RNCalendar
+                              onDayPress={(day: any) => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  nextConsultationDateReminder: day.dateString,
+                                }));
+                                setShowNextAppointmentPicker(false);
+                                setShowTimePicker(true);
+                              }}
+                              markedDates={{
+                                [formData.nextConsultationDateReminder]: {
+                                  selected: true,
+                                  selectedColor: colors.primary,
+                                },
+                              }}
+                              theme={{
+                                backgroundColor: "#ffffff",
+                                calendarBackground: "#ffffff",
+                                textSectionTitleColor: colors.text,
+                                selectedDayBackgroundColor: colors.primary,
+                                selectedDayTextColor: "#ffffff",
+                                todayTextColor: colors.primary,
+                                dayTextColor: colors.text,
+                                textDisabledColor: "#d9e1e8",
+                                dotColor: colors.primary,
+                                selectedDotColor: "#ffffff",
+                                arrowColor: colors.text,
+                                monthTextColor: colors.text,
+                                indicatorColor: "blue",
+                                textDayFontFamily: "System",
+                                textMonthFontFamily: "System",
+                                textDayHeaderFontFamily: "System",
+                                textDayFontWeight: "300",
+                                textMonthFontWeight: "bold",
+                                textDayHeaderFontWeight: "300",
+                                textDayFontSize: 16,
+                                textMonthFontSize: 16,
+                                textDayHeaderFontSize: 16,
+                              }}
+                            />
+                          </View>
+                        )}
+
+                        <DateTimePickerModal
+                          isVisible={showTimePicker}
+                          mode="time"
+                          onConfirm={handleTimeConfirm}
+                          onCancel={() => setShowTimePicker(false)}
+                          locale="fr"
+                          cancelTextIOS="Annuler"
+                          confirmTextIOS="Confirmer"
+                          is24Hour={true}
+                          themeVariant="light"
+                          accentColor={colors.primary}
+                          buttonTextColorIOS={colors.primary}
+                          // Android specific props
+                          display={
+                            Platform.OS === "android" ? "default" : undefined
+                          }
+                          textColor={
+                            Platform.OS === "android" ? colors.text : undefined
+                          }
+                          positiveButton={{ label: "Ok", textColor: "green" }}
+                          negativeButton={{
+                            label: "Annuler",
+                            textColor: "red",
+                          }}
+                        />
+                        {/* Display selected date and time */}
+                        {formData.nextConsultationDateReminder && (
+                          <Text className="pl-2 pt-2">
+                            Rappel: le{" "}
+                            {new Date(
+                              formData.nextConsultationDateReminder
+                            ).toLocaleString("fr-FR", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+
+                    {/* File Upload Section */}
+                    <View>
+                      <Text className="text-md font-medium text-gray-700 mb-1">
+                        Documents
+                      </Text>
+                      <View className="bg-white rounded-xl border border-gray-200 p-4">
+                        <View className="flex-row justify-around mb-4">
+                          <TouchableOpacity
+                            onPress={pickImage}
+                            className="items-center"
+                          >
+                            <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
+                              <ImageIcon size={24} color={colors.primary} />
+                            </View>
+                            <Text className="text-md text-gray-600">
+                              Galerie
+                            </Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            onPress={takePicture}
+                            className="items-center"
+                          >
+                            <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
+                              <Upload size={24} color={colors.primary} />
+                            </View>
+                            <Text className="text-md text-gray-600">
+                              Camera
+                            </Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            onPress={pickDocument}
+                            className="items-center"
+                          >
+                            <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
+                              <FileText size={24} color={colors.primary} />
+                            </View>
+                            <Text className="text-md text-gray-600">
+                              Document
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+
+                        {formData.files.length > 0 && (
+                          <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            className="flex-row gap-2"
+                          >
+                            {formData.files.map((file, index) => (
+                              <View key={index} className="relative">
+                                {file.type === "image" ? (
+                                  <Image
+                                    source={{ uri: file.uri }}
+                                    className="w-20 h-20 rounded-lg"
+                                  />
+                                ) : (
+                                  <View className="w-20 h-20 bg-gray-200 rounded-lg items-center justify-center">
+                                    <FileText
+                                      size={24}
+                                      color={colors.primary}
+                                    />
+                                    <Text
+                                      className="text-xs text-gray-600 mt-1"
+                                      numberOfLines={1}
+                                    >
+                                      {file.name}
+                                    </Text>
+                                  </View>
+                                )}
+                                <TouchableOpacity
+                                  onPress={() => deleteFile(index)}
+                                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full items-center justify-center"
+                                  hitSlop={{
+                                    top: 10,
+                                    right: 10,
+                                    bottom: 10,
+                                    left: 10,
+                                  }}
+                                >
+                                  <X size={12} color="white" />
+                                </TouchableOpacity>
+                              </View>
+                            ))}
+                          </ScrollView>
+                        )}
+                      </View>
+                    </View>
+
+                    {/* Notes Input with Audio Recording */}
+                    <View className=" mb-16">
+                      <Text className="text-md font-medium text-gray-700 mb-1">
+                        Notes
+                      </Text>
+                      <View className="bg-white rounded-xl border border-gray-200 p-4">
+                        <TextInput
+                          value={formData.notes}
+                          onChangeText={(text) =>
+                            setFormData((prev) => ({ ...prev, notes: text }))
+                          }
+                          placeholder="Ajouter des notes..."
+                          placeholderTextColor="#9CA3AF"
+                          multiline
+                          numberOfLines={4}
+                          className="min-h-[100] mb-4 text-md font-semibold"
+                          textAlignVertical="top"
+                        />
+
+                        {/* Audio Notes List */}
+                        {audioNotes.length > 0 && (
+                          <View className="mb-4">
+                            {audioNotes.map((audio) => (
+                              <View
+                                key={audio.id}
+                                className="flex-row items-center justify-between py-2 border-b border-gray-100"
+                              >
+                                <TouchableOpacity
+                                  onPress={() => playPauseAudio(audio.id)}
+                                  className="flex-row items-center flex-1"
+                                >
+                                  <View className="w-8 h-8 rounded-full bg-indigo-100 items-center justify-center mr-3">
+                                    {selectedAudioId === audio.id ? (
+                                      <Pause size={16} color={colors.primary} />
+                                    ) : (
+                                      <Play size={16} color={colors.primary} />
+                                    )}
+                                  </View>
+                                  <View className="flex-1">
+                                    <Text className="text-md text-gray-600">
+                                      Note audio {audioNotes.indexOf(audio) + 1}
+                                    </Text>
+                                    <Text className="text-xs text-gray-400">
+                                      {selectedAudioId === audio.id
+                                        ? `${formatTime(
+                                            audio.currentTime
+                                          )} / ${formatTime(audio.duration)}`
+                                        : formatTime(audio.duration)}
+                                    </Text>
+                                  </View>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                  onPress={() =>
+                                    setShowOptionsFor(
+                                      showOptionsFor === audio.id
+                                        ? null
+                                        : audio.id
+                                    )
+                                  }
+                                  className="p-2"
+                                >
+                                  <MoreVertical size={20} color={colors.text} />
+                                </TouchableOpacity>
+
+                                {showOptionsFor === audio.id && (
+                                  <TouchableOpacity
+                                    onPress={() => deleteAudio(audio.id)}
+                                    className="absolute right-10 top-2 bg-white shadow-lg rounded-lg p-2"
+                                  >
+                                    <View className="flex-row items-center">
+                                      <Trash size={16} color="red" />
+                                      <Text className="ml-2 text-red-500">
+                                        Supprimer
+                                      </Text>
+                                    </View>
+                                  </TouchableOpacity>
+                                )}
+                              </View>
+                            ))}
+                          </View>
+                        )}
+
+                        {/* Recording Button */}
+                        <TouchableOpacity
+                          onPress={isRecording ? stopRecording : startRecording}
+                          className="flex-row items-center"
+                        >
+                          <View
+                            className={`w-10 h-10 rounded-full ${
+                              isRecording ? "bg-red-500" : "bg-gray-100"
+                            } items-center justify-center mr-2`}
+                          >
+                            <Mic
+                              size={20}
+                              color={isRecording ? "white" : colors.primary}
+                            />
+                          </View>
+                          <Text className="text-md text-gray-600">
+                            {isRecording
+                              ? "Arrêter l'enregistrement"
+                              : "Enregistrer une note audio"}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </View>
+
+              {/* Reminder Section */}
+              <View>
+                <Text className="text-md font-medium text-gray-700 mb-1">
+                  Rappel pour la prochaine consultation
+                </Text>
+                <View className="bg-white rounded-xl border border-gray-200 p-4">
+                  <View className="flex-row items-center justify-between mb-4">
+                    <Text className="text-gray-700">Activer le rappel</Text>
+                    <Switch
+                      value={formData.reminder}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({ ...prev, reminder: value }))
+                      }
+                    />
+                  </View>
+                  {formData.reminder && (
+                    <TouchableOpacity
+                      onPress={() =>
+                        setShowNextAppointmentPicker(!showNextAppointmentPicker)
+                      }
+                      className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12"
+                    >
+                      <Calendar
+                        size={20}
+                        color={colors.text}
+                        className="opacity-50"
+                      />
+                      <Text className="flex-1 ml-3 text-gray-700">
+                        {formData.nextConsultationDateReminder
+                          ? formatDate(formData.nextConsultationDateReminder)
+                          : "Date du prochain rappel"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  {showNextAppointmentPicker && (
+                    <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
+                      <RNCalendar
                         onDayPress={(day: any) => {
                           setFormData((prev) => ({
                             ...prev,
-                            nextConsultationDate: day.dateString,
+                            nextConsultationDateReminder: day.dateString,
                           }));
-                          setShowNextConsultationTimePicker(true);
+                          setShowNextAppointmentPicker(false);
+                          setShowTimePicker(true);
                         }}
                         markedDates={{
-                          [formData.nextConsultationDate]: {
+                          [formData.nextConsultationDateReminder]: {
                             selected: true,
                             selectedColor: colors.primary,
                           },
@@ -894,428 +1329,11 @@ export default function AddConsultation() {
                           textMonthFontSize: 16,
                           textDayHeaderFontSize: 16,
                         }}
-                    />
-                    <DateTimePickerModal
-                        isVisible={showNextConsultationTimePicker}
-                        mode="time"
-                        onConfirm={handleNextConsultationTimeConfirm}
-                        onCancel={() => setShowNextConsultationTimePicker(false)}
-                        locale="fr"
-                        cancelTextIOS="Annuler"
-                        confirmTextIOS="Confirmer"
-                        is24Hour={true}
-                        themeVariant="light"
-                        accentColor={colors.primary}
-                        buttonTextColorIOS={colors.primary}
-                        // Android specific props
-                        display={
-                          Platform.OS === "android" ? "default" : undefined
-                        }
-                        textColor={
-                          Platform.OS === "android" ? colors.text : undefined
-                        }
-                        positiveButton={{ label: "Ok", textColor: "green" }}
-                        negativeButton={{ label: "Annuler", textColor: "red" }}
-                    />
-                    {/* Reminder Section */}
-                    <View>
-                      <Text className="text-md font-medium text-gray-700 mb-1">
-                        Rappel pour la prochaine consultation
-                      </Text>
-                      <View className="bg-white rounded-xl border border-gray-200 p-4">
-                        <View className="flex-row items-center justify-between mb-4">
-                          <Text className="text-gray-700">Activer le rappel</Text>
-                          <Switch
-                              value={formData.reminder}
-                              onValueChange={(value) =>
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    reminder: value,
-                                  }))
-                              }
-                          />
-                        </View>
-                        {formData.reminder && (
-                            <TouchableOpacity
-                                onPress={() =>
-                                    setShowNextAppointmentPicker(
-                                        !showNextAppointmentPicker
-                                    )
-                                }
-                                className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12"
-                            >
-                              <Calendar
-                                  size={20}
-                                  color={colors.text}
-                                  className="opacity-50"
-                              />
-                              <Text className="flex-1 ml-3 text-gray-700">
-                                {formData.nextConsultationDateReminder
-                                    ? formatDate(
-                                        formData.nextConsultationDateReminder
-                                    )
-                                    : "Date du prochain rappel"}
-                              </Text>
-                            </TouchableOpacity>
-                        )}
-                        {showNextAppointmentPicker && (
-                            <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
-                              <RNCalendar
-                                  onDayPress={(day: any) => {
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      nextConsultationDateReminder: day.dateString,
-                                    }));
-                                    setShowNextAppointmentPicker(false);
-                                    setShowTimePicker(true);
-                                  }}
-                                  markedDates={{
-                                    [formData.nextConsultationDateReminder]: {
-                                      selected: true,
-                                      selectedColor: colors.primary,
-                                    },
-                                  }}
-                                  theme={{
-                                    backgroundColor: "#ffffff",
-                                    calendarBackground: "#ffffff",
-                                    textSectionTitleColor: colors.text,
-                                    selectedDayBackgroundColor: colors.primary,
-                                    selectedDayTextColor: "#ffffff",
-                                    todayTextColor: colors.primary,
-                                    dayTextColor: colors.text,
-                                    textDisabledColor: "#d9e1e8",
-                                    dotColor: colors.primary,
-                                    selectedDotColor: "#ffffff",
-                                    arrowColor: colors.text,
-                                    monthTextColor: colors.text,
-                                    indicatorColor: "blue",
-                                    textDayFontFamily: "System",
-                                    textMonthFontFamily: "System",
-                                    textDayHeaderFontFamily: "System",
-                                    textDayFontWeight: "300",
-                                    textMonthFontWeight: "bold",
-                                    textDayHeaderFontWeight: "300",
-                                    textDayFontSize: 16,
-                                    textMonthFontSize: 16,
-                                    textDayHeaderFontSize: 16,
-                                  }}
-                              />
-                            </View>
-                        )}
-
-                        <DateTimePickerModal
-                            isVisible={showTimePicker}
-                            mode="time"
-                            onConfirm={handleTimeConfirm}
-                            onCancel={() => setShowTimePicker(false)}
-                            locale="fr"
-                            cancelTextIOS="Annuler"
-                            confirmTextIOS="Confirmer"
-                            is24Hour={true}
-                            themeVariant="light"
-                            accentColor={colors.primary}
-                            buttonTextColorIOS={colors.primary}
-                            // Android specific props
-                            display={
-                              Platform.OS === "android" ? "default" : undefined
-                            }
-                            textColor={
-                              Platform.OS === "android" ? colors.text : undefined
-                            }
-                            positiveButton={{ label: "Ok", textColor: "green" }}
-                            negativeButton={{ label: "Annuler", textColor: "red" }}
-                        />
-                        {/* Display selected date and time */}
-                        {formData.nextConsultationDateReminder && (
-                            <Text className="pl-2 pt-2">
-                              Rappel: le {" "}
-                              {new Date(
-                                  formData.nextConsultationDateReminder
-                              ).toLocaleString("fr-FR", {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </Text>
-                        )}
-                      </View>
-                    </View>
-
-                    {/* File Upload Section */}
-                    <View>
-                      <Text className="text-md font-medium text-gray-700 mb-1">
-                        Documents
-                      </Text>
-                      <View className="bg-white rounded-xl border border-gray-200 p-4">
-                        <View className="flex-row justify-around mb-4">
-                          <TouchableOpacity
-                              onPress={pickImage}
-                              className="items-center"
-                          >
-                            <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
-                              <ImageIcon size={24} color={colors.primary} />
-                            </View>
-                            <Text className="text-md text-gray-600">Galerie</Text>
-                          </TouchableOpacity>
-
-                          <TouchableOpacity
-                              onPress={takePicture}
-                              className="items-center"
-                          >
-                            <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
-                              <Upload size={24} color={colors.primary} />
-                            </View>
-                            <Text className="text-md text-gray-600">Camera</Text>
-                          </TouchableOpacity>
-
-                          <TouchableOpacity
-                              onPress={pickDocument}
-                              className="items-center"
-                          >
-                            <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
-                              <FileText size={24} color={colors.primary} />
-                            </View>
-                            <Text className="text-md text-gray-600">
-                              Document
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-
-                        {formData.files.length > 0 && (
-                            <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                className="flex-row gap-2"
-                            >
-                              {formData.files.map((file, index) => (
-                                  <View key={index} className="relative">
-                                    {file.type === "image" ? (
-                                        <Image
-                                            source={{ uri: file.uri }}
-                                            className="w-20 h-20 rounded-lg"
-                                        />
-                                    ) : (
-                                        <View className="w-20 h-20 bg-gray-200 rounded-lg items-center justify-center">
-                                          <FileText size={24} color={colors.primary} />
-                                          <Text
-                                              className="text-xs text-gray-600 mt-1"
-                                              numberOfLines={1}
-                                          >
-                                            {file.name}
-                                          </Text>
-                                        </View>
-                                    )}
-                                    <TouchableOpacity
-                                        onPress={() => deleteFile(index)}
-                                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full items-center justify-center"
-                                        hitSlop={{
-                                          top: 10,
-                                          right: 10,
-                                          bottom: 10,
-                                          left: 10,
-                                        }}
-                                    >
-                                      <X size={12} color="white" />
-                                    </TouchableOpacity>
-                                  </View>
-                              ))}
-                            </ScrollView>
-                        )}
-                      </View>
-                    </View>
-
-                    {/* Notes Input with Audio Recording */}
-                    <View className=" mb-16">
-                      <Text className="text-md font-medium text-gray-700 mb-1">
-                        Notes
-                      </Text>
-                      <View className="bg-white rounded-xl border border-gray-200 p-4">
-                        <TextInput
-                            value={formData.notes}
-                            onChangeText={(text) =>
-                                setFormData((prev) => ({ ...prev, notes: text }))
-                            }
-                            placeholder="Ajouter des notes..."
-                            placeholderTextColor="#9CA3AF"
-                            multiline
-                            numberOfLines={4}
-                            className="min-h-[100] mb-4 text-md font-semibold"
-                            textAlignVertical="top"
-                        />
-
-                        {/* Audio Notes List */}
-                        {audioNotes.length > 0 && (
-                            <View className="mb-4">
-                              {audioNotes.map((audio) => (
-                                  <View
-                                      key={audio.id}
-                                      className="flex-row items-center justify-between py-2 border-b border-gray-100"
-                                  >
-                                    <TouchableOpacity
-                                        onPress={() => playPauseAudio(audio.id)}
-                                        className="flex-row items-center flex-1"
-                                    >
-                                      <View className="w-8 h-8 rounded-full bg-indigo-100 items-center justify-center mr-3">
-                                        {selectedAudioId === audio.id ? (
-                                            <Pause size={16} color={colors.primary} />
-                                        ) : (
-                                            <Play size={16} color={colors.primary} />
-                                        )}
-                                      </View>
-                                      <View className="flex-1">
-                                        <Text className="text-md text-gray-600">
-                                          Note audio {audioNotes.indexOf(audio) + 1}
-                                        </Text>
-                                        <Text className="text-xs text-gray-400">
-                                          {selectedAudioId === audio.id
-                                              ? `${formatTime(
-                                                  audio.currentTime
-                                              )} / ${formatTime(audio.duration)}`
-                                              : formatTime(audio.duration)}
-                                        </Text>
-                                      </View>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity
-                                        onPress={() =>
-                                            setShowOptionsFor(
-                                                showOptionsFor === audio.id
-                                                    ? null
-                                                    : audio.id
-                                            )
-                                        }
-                                        className="p-2"
-                                    >
-                                      <MoreVertical size={20} color={colors.text} />
-                                    </TouchableOpacity>
-
-                                    {showOptionsFor === audio.id && (
-                                        <TouchableOpacity
-                                            onPress={() => deleteAudio(audio.id)}
-                                            className="absolute right-10 top-2 bg-white shadow-lg rounded-lg p-2"
-                                        >
-                                          <View className="flex-row items-center">
-                                            <Trash size={16} color="red" />
-                                            <Text className="ml-2 text-red-500">
-                                              Supprimer
-                                            </Text>
-                                          </View>
-                                        </TouchableOpacity>
-                                    )}
-                                  </View>
-                              ))}
-                            </View>
-                        )}
-
-                        {/* Recording Button */}
-                        <TouchableOpacity
-                            onPress={isRecording ? stopRecording : startRecording}
-                            className="flex-row items-center"
-                        >
-                          <View
-                              className={`w-10 h-10 rounded-full ${
-                                  isRecording ? "bg-red-500" : "bg-gray-100"
-                              } items-center justify-center mr-2`}
-                          >
-                            <Mic
-                                size={20}
-                                color={isRecording ? "white" : colors.primary}
-                            />
-                          </View>
-                          <Text className="text-md text-gray-600">
-                            {isRecording
-                                ? "Arrêter l'enregistrement"
-                                : "Enregistrer une note audio"}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-              )}
-            </View>
-
-            {/* Reminder Section */}
-            <View >
-              <Text className="text-md font-medium text-gray-700 mb-1">
-                Rappel pour la prochaine consultation
-              </Text>
-              <View className="bg-white rounded-xl border border-gray-200 p-4">
-                <View className="flex-row items-center justify-between mb-4">
-                  <Text className="text-gray-700">Activer le rappel</Text>
-                  <Switch
-                      value={formData.reminder}
-                      onValueChange={(value) =>
-                          setFormData((prev) => ({ ...prev, reminder: value }))
-                      }
-                  />
-                </View>
-                {formData.reminder && (
-                    <TouchableOpacity
-                        onPress={() =>
-                            setShowNextAppointmentPicker(!showNextAppointmentPicker)
-                        }
-                        className="flex-row items-center bg-gray-100 rounded-xl px-4 h-12"
-                    >
-                      <Calendar
-                          size={20}
-                          color={colors.text}
-                          className="opacity-50"
-                      />
-                      <Text className="flex-1 ml-3 text-gray-700">
-                        {formData.nextConsultationDateReminder
-                            ? formatDate(formData.nextConsultationDateReminder)
-                            : "Date du prochain rappel"}
-                      </Text>
-                    </TouchableOpacity>
-                )}
-                {showNextAppointmentPicker && (
-                    <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
-                      <RNCalendar
-                          onDayPress={(day: any) => {
-                            setFormData((prev) => ({
-                              ...prev,
-                              nextConsultationDateReminder: day.dateString,
-                            }));
-                            setShowNextAppointmentPicker(false);
-                            setShowTimePicker(true);
-                          }}
-                          markedDates={{
-                            [formData.nextConsultationDateReminder]: {
-                              selected: true,
-                              selectedColor: colors.primary,
-                            },
-                          }}
-                          theme={{
-                            backgroundColor: "#ffffff",
-                            calendarBackground: "#ffffff",
-                            textSectionTitleColor: colors.text,
-                            selectedDayBackgroundColor: colors.primary,
-                            selectedDayTextColor: "#ffffff",
-                            todayTextColor: colors.primary,
-                            dayTextColor: colors.text,
-                            textDisabledColor: "#d9e1e8",
-                            dotColor: colors.primary,
-                            selectedDotColor: "#ffffff",
-                            arrowColor: colors.text,
-                            monthTextColor: colors.text,
-                            indicatorColor: "blue",
-                            textDayFontFamily: "System",
-                            textMonthFontFamily: "System",
-                            textDayHeaderFontFamily: "System",
-                            textDayFontWeight: "300",
-                            textMonthFontWeight: "bold",
-                            textDayHeaderFontWeight: "300",
-                            textDayFontSize: 16,
-                            textMonthFontSize: 16,
-                            textDayHeaderFontSize: 16,
-                          }}
                       />
                     </View>
-                )}
+                  )}
 
-                <DateTimePickerModal
+                  <DateTimePickerModal
                     isVisible={showTimePicker}
                     mode="time"
                     onConfirm={handleTimeConfirm}
@@ -1334,13 +1352,13 @@ export default function AddConsultation() {
                     }
                     positiveButton={{ label: "Ok", textColor: "green" }}
                     negativeButton={{ label: "Annuler", textColor: "red" }}
-                />
-                {/* Display selected date and time */}
-                {formData.nextConsultationDateReminder && (
+                  />
+                  {/* Display selected date and time */}
+                  {formData.nextConsultationDateReminder && (
                     <Text className="pl-2 pt-2">
                       prochain rappel:{" "}
                       {new Date(
-                          formData.nextConsultationDateReminder
+                        formData.nextConsultationDateReminder
                       ).toLocaleString("fr-FR", {
                         year: "numeric",
                         month: "long",
@@ -1349,10 +1367,10 @@ export default function AddConsultation() {
                         minute: "2-digit",
                       })}
                     </Text>
-                )}
+                  )}
+                </View>
               </View>
             </View>
-          </View>
 
             {/* File Upload Section */}
             <View>
@@ -1537,7 +1555,8 @@ export default function AddConsultation() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      <View className="p-6 bg-white border-t border-gray-200">
+
+      <View className="p-6 pb-2 bg-white border-t border-gray-200">
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={isLoading}
@@ -1550,7 +1569,7 @@ export default function AddConsultation() {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

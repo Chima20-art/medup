@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { use$ } from "@legendapp/state/react";
+import { observer, use$ } from "@legendapp/state/react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   RefreshControl,
   Alert,
   Animated,
+  SafeAreaView,
 } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { Bell, Star, Calendar, Clock, Plus } from "lucide-react-native";
@@ -50,7 +51,6 @@ interface Consultation {
     hexColor: string;
   };
 }
-
 
 // Styles
 const categoryCardStyle = {
@@ -101,7 +101,7 @@ interface Appointment {
   color?: string;
 }
 
-export default function Dashboard() {
+function Dashboard() {
   // Hooks
   const { colors } = useTheme();
   const router = useRouter();
@@ -211,16 +211,25 @@ export default function Dashboard() {
   }, [isLoading, shimmerAnimation]);
 
   useEffect(() => {
-    setUnreadNotificationsNumber(
-      notificationStore$.unreadNotificationsNumber.get()
-    );
-    const interval = setInterval(() => {
-      console.log("interval");
-
-      setUnreadNotificationsNumber(
-        notificationStore$.unreadNotificationsNumber.get()
+    let unreadNotifications = notificationStore$.notification
+      .get()
+      .filter(
+        (notification) =>
+          notification.date.getTime() <= new Date().getTime() &&
+          !notification.isRead
       );
-    }, 20000);
+
+    setUnreadNotificationsNumber(unreadNotifications.length);
+    const interval = setInterval(() => {
+      let unreadNotifications = notificationStore$.notification
+        .get()
+        .filter(
+          (notification) =>
+            notification.date.getTime() <= new Date().getTime() &&
+            !notification.isRead
+        );
+      setUnreadNotificationsNumber(unreadNotifications.length);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, []);
@@ -366,7 +375,7 @@ export default function Dashboard() {
           onPress={() => router.push(category.route as any)}
         >
           <category.image width={120} height={120} />
-          <Text className="text-center text-gray-900 text-sm">
+          <Text className="text-center text-gray-900 font-bold text-xs">
             {category.title}
           </Text>
         </TouchableOpacity>
@@ -381,9 +390,9 @@ export default function Dashboard() {
       : DefaultAvatar;
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1  bg-gray-50">
       {/* Header */}
-      <View className="px-6 pt-14 pb-6 bg-white">
+      <View className="px-6 pt-2.5  bg-white">
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center space-x-3">
             <TouchableOpacity
@@ -425,7 +434,7 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <ScrollView
-        className="flex-1"
+        className="flex-1 pb-10 "
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
@@ -460,9 +469,7 @@ export default function Dashboard() {
                           {consultations.specialties.name}
                         </Text>
                         <View className="flex-row items-center">
-                          <Text className="text-white mr-1">
-                            consultation
-                          </Text>
+                          <Text className="text-white mr-1">consultation</Text>
                           <Star size={16} color="#FCD34D" fill="#FCD34D" />
                         </View>
                       </View>
@@ -502,11 +509,11 @@ export default function Dashboard() {
         </View>
 
         {/* Categories Section */}
-        <View className="px-6 pb-6 h-full">
+        <View className="px-6 mb-6 h-full">
           <Text className="text-2xl font-extrabold text-primary-500 mb-4">
             Categories
           </Text>
-          <View className="flex-row flex-wrap justify-start gap-x-4">
+          <View className="flex flex-row flex-wrap justify-start gap-x-4 gap-y-0">
             {categoryItems}
           </View>
         </View>
@@ -520,6 +527,8 @@ export default function Dashboard() {
         username={username}
         currentAvatarId={currentAvatarId ?? 13}
       />
-    </View>
+    </SafeAreaView>
   );
 }
+
+export default observer(Dashboard);

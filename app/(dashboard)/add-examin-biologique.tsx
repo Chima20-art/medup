@@ -9,6 +9,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  SafeAreaView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "@react-navigation/native";
@@ -393,19 +394,18 @@ export default function MergedExamensRadiologiques() {
   };
 
   return (
-    <View className="flex-1 bg-gray-50 pt-4">
-      <View className="px-6 pt-14  bg-white">
-        <View className="flex-row items-start">
+    <SafeAreaView className="flex-1 bg-gray-50 pt-4">
+      <View className="px-6 pt-2 pb-2  bg-white">
+        <View className="flex-row items-center">
           <TouchableOpacity
             onPress={() => router.back()}
             className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
           >
             <ChevronLeft size={34} color={colors.primary} />
           </TouchableOpacity>
-          <Text className="text-primary-500 text-3xl font-extrabold ml-4">
-            Ajouter un examen {`\n`} biologique
+          <Text className="text-primary-500 text-2xl font-extrabold ml-4">
+            Ajouter un examen biologique
           </Text>
-          <BioCategory />
         </View>
       </View>
 
@@ -415,7 +415,7 @@ export default function MergedExamensRadiologiques() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
         <ScrollView className="flex-1 p-6">
-          <View className="gap-y-4">
+          <View className="gap-y-4 pb-10">
             {/* Name/Type Input */}
             <View>
               <Text className="text-md font-medium text-gray-700 mb-1">
@@ -735,7 +735,7 @@ export default function MergedExamensRadiologiques() {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -45,15 +45,15 @@ const ConsultationCards = memo(
       return `${day}/${month}/${year}`;
     };
 
-      const formatDateTime = (dateString: string) => {
-          return new Date(dateString).toLocaleDateString('fr-FR', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-          });
-      };
+    const formatDateTime = (dateString: string) => {
+      return new Date(dateString).toLocaleDateString("fr-FR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    };
 
     const fetchConsultations = useCallback(async () => {
       try {
@@ -63,7 +63,7 @@ const ConsultationCards = memo(
         const { data, error } = await supabase
           .from("consultations")
           .select("*, specialties(name, hexColor)")
-          .order("date", { ascending: false })
+          .order("created_at", { ascending: false })
           .ilike("doctorName", `%${searchQuery}%`);
 
         if (error) throw error;
@@ -132,77 +132,83 @@ const ConsultationCards = memo(
 
     return (
       <ScrollView className="flex-1 px-4 bg-gray-50 pt-4">
-        {consultations.map((consultation) => {
-          const date = formatDate(consultation.date);
-          return (
-            <TouchableOpacity
-              key={consultation.id}
-              onPress={() => onConsultationPress(consultation)}
-              className="mb-4 flex-row items-stretch px-2"
-            >
-              <View className="flex-1 bg-white rounded-3xl p-4 shadow-sm">
-                <View className="flex-row gap-x-2">
-                  <View className="bg-gray-200 rounded-full h-16 w-16 justify-center items-center">
-                    <Doctor width={36} height={36} />
-                  </View>
-                  <View className="flex-1 flex-col gap-y-1 mt-1">
-                    <Text className="text-gray-900 font-medium capitalize">
-                      {consultation.doctorName}
-                    </Text>
-                    <View className="flex-row">
-                      {/*speciality*/}
-                      <View
-                        style={{
-                          backgroundColor: consultation.specialties.hexColor,
-                        }}
-                        className="px-3 py-1 rounded-full"
-                      >
-                        <Text className="text-white text-xs">
-                          {consultation.specialties.name}
-                        </Text>
-                      </View>
-                      {/*adress*/}
-                      <Text className="text-sm text-gray-600 ml-2">
-                        | {consultation.adress}
-                      </Text>
+        {consultations.length === 0 ? (
+          <View className="flex-1 items-center justify-center py-8">
+            <Text className="text-gray-500 text-lg font-medium">
+              Aucune consultation trouvée
+            </Text>
+          </View>
+        ) : (
+          consultations.map((consultation) => {
+            const date = formatDate(consultation.date);
+            return (
+              <TouchableOpacity
+                key={consultation.id}
+                onPress={() => onConsultationPress(consultation)}
+                className="mb-4 flex-row items-stretch px-2"
+              >
+                <View className="flex-1 bg-white rounded-3xl p-4 shadow-sm">
+                  <View className="flex-row gap-x-2">
+                    <View className="bg-gray-200 rounded-full h-16 w-16 justify-center items-center">
+                      <Doctor width={36} height={36} />
                     </View>
-                    {/*date consultation*/}
-                    <View className="flex-row items-center mb-2 mt-4">
-                      <Text className="text-sm text-gray-600 ml-2">
-                        {formatToFrenchDate(consultation.date)}
+                    <View className="flex-1 flex-col gap-y-1 mt-1">
+                      <Text className="text-gray-900 font-medium capitalize">
+                        {consultation.doctorName}
                       </Text>
-                    </View>
-
-                    {/*date next consultation*/}
-                    {consultation.nextConsultationDate && (
-                      <View className="flex-row items-start mb-3">
+                      <View className="flex-row">
+                        {/*speciality*/}
+                        <View
+                          style={{
+                            backgroundColor: consultation.specialties.hexColor,
+                          }}
+                          className="px-3 py-1 rounded-full"
+                        >
+                          <Text className="text-white text-xs">
+                            {consultation.specialties.name}
+                          </Text>
+                        </View>
+                        {/*adress*/}
                         <Text className="text-sm text-gray-600 ml-2">
-                          Prochaine consultation programée le{" "}
-                          {formatDateTime(
-                            consultation.nextConsultationDate
-                          )}
+                          | {consultation.adress}
                         </Text>
                       </View>
-                    )}
+                      {/*date consultation*/}
+                      <View className="flex-row items-center mb-2 mt-4">
+                        <Text className="text-sm text-gray-600 ml-2">
+                          {formatToFrenchDate(consultation.date)}
+                        </Text>
+                      </View>
+
+                      {/*date next consultation*/}
+                      {consultation.nextConsultationDate && (
+                        <View className="flex-row items-start mb-3">
+                          <Text className="text-sm text-gray-600 ml-2">
+                            Prochaine consultation programée le{" "}
+                            {formatDateTime(consultation.nextConsultationDate)}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+
+                  <View className="flex-row gap-x-2 justify-end">
+                    <TouchableOpacity
+                      className="px-4 py-2 bg-primary-500 rounded-xl"
+                      onPress={() => onConsultationPress(consultation)}
+                    >
+                      <Text className="text-xs font-medium text-secondary">
+                        {consultation?.uploads?.length
+                          ? `${consultation.uploads.length} fichier(s)`
+                          : "Aucun fichier"}
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
-
-                <View className="flex-row gap-x-2 justify-end">
-                  <TouchableOpacity
-                    className="px-4 py-2 bg-primary-500 rounded-xl"
-                    onPress={() => onConsultationPress(consultation)}
-                  >
-                    <Text className="text-xs font-medium text-secondary">
-                      {consultation?.uploads?.length
-                        ? `${consultation.uploads.length} fichier(s)`
-                        : "Aucun fichier"}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
+              </TouchableOpacity>
+            );
+          })
+        )}
       </ScrollView>
     );
   }

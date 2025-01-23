@@ -25,7 +25,10 @@ export default function ListExaminsRadiologiques() {
 
   useEffect(() => {
     const fetchRadiologies = async () => {
-      const { data, error } = await supabase.from("radiologie").select("*");
+      const { data, error } = await supabase
+        .from("radiologie")
+        .select("*")
+        .order("created_at", { ascending: false });
       if (data) {
         setRadiologies(data);
       }
@@ -95,7 +98,7 @@ export default function ListExaminsRadiologiques() {
     <SafeAreaView className="flex-1 bg-gray-50">
       {/* Header */}
       <View className="bg-white px-2 pb-4">
-        <View className="flex-row items-center justify-between mb-2 ">
+        <View className="flex-row relative items-center justify-between mb-2 ">
           <View className="flex-col flex-1 mr-2">
             <View className="flex-row items-start gap-x-2">
               <TouchableOpacity
@@ -104,12 +107,9 @@ export default function ListExaminsRadiologiques() {
               >
                 <ChevronLeft size={26} color="#4F46E5" />
               </TouchableOpacity>
-              <View className="flex-col items-center mr-2 flex-1">
-                <Text className="text-primary-500 text-3xl font-extrabold">
-                  Mes examens
-                </Text>
-                <Text className="text-primary-500 text-3xl font-extrabold ml-1">
-                  radiologiques
+              <View className="w-full absolute left-12 top-2 flex flex-col items-start  flex-1">
+                <Text className="w-full  text-primary-500 text-[16px] font-extrabold">
+                  Mes examens radiologiques
                 </Text>
               </View>
             </View>
@@ -126,79 +126,87 @@ export default function ListExaminsRadiologiques() {
               />
             </View>
           </View>
-          <RadioCategory />
+          <RadioCategory width={140} height={100} />
         </View>
       </View>
 
       {/* Radiologies List */}
       <ScrollView className="flex-1 px-4 pt-4">
-        {radiologies.map((radio: any) => {
-          const date = formatDate(radio.date);
-          return (
-            <TouchableOpacity
-              key={radio.id}
-              onPress={() => handleExamenPress(radio)}
-              className="mb-4 flex-row items-stretch px-2"
-            >
-              {/*date*/}
-              <View className="bg-primary-500 w-16 py-4 items-center justify-center rounded-full my-2 mr-2">
-                <Text className="text-white text-2xl font-bold">
-                  {date.day}
-                </Text>
-                <Text className="text-white uppercase">{date.month}</Text>
-                <Text className="text-white">{date.year}</Text>
-              </View>
-
-              {/*detailed card*/}
-              <View className="flex-1 bg-white rounded-3xl p-4 shadow-sm">
-                <Text className="text-gray-900 text-lg font-bold mb-2">
-                  {radio.name}
-                </Text>
-
-                <View className="flex-col ml-6 ">
-                  {/* Laboratory Info */}
-                  <View className="flex-row items-center mb-2 w-fit ">
-                    <Hospital />
-                    <Text className="text-base font-semibold text-gray-600 ml-2">
-                      {radio.labName}
-                    </Text>
-                  </View>
-
-                  {/* Doctor Info */}
-                  <View className="flex-row items-center mb-2 w-fit">
-                    <Doctor />
-                    <Text className="text-base font-semibold text-gray-600 ml-2">
-                      {radio.phone}
-                    </Text>
-                  </View>
+        {radiologies.length === 0 ? (
+          <View className="flex-1 items-center justify-center py-8">
+            <Text className="text-gray-500 text-lg font-medium">
+              Aucun examen radiologique trouvé
+            </Text>
+          </View>
+        ) : (
+          radiologies.map((radio: any) => {
+            const date = formatDate(radio.date);
+            return (
+              <TouchableOpacity
+                key={radio.id}
+                onPress={() => handleExamenPress(radio)}
+                className="mb-4 flex-row items-stretch px-2"
+              >
+                {/*date*/}
+                <View className="bg-primary-500 w-16 py-4 items-center justify-center rounded-full my-2 mr-2">
+                  <Text className="text-white text-2xl font-bold">
+                    {date.day}
+                  </Text>
+                  <Text className="text-white uppercase">{date.month}</Text>
+                  <Text className="text-white">{date.year}</Text>
                 </View>
 
-                {/* Action Buttons */}
-                <View className="flex-row gap-x-2 justify-end">
-                  {/*<TouchableOpacity*/}
-                  {/*  className="bg-primary px-4 py-2 rounded-xl"*/}
-                  {/*  onPress={() => handleExamenPress(radio)}*/}
-                  {/*>*/}
-                  {/*  <Text className="textwhite text-sm font-medium">*/}
-                  {/*    Détail*/}
-                  {/*  </Text>*/}
-                  {/*</TouchableOpacity>*/}
+                {/*detailed card*/}
+                <View className="flex-1 bg-white rounded-3xl p-4 shadow-sm">
+                  <Text className="text-gray-900 text-lg font-bold mb-2">
+                    {radio.name}
+                  </Text>
 
-                  <TouchableOpacity
-                    className="px-4 py-2 bg-primary-500 rounded-xl"
-                    onPress={() => handleExamenPress(radio)}
-                  >
-                    <Text className="text-xs font-medium text-secondary">
-                      {radio?.uploads?.length
-                        ? `${radio.uploads.length} fichier(s)`
-                        : "Aucun fichier"}
-                    </Text>
-                  </TouchableOpacity>
+                  <View className="flex-col ml-6 ">
+                    {/* Laboratory Info */}
+                    <View className="flex-row items-center mb-2 w-fit ">
+                      <Hospital />
+                      <Text className="text-base font-semibold text-gray-600 ml-2">
+                        {radio.labName}
+                      </Text>
+                    </View>
+
+                    {/* Doctor Info */}
+                    <View className="flex-row items-center mb-2 w-fit">
+                      <Doctor />
+                      <Text className="text-base font-semibold text-gray-600 ml-2">
+                        {radio.phone}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Action Buttons */}
+                  <View className="flex-row gap-x-2 justify-end">
+                    {/*<TouchableOpacity*/}
+                    {/*  className="bg-primary px-4 py-2 rounded-xl"*/}
+                    {/*  onPress={() => handleExamenPress(radio)}*/}
+                    {/*>*/}
+                    {/*  <Text className="textwhite text-sm font-medium">*/}
+                    {/*    Détail*/}
+                    {/*  </Text>*/}
+                    {/*</TouchableOpacity>*/}
+
+                    <TouchableOpacity
+                      className="px-4 py-2 bg-primary-500 rounded-xl"
+                      onPress={() => handleExamenPress(radio)}
+                    >
+                      <Text className="text-xs font-medium text-secondary">
+                        {radio?.uploads?.length
+                          ? `${radio.uploads.length} fichier(s)`
+                          : "Aucun fichier"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
+              </TouchableOpacity>
+            );
+          })
+        )}
       </ScrollView>
 
       {selectedExamen && slideAnim ? (

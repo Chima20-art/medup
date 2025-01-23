@@ -3,7 +3,7 @@ import { Switch, Text, View } from "react-native";
 import PillIcon from "@/assets/images/pillIcon.svg";
 import { differenceInDays } from "date-fns";
 import { scheduleNotification } from "@/utils/notifcations";
-import {useTheme} from "@react-navigation/native";
+import { useTheme } from "@react-navigation/native";
 
 interface UploadedFile {
   uri: string;
@@ -11,29 +11,28 @@ interface UploadedFile {
 }
 
 interface MedicationCardProps {
-medication: {
-  id: string;
-  name: string;
-  startDate: string;
-  endDate: string;
-  dosage: string;
-  stock: string;
-  duration: string;
-  frequency: string;
-  notes: string;
-  schedule: {
-    matin: boolean;
-    apres_midi: boolean;
-    soir: boolean;
-    nuit: boolean;
+  medication: {
+    id: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+    dosage: string;
+    stock: string;
+    duration: string;
+    frequency: string;
+    notes: string;
+    schedule: {
+      matin: boolean;
+      apres_midi: boolean;
+      soir: boolean;
+      nuit: boolean;
+    };
+    isActive: boolean;
+    reminders: string[];
+    file: UploadedFile | null;
+    image: UploadedFile | null;
   };
-  isActive: boolean;
-  reminders: string[];
-  file: UploadedFile | null;
-  image: UploadedFile | null
 }
-}
-
 
 export default function MedicationCard({ medication }: MedicationCardProps) {
   const [isEnabled, setIsEnabled] = useState(medication.isActive);
@@ -41,7 +40,6 @@ export default function MedicationCard({ medication }: MedicationCardProps) {
   const toggleSwitch = () => {
     setIsEnabled((previousState) => !previousState);
   };
-
 
   const { colors } = useTheme();
   // Calculate remaining pills as a number from stock string
@@ -104,8 +102,8 @@ export default function MedicationCard({ medication }: MedicationCardProps) {
 
       <View className="mb-2 space-y-1">
         <Text
-            style={{ fontFamily: "Poppins_400Regular" }}
-            className="text-gray-600 font-bold"
+          style={{ fontFamily: "Poppins_400Regular" }}
+          className="text-gray-600 font-bold"
         >
           • début: {new Date(medication.startDate).toLocaleDateString()}, fin:{" "}
           {new Date(medication.endDate).toLocaleDateString()}
@@ -124,22 +122,20 @@ export default function MedicationCard({ medication }: MedicationCardProps) {
         >
           • Il reste {medication.stock} comprimés
         </Text>
-
       </View>
 
-        {/* Duration pill - Calculate duration from start and end date */}
-        <View className="relative bg-secondary rounded-xl py-2 pt-4 px-4">
-
-          <Text  className="text-secondary font-semibold w-fit bg-primary-500 text-sm absolute right-0 -top-2 p-2 rounded-lg">
-            Pendant{ medication.duration}  jours
-          </Text>
-          <Text
-            style={{ fontFamily: "Poppins_500Medium" }}
-            className="text-black font-semibold text-md"
-          >
-            { medication.frequency} foix/jour, le matin, le soir
-          </Text>
-        </View>
+      {/* Duration pill - Calculate duration from start and end date */}
+      <View className="relative bg-secondary rounded-xl py-2 pt-4 px-4">
+        <Text className="text-secondary font-semibold w-fit bg-primary-500 text-sm absolute right-0 -top-2 p-2 rounded-lg">
+          Pendant{medication.duration} jours
+        </Text>
+        <Text
+          style={{ fontFamily: "Poppins_500Medium" }}
+          className="text-black font-semibold text-md"
+        >
+          {medication.frequency} foix/jour, le matin, le soir
+        </Text>
+      </View>
 
       {/* Position pill icon in top right, rotated horizontally */}
       <View className="absolute -top-8 right-4 transform -scale-x-[-1]">
