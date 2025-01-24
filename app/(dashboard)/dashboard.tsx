@@ -101,6 +101,34 @@ interface Appointment {
   color?: string;
 }
 
+interface Medication {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  dosage: string;
+  stock: string;
+  duration: string;
+  frequency: string;
+  notes: string;
+  schedule: {
+    matin: boolean;
+    apres_midi: boolean;
+    soir: boolean;
+    nuit: boolean;
+  };
+  reminders: string[];
+  file: UploadedFile | null;
+  image: UploadedFile | null;
+  momentDePrise: string;
+  isActive: boolean;
+}
+
+interface UploadedFile {
+  uri: string;
+  name: string;
+}
+
 function Dashboard() {
   // Hooks
   const { colors } = useTheme();
@@ -116,8 +144,46 @@ function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [consultations, setConsultations] = useState<Consultation[]>([]);
+  const [consultations, setConsultations] = useState<any[]>([]);
+  const [medicaments, setMedicaments] = useState<Medication[]>([]);
 
+  console.log("medicaments", medicaments.length);
+
+  const filteredMedicaments = medicaments.filter(
+    (medicament) => new Date(medicament.endDate) > new Date()
+  );
+
+  let filtredData = consultations.filter(
+    (consultation) =>
+      new Date(consultation.nextConsultationDate).getTime() >
+      new Date().getTime()
+  );
+
+  let monPlanningItems = [...filtredData, ...filteredMedicaments];
+
+  monPlanningItems = monPlanningItems.sort((a, b) => {
+    // If both items are consultations, sort by nextConsultationDate
+    if (a.nextConsultationDate && b.nextConsultationDate) {
+      return (
+        new Date(a.nextConsultationDate).getTime() -
+        new Date(b.nextConsultationDate).getTime()
+      );
+    }
+    // If both items are medications, sort by endDate
+    if (a.endDate && b.endDate) {
+      return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
+    }
+    // If mixing types, consultation's nextConsultationDate vs medication's endDate
+    const dateA = a.nextConsultationDate
+      ? new Date(a.nextConsultationDate)
+      : new Date(a.endDate);
+    const dateB = b.nextConsultationDate
+      ? new Date(b.nextConsultationDate)
+      : new Date(b.endDate);
+    return dateA.getTime() - dateB.getTime();
+  });
+
+  //     [
   //     [
   //   {
   //     id: '1',
@@ -149,15 +215,30 @@ function Dashboard() {
 
       if (error) throw error;
 
-      let filtredData = data.filter(
-        (consultation) =>
-          new Date(consultation.nextConsultationDate).getTime() >
-          new Date().getTime()
-      );
-
-      setConsultations(filtredData || []);
+      setConsultations(data || []);
     } catch (e) {
       console.error("Error fetching consultations:", e);
+    }
+  };
+
+  const fetchMedications = async () => {
+    const { data, error } = await supabase
+      .from("medicaments")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching medications:", error);
+      return;
+    }
+
+    if (data) {
+      // Transform the data to match your component's needs
+      const transformedData = data.map((med) => ({
+        ...med,
+        isActive: new Date(med.endDate) > new Date(), // Check if medication is still active
+      }));
+      setMedicaments(transformedData);
     }
   };
 
@@ -179,8 +260,34 @@ function Dashboard() {
       )
       .subscribe();
 
+    fetchMedications();
+
+    // Set up real-time subscription
+    const subscriptionMedicament = supabase
+      .channel("medicaments_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "medicaments",
+        },
+        async (payload) => {
+          const { data } = await supabase.from("medicaments").select("*");
+          if (data) {
+            const transformedData = data.map((med) => ({
+              ...med,
+              isActive: new Date(med.endDate) > new Date(),
+            }));
+            setMedicaments(transformedData);
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       subscription.unsubscribe();
+      subscriptionMedicament.unsubscribe();
     };
   }, []);
 
@@ -450,54 +557,74 @@ function Dashboard() {
             showsHorizontalScrollIndicator={false}
             className="flex flex-row gap-4"
           >
-            {consultations.length > 0 ? (
-              consultations.map((consultations: any) => (
-                <View
-                  key={consultations.id}
-                  className={`w-64 bg-primary-500 rounded-3xl flex-col justify-between p-4 pb-5 mr-4`}
-                >
-                  <View className="flex-row items-center justify-between mb-6">
-                    <View className="flex flex-row items-start gap-x-3">
-                      <View className="bg-gray-100 rounded-full h-12 w-12 justify-center items-center">
-                        <Doctor width={24} height={24} />
-                      </View>
-                      <View>
-                        <Text className="text-white font-medium">
-                          {consultations.doctorName}
-                        </Text>
-                        <Text className="text-indigo-200">
-                          {consultations.specialties.name}
-                        </Text>
-                        <View className="flex-row items-center">
-                          <Text className="text-white mr-1">consultation</Text>
-                          <Star size={16} color="#FCD34D" fill="#FCD34D" />
+            {monPlanningItems.length > 0 ? (
+              monPlanningItems.map((consultations: any) => {
+                let isConsultation = !!consultations?.nextConsultationDate;
+                return (
+                  <View
+                    key={consultations.id}
+                    className={`w-64 bg-primary-500 rounded-3xl flex-col justify-between p-4 pb-5 mr-4`}
+                  >
+                    <View className="flex-row items-center justify-between mb-6">
+                      <View className="flex flex-row items-start gap-x-3">
+                        <View className="bg-gray-100 rounded-full h-12 w-12 justify-center items-center">
+                          <Doctor width={24} height={24} />
+                        </View>
+                        <View>
+                          <Text className="text-white font-medium">
+                            {isConsultation
+                              ? consultations?.doctorName
+                              : consultations.name}
+                          </Text>
+                          <Text className="text-indigo-200">
+                            {isConsultation
+                              ? consultations?.specialties?.name
+                              : consultations?.momentDePrise}
+                          </Text>
+                          <View className="flex-row items-center">
+                            <Text className="text-white mr-1">
+                              {isConsultation ? "Consultation" : "Medicament"}
+                            </Text>
+                            <Star size={16} color="#FCD34D" fill="#FCD34D" />
+                          </View>
                         </View>
                       </View>
                     </View>
-                  </View>
-                  <View className="flex flex-row items-center gap-x-4 mt-2">
-                    <View className="flex-row items-center gap-x-2">
-                      <Calendar size={16} color="#E0E7FF" className="mr-2" />
-                      <Text className="text-indigo-100">
-                        {new Date(
-                          consultations.nextConsultationDate
-                        ).toLocaleDateString("fr-FR")}
-                      </Text>
+                    <View className="flex flex-row items-center gap-x-4 mt-2">
+                      <View className="flex-row items-center gap-x-2">
+                        <Calendar size={16} color="#E0E7FF" className="mr-2" />
+                        <Text className="text-indigo-100">
+                          {isConsultation
+                            ? new Date(
+                                consultations.nextConsultationDate
+                              ).toLocaleDateString("fr-FR")
+                            : new Date(
+                                consultations.endDate
+                              ).toLocaleDateString("fr-FR")}
+                        </Text>
+                      </View>
+                      <View className="flex-row items-center gap-x-2">
+                        <Clock size={16} color="#E0E7FF" className="mr-2" />
+                        <Text className="text-indigo-100">
+                          {isConsultation
+                            ? new Date(
+                                consultations.nextConsultationDate
+                              ).toLocaleTimeString("fr-FR", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : new Date(
+                                consultations.endDate
+                              ).toLocaleTimeString("fr-FR", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                        </Text>
+                      </View>
                     </View>
-                    <View className="flex-row items-center gap-x-2">
-                      <Clock size={16} color="#E0E7FF" className="mr-2" />
-                      <Text className="text-indigo-100">
-                        {new Date(
-                          consultations.nextConsultationDate
-                        ).toLocaleTimeString("fr-FR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </Text>
-                    </View>
                   </View>
-                </View>
-              ))
+                );
+              })
             ) : (
               <>
                 {[1, 2].map((key) => (
