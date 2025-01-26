@@ -416,7 +416,7 @@ export default function MergedExamensRadiologiques() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
         <ScrollView className="flex-1 p-6">
-          <View className="gap-y-4">
+          <View className="gap-y-4 pb-10">
             {/* Name/Type Input */}
             <View>
               <Text className="text-md font-medium text-gray-700 mb-1">
@@ -729,7 +729,7 @@ export default function MergedExamensRadiologiques() {
       <View className="p-6 bg-white border-t border-gray-200">
         <TouchableOpacity
           onPress={handleSubmit}
-          className="w-full bg-indigo-600 rounded-xl py-3 items-center"
+          className="w-full bg-primary-500 rounded-xl py-3 items-center"
         >
           <Text className="text-white font-semibold text-lg">
             {isLoading ? "Chargement..." : "Enregistrer"}

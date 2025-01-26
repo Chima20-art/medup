@@ -100,7 +100,7 @@ export default function MedicationCard({ medication }: MedicationCardProps) {
         />
       </View>
 
-      <View className="mb-2 space-y-1">
+      <View className="mb-4 flex flex-col gap-y-2">
         <Text
           style={{ fontFamily: "Poppins_400Regular" }}
           className="text-gray-600 font-bold"
@@ -111,24 +111,27 @@ export default function MedicationCard({ medication }: MedicationCardProps) {
 
         <Text
           style={{ fontFamily: "Poppins_400Regular" }}
-          className="text-gray-600 font-bold"
+          className="text-gray-600 font-semibold"
         >
-          • {medication.dosage} mg
+          • {medication.dosage}
         </Text>
 
         <Text
           style={{ fontFamily: "Poppins_400Regular" }}
           className="text-gray-600 font-bold"
         >
-          • Il reste {medication.stock} comprimés
+          • Il reste {medication.stock}
         </Text>
       </View>
 
       {/* Duration pill - Calculate duration from start and end date */}
       <View className="relative bg-secondary rounded-xl py-2 pt-4 px-4">
-        <Text className="text-secondary font-semibold w-fit bg-primary-500 text-sm absolute right-0 -top-2 p-2 rounded-lg">
-          Pendant{medication.duration} jours
-        </Text>
+        <View className="bg-primary-500 text-xs absolute -right-1 -top-6 p-2 rounded-xl">
+          <Text className="text-secondary">
+            Pendant {medication.duration}
+          </Text>
+        </View>
+
         <Text
           style={{ fontFamily: "Poppins_500Medium" }}
           className="text-black font-semibold text-md"

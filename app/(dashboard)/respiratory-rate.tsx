@@ -93,6 +93,7 @@ export default function RespiratoryRate() {
       console.error("Error saving respiratory rate value:", error);
     } finally {
       setShowAddValue(false);
+      setValue('')
     }
   };
 
@@ -146,11 +147,10 @@ export default function RespiratoryRate() {
               if (selectedDate) setDate(selectedDate);
             }}
             onDateConfirm={(selectedDate: Date) => setDate(selectedDate)}
-            onNumberPress={handleNumberPress}
-            onDeletePress={handleDeletePress}
             onDonePress={handleDone}
             unit="resp/min"
-        />
+            onChangeValue={setValue}
+            onNumberPress={()=>{}}/>
     );
   }
 
@@ -167,7 +167,7 @@ export default function RespiratoryRate() {
         </Text>
         <TouchableOpacity
             onPress={() => setShowAddValue(true)}
-            className="bg-indigo-500 px-6 py-3 rounded-full flex-row items-center"
+            className="bg-primary-500 px-6 py-3 rounded-full flex-row items-center"
         >
           <Plus size={20} color="white" />
           <Text className="text-white font-semibold ml-2">Ajouter une mesure</Text>
@@ -213,7 +213,7 @@ export default function RespiratoryRate() {
               })}
             </Text>
           </View>
-          <View className="w-2 h-2 rounded-full bg-indigo-500" />
+          <View className="w-2 h-2 rounded-full bg-primary-500" />
         </TouchableOpacity>
       </Swipeable>
   );
@@ -221,18 +221,20 @@ export default function RespiratoryRate() {
   return (
       <SafeAreaView className="flex-1 bg-gray-50">
         {/* Header */}
-        <View className="px-6 pt-14 pb-4 bg-white shadow-sm">
-          <View className="flex-row items-center justify-between">
-            <TouchableOpacity
-                onPress={() => router.back()}
-                className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
-            >
-              <ChevronLeft size={34} color="#4F46E5" />
-            </TouchableOpacity>
-            <Text className="text-2xl font-bold text-gray-800">Fréquence respiratoire</Text>
+        <View className="px-6 pt-4 pb-4 bg-white shadow-sm">
+          <View className="flex-row  justify-between">
+           <View className="flex-row items-center">
+               <TouchableOpacity
+                   onPress={() => router.back()}
+                   className="w-10 h-10 justify-items-start rounded-full bg-gray-100"
+               >
+                   <ChevronLeft size={34} color="#4F46E5" />
+               </TouchableOpacity>
+               <Text className="text-2xl font-bold text-primary-500 ml-2">Fréquence respiratoire</Text>
+           </View>
             <TouchableOpacity
                 onPress={() => setShowAddValue(true)}
-                className="w-10 h-10 items-center justify-center rounded-full bg-indigo-500"
+                className="w-10 h-10 items-center justify-center rounded-full bg-primary-500"
             >
               <Plus size={24} color="white" />
             </TouchableOpacity>

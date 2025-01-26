@@ -728,7 +728,7 @@ export default function MergedExamensRadiologiques() {
       <View className="p-6 bg-white border-t border-gray-200">
         <TouchableOpacity
           onPress={handleSubmit}
-          className="w-full bg-indigo-600 rounded-xl py-3 items-center"
+          className="w-full bg-primary-500 rounded-xl py-3 items-center"
         >
           <Text className="text-white font-semibold text-xl">
             {isLoading ? "Chargement..." : "Enregistrer"}

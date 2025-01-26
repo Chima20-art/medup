@@ -42,7 +42,7 @@ export default function Add() {
     ] as const;
 
     return (
-        <View className="flex-1 pt-12 bg-gray-50">
+        <View className="flex-1 pt-4 bg-gray-50">
             {/* Header Section */}
             <View className="flex-row px-6 pt-14 pb-6 bg-white">
                 <TouchableOpacity onPress={() => router.back()}

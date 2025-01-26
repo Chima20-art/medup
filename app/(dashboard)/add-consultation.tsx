@@ -1561,7 +1561,7 @@ export default function AddConsultation() {
           onPress={handleSubmit}
           disabled={isLoading}
           className={`w-full rounded-xl py-3 items-center ${
-            isLoading ? "bg-indigo-400" : "bg-indigo-600"
+            isLoading ? "bg-primary-400" : "bg-primary-500"
           }`}
         >
           <Text className="text-white font-semibold text-xl">

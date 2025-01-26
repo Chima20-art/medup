@@ -64,12 +64,12 @@ const categoryCardStyle = {
 // Categories data
 const categories = [
   {
-    title: "mes Examens\nradiologiques",
+    title: "Mes Examens\nRadiologiques",
     image: RadioCategory,
     route: "/list-examins-radiologiques",
   },
   {
-    title: "mes Examens\nBiologiques",
+    title: "Mes Examens\nBiologiques",
     image: BioCategory,
     route: "/list-biologie",
   },
@@ -182,27 +182,6 @@ function Dashboard() {
       : new Date(b.endDate);
     return dateA.getTime() - dateB.getTime();
   });
-
-  //     [
-  //     [
-  //   {
-  //     id: '1',
-  //     doctorName: 'Dr. Jason Smith',
-  //     specialty: 'Dentist',
-  //     rating: 4.8,
-  //     date: '5 Oct',
-  //     time: '10:30pm',
-  //     color: 'bg-indigo-600'
-  //   },
-  //   {
-  //     id: '2',
-  //     doctorName: 'Dr. Sarah Johnson',
-  //     specialty: 'Cardiologist',
-  //     rating: 4.9,
-  //     date: '7 Oct',
-  //     time: '2:15pm',
-  //     color: 'bg-primary-500'},
-  // ]
 
   const shimmerAnimation = useRef(new Animated.Value(0)).current;
 

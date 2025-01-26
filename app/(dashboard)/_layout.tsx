@@ -74,7 +74,7 @@ export default function DashboardLayout() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="items-center justify-center w-16 h-16 bg-indigo-600 rounded-full -mt-8 shadow-lg"
+            className="items-center justify-center w-16 h-16 bg-primary-500 rounded-full -mt-8 shadow-lg"
             onPress={handlePlusPress}
           >
             <Plus size={32} color="#ffffff" />
