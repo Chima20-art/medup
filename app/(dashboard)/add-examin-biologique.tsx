@@ -276,7 +276,7 @@ export default function MergedExamensRadiologiques() {
 
     if (error) {
       console.error("Error inserting data:", error);
-      Alert.alert("Error", "Failed to save form data. Please try again.");
+      Alert.alert("Erreur", "échec de l’enregistrement des données du formulaire , veuillez réessayer.");
       setIsLoading(false);
       return;
     }
@@ -389,7 +389,7 @@ export default function MergedExamensRadiologiques() {
     }
 
     setIsLoading(false);
-    Alert.alert("Success", "Form data and files saved successfully");
+    Alert.alert("Success", "Vos informations ont été sauvegardées avec succès ");
     router.push("/list-biologie");
   };
 
@@ -522,7 +522,7 @@ export default function MergedExamensRadiologiques() {
             {/* Laboratory Input */}
             <View>
               <Text className="text-md font-medium text-gray-700 mb-1">
-                Nom du Labo
+                Lieu de réalisation
               </Text>
               <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-14">
                 <Building2
@@ -535,7 +535,7 @@ export default function MergedExamensRadiologiques() {
                   onChangeText={(text) =>
                     setFormData((prev) => ({ ...prev, laboratory: text }))
                   }
-                  placeholder="Nom du Labo"
+                  placeholder="Lieu de réalisation"
                   placeholderTextColor="#9CA3AF"
                   className="flex-1 ml-3 text-md font-semibold"
                 />

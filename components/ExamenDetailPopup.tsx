@@ -33,18 +33,20 @@ import SupabaseAudioPlayer from "./supabaseAudioPlayer";
 const { height, width } = Dimensions.get("window");
 
 interface ExamenDetailPopupProps {
-  examen: any;
-  slideAnim?: Animated.Value;
-  bucket: string;
-  onClose: () => void;
+  examen: any
+  slideAnim?: Animated.Value
+  bucket: string
+  onClose: () => void
+  onDelete: (id: number) => void
 }
 
 const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
-  examen,
-  slideAnim: propSlideAnim,
-  bucket,
-  onClose,
-}) => {
+                                                               examen,
+                                                               slideAnim: propSlideAnim,
+                                                               bucket,
+                                                               onClose,
+                                                               onDelete,
+                                                             }) => {
   if (!examen) {
     console.error("L'examen est nul ou non défini");
     return null;
@@ -96,49 +98,40 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
   };
 
   const onDeleteItem = async () => {
-    Alert.alert(
-      "Confirmer la suppression",
-      "Êtes-vous sûr de vouloir supprimer cet examen ?",
-      [
-        { text: "Annuler", style: "cancel" },
-        {
-          text: "Supprimer",
-          style: "destructive",
-          onPress: async () => {
-            setLoading(true);
-            try {
-              let uploads: string[] = examen.uploads || [];
-              let rowId: number = examen.id;
+    Alert.alert("Confirmer la suppression", "Êtes-vous sûr de vouloir supprimer cet examen ?", [
+      { text: "Annuler", style: "cancel" },
+      {
+        text: "Supprimer",
+        style: "destructive",
+        onPress: async () => {
+          setLoading(true)
+          try {
+            const uploads: string[] = examen.uploads || []
+            const rowId: number = examen.id
 
-              const { error: deleteError } = await supabase
-                .from(bucket)
-                .delete()
-                .eq("id", rowId);
+            const { error: deleteError } = await supabase.from(bucket).delete().eq("id", rowId)
 
-              if (deleteError) throw deleteError;
+            if (deleteError) throw deleteError
 
-              for (const upload of uploads) {
-                const { error: removeError } = await supabase.storage
-                  .from(bucket)
-                  .remove([upload]);
+            for (const upload of uploads) {
+              const { error: removeError } = await supabase.storage.from(bucket).remove([upload])
 
-                if (removeError) throw removeError;
-              }
-
-              Alert.alert("Succès", "Examen supprimé avec succès");
-              onClose();
-            } catch (err) {
-              console.error("Erreur lors de la suppression de l'élément:", err);
-              Alert.alert("Erreur", "Échec de la suppression de l'examen");
-            } finally {
-              setLoading(false);
+              if (removeError) throw removeError
             }
-          },
-        },
-      ]
-    );
-  };
 
+            Alert.alert("Succès", "Examen supprimé avec succès")
+            onDelete(rowId)
+            onClose()
+          } catch (err) {
+            console.error("Erreur lors de la suppression de l'élément:", err)
+            Alert.alert("Erreur", "Échec de la suppression de l'examen")
+          } finally {
+            setLoading(false)
+          }
+        },
+      },
+    ])
+  }
   const downloadFile = async () => {
     try {
       setLoading(true);
@@ -219,6 +212,43 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
     }
   };
 
+  const shareFile = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      if (!examen.uploads || examen.uploads.length === 0) {
+        throw new Error("Aucun fichier disponible pour le partage")
+      }
+
+      const path = examen.uploads[currentFileIndex]
+      const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 3600)
+
+      if (error) throw error
+
+      const signedUrl = data?.signedUrl
+      if (!signedUrl) throw new Error("URL signée invalide")
+
+      const fileName = path.split("/").pop() || "fichier-à-partager"
+      const downloadResult = await FileSystem.downloadAsync(signedUrl, FileSystem.cacheDirectory + fileName)
+
+      if (downloadResult.status !== 200) throw new Error("Le téléchargement pour le partage a échoué")
+
+      const canShare = await Sharing.isAvailableAsync()
+      if (canShare) {
+        await Sharing.shareAsync(downloadResult.uri)
+      } else {
+        throw new Error("Le partage n'est pas disponible sur cette plateforme")
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Une erreur s'est produite")
+      console.error("Erreur lors du partage du fichier:", err)
+      Alert.alert("Erreur", "Échec du partage du fichier")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const isCurrentFilePDF = useMemo(() => {
     if (!examen.uploads || examen.uploads.length === 0) return false;
     const currentFile = examen.uploads[currentFileIndex];
@@ -257,7 +287,7 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
         </PanGestureHandler>
         {examen.uploads.length > 1 && (
           <View className="flex-row justify-center gap-x-1">
-            {examen.uploads.map((_: any, index: number) => (
+            {examen?.uploads?.map((_: any, index: number) => (
               <TouchableOpacity
                 key={index}
                 onPress={() => setCurrentFileIndex(index)}
@@ -322,7 +352,7 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
           <TouchableOpacity onPress={downloadFile} className="p-2">
             <Download size={20} color="#5b7bf6" />
           </TouchableOpacity>
-          <TouchableOpacity className="p-2">
+          <TouchableOpacity onPress={shareFile} className="p-2">
             <Share2 size={20} color="#5b7bf6" />
           </TouchableOpacity>
         </View>
@@ -383,7 +413,7 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
                   showsHorizontalScrollIndicator={false}
                   className="flex-row gap-x-3"
                 >
-                  {examen.uploads.map((upload: string, index: number) => (
+                  {examen?.uploads?.map((upload: string, index: number) => (
                     <TouchableOpacity
                       key={index}
                       onPress={() => setCurrentFileIndex(index)}

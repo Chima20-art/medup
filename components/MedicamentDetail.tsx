@@ -1,176 +1,69 @@
-import React, { useState, useRef, useEffect } from "react";
+import type React from "react"
+import { useState, useCallback } from "react"
+import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, Switch, Image } from "react-native"
+import { useTheme } from "@react-navigation/native"
+import { supabase } from "@/utils/supabase"
+import { useRouter } from "expo-router"
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
-  Alert,
-  TouchableWithoutFeedback,
-  Modal,
-  Animated,
-} from "react-native";
-import { useRouter } from "expo-router";
-import { useTheme } from "@react-navigation/native";
-import {
-  ChevronLeft,
   Calendar,
-  FileText,
   Clock,
-  Pill,
-  FileUp,
-  ChevronDown,
-  FlaskConical,
-  Container,
-  Trash2,
   Edit2,
+  FileText,
+  FlaskConical,
+  Pill,
+  Repeat,
   Save,
+  Trash2,
   X,
   Download,
-  Image,
-} from "lucide-react-native";
-import * as DocumentPicker from "expo-document-picker";
-import { supabase } from "@/utils/supabase";
-import { Calendar as RNCalendar, LocaleConfig } from "react-native-calendars";
-import * as FileSystem from "expo-file-system";
-import * as Sharing from "expo-sharing";
+  Container,
+  Timer,
+  ArrowLeft,
+} from "lucide-react-native"
+import { format } from "date-fns"
+import { fr } from "date-fns/locale"
+import * as FileSystem from "expo-file-system"
+import * as Sharing from "expo-sharing"
+import Medicine from "@/assets/images/medicine.svg"
+import SupabaseAudioPlayer from "@/components/SupabaseAudioPlayer"
+import DateTimePicker from "@react-native-community/datetimepicker"
 
-// Configure French locale
-LocaleConfig.locales["fr"] = {
-  monthNames: [
-    "Janvier",
-    "Février",
-    "Mars",
-    "Avril",
-    "Mai",
-    "Juin",
-    "Juillet",
-    "Août",
-    "Septembre",
-    "Octobre",
-    "Novembre",
-    "Décembre",
-  ],
-  monthNamesShort: [
-    "Janv.",
-    "Févr.",
-    "Mars",
-    "Avril",
-    "Mai",
-    "Juin",
-    "Juil.",
-    "Août",
-    "Sept.",
-    "Oct.",
-    "Nov.",
-    "Déc.",
-  ],
-  dayNames: [
-    "Dimanche",
-    "Lundi",
-    "Mardi",
-    "Mercredi",
-    "Jeudi",
-    "Vendredi",
-    "Samedi",
-  ],
-  dayNamesShort: ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."],
-  today: "Aujourd'hui",
-};
-LocaleConfig.defaultLocale = "fr";
-
-interface UploadedFile {
-  uri: string;
-  name: string;
+interface MedicamentDetailProps {
+  initialData: {
+    id: string
+    name: string
+    startDate: string
+    endDate: string
+    dosage: string
+    stock: string
+    duration: string
+    frequency: string
+    notes: string
+    schedule: {
+      matin: boolean
+      apres_midi: boolean
+      soir: boolean
+      nuit: boolean
+    }
+    isActive: boolean
+    reminders: string[]
+    uploads: { uri: string; name: string; type: string }[]
+    momentDePrise: string
+  }
 }
 
-export default function MedicamentDetail({ initialData }: { initialData: any }) {
-  const router = useRouter();
-  const { colors } = useTheme();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [formData, setFormData] = useState(initialData);
-
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-  const [showMomentDePrisePicker, setShowMomentDePrisePicker] = useState(false);
-  const dropdownAnimation = useRef(new Animated.Value(0)).current;
-  const momentDePriseInputRef = useRef(null);
-  const [dropdownLayout, setDropdownLayout] = useState({
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-  });
-
-  const momentDePriseOptions = [
-    { label: "Avant le repas", value: "avant_le_repas" },
-    { label: "Pendant le repas", value: "pendant_le_repas" },
-    { label: "Après le repas", value: "apres_le_repas" },
-    { label: "Non précisé", value: "non_precise" },
-  ];
-
-  useEffect(() => {
-    if (showMomentDePrisePicker) {
-      Animated.timing(dropdownAnimation, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(dropdownAnimation, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [showMomentDePrisePicker]);
-
-  const handleDelete = async () => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase
-          .from("medicaments")
-          .delete()
-          .eq("id", initialData.id);
-
-      if (error) throw error;
-
-      if (formData.file) {
-        await supabase.storage.from("medicaments").remove([formData.file.uri]);
-      }
-
-      Alert.alert("Success", "Medication deleted successfully");
-      router.push("/list-medicaments");
-    } catch (error) {
-      console.error("Error:", error);
-      Alert.alert("Error", "Failed to delete medication");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const MedicamentDetail: React.FC<MedicamentDetailProps> = ({ initialData }) => {
+  const [isEditing, setIsEditing] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [formData, setFormData] = useState(initialData)
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false)
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false)
+  const { colors } = useTheme()
+  const router = useRouter()
 
   const handleUpdate = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      let filePath = formData.file?.uri || null;
-
-      if (formData.file && formData.file.uri.startsWith("file://")) {
-        const fileName = formData.file.uri.split("/").pop();
-        if (fileName) {
-          filePath = `${Date.now()}_${fileName}`;
-          const response = await fetch(formData.file.uri);
-          const blob = await response.blob();
-
-          const { error: uploadError } = await supabase.storage
-              .from("medicaments")
-              .upload(filePath, blob);
-
-          if (uploadError) throw uploadError;
-        }
-      }
-
       const { error } = await supabase
           .from("medicaments")
           .update({
@@ -178,575 +71,336 @@ export default function MedicamentDetail({ initialData }: { initialData: any }) 
             startDate: formData.startDate,
             endDate: formData.endDate,
             dosage: formData.dosage,
+            stock: formData.stock,
+            duration: formData.duration,
+            frequency: formData.frequency,
             notes: formData.notes,
             schedule: formData.schedule,
-            file: filePath,
+            isActive: formData.isActive,
+            reminders: formData.reminders,
             momentDePrise: formData.momentDePrise,
-            stock: formData.stock,
           })
-          .eq("id", initialData.id);
+          .eq("id", formData.id)
 
-      if (error) throw error;
+      if (error) throw error
 
-      Alert.alert("Success", "Medication updated successfully");
-      setIsEditing(false);
+      Alert.alert("Succès", "Médicament mis à jour avec succès")
+      setIsEditing(false)
     } catch (error) {
-      console.error("Error:", error);
-      Alert.alert("Error", "Failed to update medication");
+      console.error("Error:", error)
+      Alert.alert("Erreur", "Échec de la mise à jour du médicament")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
+
+  const handleDelete = async () => {
+    Alert.alert("Confirmer la suppression", "Êtes-vous sûr de vouloir supprimer ce médicament ?", [
+      { text: "Annuler", style: "cancel" },
+      {
+        text: "Supprimer",
+        style: "destructive",
+        onPress: async () => {
+          setIsLoading(true)
+          try {
+            const { error } = await supabase.from("medicaments").delete().eq("id", formData.id)
+
+            if (error) throw error
+
+            Alert.alert("Succès", "Médicament supprimé avec succès")
+            router.back()
+          } catch (error) {
+            console.error("Error:", error)
+            Alert.alert("Erreur", "Échec de la suppression du médicament")
+          } finally {
+            setIsLoading(false)
+          }
+        },
+      },
+    ])
+  }
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return "Sélectionner une date";
-    const [year, month, day] = dateString.split("-");
-    return `${day}-${month}-${year}`;
-  };
+    return format(new Date(dateString), "dd-MM-yyyy", { locale: fr })
+  }
 
-  const onChangeStartDate = (date: any) => {
-    setFormData((prev) => ({ ...prev, startDate: date.dateString }));
-    setShowStartDatePicker(false);
-  };
-
-  const onChangeEndDate = (date: any) => {
-    setFormData((prev) => ({ ...prev, endDate: date.dateString }));
-    setShowEndDatePicker(false);
-  };
-
-  const pickDocument = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: "application/pdf",
-    });
-
-    if (result.assets && result.assets[0]) {
+  const handleDateChange = (event: any, selectedDate: Date | undefined, dateType: "start" | "end") => {
+    if (selectedDate) {
       setFormData((prev) => ({
         ...prev,
-        file: {
-          uri: result.assets[0].uri,
-          name: result.assets[0].name,
-        },
-      }));
+        [dateType === "start" ? "startDate" : "endDate"]: selectedDate.toISOString().split("T")[0],
+      }))
     }
-  };
+    setShowStartDatePicker(false)
+    setShowEndDatePicker(false)
+  }
 
-  const deleteFile = () => {
-    setFormData((prev) => ({
-      ...prev,
-      file: null,
-    }));
-  };
+  const downloadFile = async (file: { uri: string; name: string }) => {
+    try {
+      const { data, error } = await supabase.storage.from("medicaments").createSignedUrl(file.uri, 3600)
 
-  const saveFile = async (file: UploadedFile | null) => {
-    if (file) {
-      try {
-        const path = file.uri;
-        const { data, error } = await supabase.storage
-            .from("medicaments")
-            .createSignedUrl(path, 3600);
+      if (error) throw error
 
-        if (error) {
-          throw new Error("No signed URL available");
-        }
+      const downloadResult = await FileSystem.downloadAsync(data.signedUrl, FileSystem.documentDirectory + file.name)
 
-        let signedUrl = data?.signedUrl;
-
-        const fileName = path.split("/").pop() || "downloaded-file";
-
-        const downloadResult = await FileSystem.downloadAsync(
-            signedUrl,
-            FileSystem.documentDirectory + fileName
-        );
-
-        if (downloadResult.status !== 200) {
-          throw new Error("Download failed");
-        }
-
-        const canShare = await Sharing.isAvailableAsync();
-        if (canShare) {
-          await Sharing.shareAsync(downloadResult.uri);
-        } else {
-          throw new Error("Sharing is not available on this platform");
-        }
-      } catch (error) {
-        console.error("Error downloading file:", error);
+      if (downloadResult.status !== 200) {
+        throw new Error("Download failed")
       }
+
+      await Sharing.shareAsync(downloadResult.uri)
+    } catch (error) {
+      console.error("Error downloading file:", error)
+      Alert.alert("Erreur", "Échec du téléchargement du fichier")
     }
-  };
+  }
 
   return (
-      <TouchableWithoutFeedback
-          onPress={() => {
-            setShowStartDatePicker(false);
-            setShowEndDatePicker(false);
-            setShowMomentDePrisePicker(false);
-          }}
-      >
-        <View className="flex-1 bg-gray-50">
-          {/* Header */}
-          <View className="px-6 pt-14 pb-6 bg-white">
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center">
-                <TouchableOpacity
-                    onPress={() => router.back()}
-                    className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
-                >
-                  <ChevronLeft size={24} color={colors.text} />
-                </TouchableOpacity>
-                <Text className="font-bold text-xl text-gray-900 ml-4">
-                  Détails du médicament
-                </Text>
+      <View className="flex-1 bg-gray-50">
+        <View className="bg-white p-4 mb-4 flex-row items-center">
+          <TouchableOpacity onPress={() => router.back()} className="mr-4">
+            <ArrowLeft size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text className="text-xl font-bold">Détail du médicament</Text>
+        </View>
+        <ScrollView className="flex-1 px-4">
+          <View className="space-y-4 pb-10">
+            {/* Nom du médicament */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Nom du médicament</Text>
+              <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
+                <Pill size={20} color={colors.text} className="opacity-50" />
+                <TextInput
+                    value={formData.name}
+                    onChangeText={(text) => setFormData((prev) => ({ ...prev, name: text }))}
+                    placeholder="Nom du médicament"
+                    placeholderTextColor="#9CA3AF"
+                    className="flex-1 ml-3"
+                    editable={isEditing}
+                />
               </View>
-              <View className="flex-row gap-2">
-                {!isEditing ? (
-                    <>
-                      <TouchableOpacity
-                          onPress={() => setIsEditing(true)}
-                          className="w-10 h-10 items-center justify-center rounded-full bg-primary-100"
-                      >
-                        <Edit2 size={20} color={colors.primary} />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                          onPress={() => setShowDeleteConfirm(true)}
-                          className="w-10 h-10 items-center justify-center rounded-full bg-red-100"
-                      >
-                        <Trash2 size={20} color="rgb(220 38 38)" />
-                      </TouchableOpacity>
-                    </>
+            </View>
+
+            {/* Date de début */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Date de début</Text>
+              <TouchableOpacity
+                  onPress={() => isEditing && setShowStartDatePicker(true)}
+                  className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12"
+              >
+                <Calendar size={20} color={colors.text} className="opacity-50" />
+                <Text className="flex-1 ml-3 text-gray-700">{formatDate(formData.startDate)}</Text>
+              </TouchableOpacity>
+              {showStartDatePicker && (
+                  <DateTimePicker
+                      value={new Date(formData.startDate)}
+                      mode="date"
+                      display="default"
+                      onChange={(event, selectedDate) => handleDateChange(event, selectedDate, "start")}
+                  />
+              )}
+            </View>
+
+            {/* Date de fin */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Date de fin</Text>
+              <TouchableOpacity
+                  onPress={() => isEditing && setShowEndDatePicker(true)}
+                  className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12"
+              >
+                <Calendar size={20} color={colors.text} className="opacity-50" />
+                <Text className="flex-1 ml-3 text-gray-700">{formatDate(formData.endDate)}</Text>
+              </TouchableOpacity>
+              {showEndDatePicker && (
+                  <DateTimePicker
+                      value={new Date(formData.endDate)}
+                      mode="date"
+                      display="default"
+                      onChange={(event, selectedDate) => handleDateChange(event, selectedDate, "end")}
+                  />
+              )}
+            </View>
+
+            {/* Dosage */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Dosage</Text>
+              <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
+                <FlaskConical size={20} color={colors.text} className="opacity-50" />
+                <TextInput
+                    value={formData.dosage}
+                    onChangeText={(text) => setFormData((prev) => ({ ...prev, dosage: text }))}
+                    placeholder="Ex: 50 mg, 50 ml"
+                    placeholderTextColor="#9CA3AF"
+                    className="flex-1 ml-3"
+                    editable={isEditing}
+                />
+              </View>
+            </View>
+
+            {/* Stock */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Stock</Text>
+              <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
+                <Container size={20} color={colors.text} className="opacity-50" />
+                <TextInput
+                    value={formData.stock}
+                    onChangeText={(text) => setFormData((prev) => ({ ...prev, stock: text }))}
+                    placeholder="Ex: 50 comprimés"
+                    placeholderTextColor="#9CA3AF"
+                    className="flex-1 ml-3"
+                    editable={isEditing}
+                />
+              </View>
+            </View>
+
+            {/* Durée */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Durée</Text>
+              <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
+                <Timer size={20} color={colors.text} className="opacity-50" />
+                <TextInput
+                    value={formData.duration}
+                    onChangeText={(text) => setFormData((prev) => ({ ...prev, duration: text }))}
+                    placeholder="Ex: 10 jours"
+                    placeholderTextColor="#9CA3AF"
+                    className="flex-1 ml-3"
+                    editable={isEditing}
+                />
+              </View>
+            </View>
+
+            {/* Fréquence */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Fréquence</Text>
+              <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
+                <Repeat size={20} color={colors.text} className="opacity-50" />
+                <TextInput
+                    value={formData.frequency}
+                    onChangeText={(text) => setFormData((prev) => ({ ...prev, frequency: text }))}
+                    placeholder="Ex: X fois/jours, tous les jours"
+                    placeholderTextColor="#9CA3AF"
+                    className="flex-1 ml-3"
+                    editable={isEditing}
+                />
+              </View>
+            </View>
+
+            {/* Moment de prise */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Moment de prise</Text>
+              <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
+                <Clock size={20} color={colors.text} className="opacity-50" />
+                <TextInput
+                    value={formData.momentDePrise}
+                    onChangeText={(text) => setFormData((prev) => ({ ...prev, momentDePrise: text }))}
+                    placeholder="Ex: Avant le repas"
+                    placeholderTextColor="#9CA3AF"
+                    className="flex-1 ml-3"
+                    editable={isEditing}
+                />
+              </View>
+            </View>
+
+            {/* Rappels */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Rappels</Text>
+              <View className="bg-white rounded-xl border border-gray-200 p-4">
+                {formData.reminders && formData.reminders.length > 0 ? (
+                    formData.reminders.map((time, index) => (
+                        <View key={index} className="flex-row items-center justify-between mb-2 bg-gray-50 p-3 rounded-lg">
+                          <View className="flex-row items-center">
+                            <Clock size={20} color={colors.text} className="opacity-50" />
+                            <Text className="ml-3">{time}</Text>
+                          </View>
+                          {isEditing && (
+                              <TouchableOpacity
+                                  onPress={() => {
+                                    const newReminders = [...formData.reminders]
+                                    newReminders.splice(index, 1)
+                                    setFormData((prev) => ({ ...prev, reminders: newReminders }))
+                                  }}
+                                  className="bg-gray-200 rounded-full p-2"
+                              >
+                                <X size={16} color={colors.text} />
+                              </TouchableOpacity>
+                          )}
+                        </View>
+                    ))
                 ) : (
+                    <Text className="text-gray-500">Aucun rappel configuré</Text>
+                )}
+                {isEditing && (
                     <TouchableOpacity
-                        onPress={handleUpdate}
-                        className="w-10 h-10 items-center justify-center rounded-full bg-primary"
+                        onPress={() => {
+                          // Add new reminder logic here
+                        }}
+                        className="flex-row items-center justify-center py-3 mt-2 border-t border-gray-200"
                     >
-                      <Save size={20} color="black" />
+                      <Text className="ml-2 text-primary-500 font-medium">Ajouter un rappel</Text>
                     </TouchableOpacity>
                 )}
               </View>
             </View>
+
+            {/* Notes */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Notes</Text>
+              <View className="bg-white rounded-xl border border-gray-200 p-4">
+                <TextInput
+                    value={formData.notes}
+                    onChangeText={(text) => setFormData((prev) => ({ ...prev, notes: text }))}
+                    placeholder="Ajouter des notes..."
+                    placeholderTextColor="#9CA3AF"
+                    multiline
+                    numberOfLines={4}
+                    className="min-h-[100] text-gray-700"
+                    textAlignVertical="top"
+                    editable={isEditing}
+                />
+              </View>
+            </View>
+
+            {/* Ordonnance */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-1">Ordonnance</Text>
+              <View className="bg-white rounded-xl border border-gray-200 p-4">
+                {formData?.uploads?.map((file, index) => (
+                    <View key={index} className="flex-row items-center justify-between mb-2">
+                      <Text className="text-gray-600">{file.name}</Text>
+                      <TouchableOpacity onPress={() => downloadFile(file)}>
+                        <FileText size={20} color={colors.primary} />
+                      </TouchableOpacity>
+                    </View>
+                ))}
+                {formData?.uploads?.length === 0 && <Text className="text-gray-500">Aucun fichier joint</Text>}
+              </View>
+            </View>
+
+            {/* Action Buttons */}
+            <View className="flex-row justify-between mt-6">
+              {!isEditing ? (
+                  <>
+                    <TouchableOpacity onPress={() => setIsEditing(true)} className="bg-primary-500 px-4 py-2 rounded-xl">
+                      <Text className="text-white">Modifier</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleDelete} className="bg-red-500 px-4 py-2 rounded-xl">
+                      <Text className="text-white">Supprimer</Text>
+                    </TouchableOpacity>
+                  </>
+              ) : (
+                  <TouchableOpacity
+                      onPress={handleUpdate}
+                      disabled={isLoading}
+                      className="bg-primary-500 px-4 py-2 rounded-xl"
+                  >
+                    <Text className="text-white">{isLoading ? "Mise à jour..." : "Enregistrer"}</Text>
+                  </TouchableOpacity>
+              )}
+            </View>
           </View>
-
-          {/* Content */}
-          <ScrollView className="flex-1 p-6">
-            <View className="space-y-4">
-              {/* Name Input */}
-              <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1">
-                  Nom du médicament
-                </Text>
-                <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
-                  <Pill size={20} color={colors.text} className="opacity-50" />
-                  <TextInput
-                      value={formData.name}
-                      onChangeText={(text) =>
-                          setFormData((prev) => ({ ...prev, name: text }))
-                      }
-                      placeholder="Nom du médicament"
-                      placeholderTextColor="#9CA3AF"
-                      className="flex-1 ml-3"
-                      editable={isEditing}
-                  />
-                </View>
-              </View>
-
-              {/* Start Date Input */}
-              <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1">
-                  Date de début
-                </Text>
-                <TouchableOpacity
-                    onPress={() =>
-                        isEditing && setShowStartDatePicker(!showStartDatePicker)
-                    }
-                    className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12"
-                >
-                  <Calendar
-                      size={20}
-                      color={colors.text}
-                      className="opacity-50"
-                  />
-                  <Text className="flex-1 ml-3 text-gray-700">
-                    {formatDate(formData.startDate)}
-                  </Text>
-                </TouchableOpacity>
-                {showStartDatePicker && (
-                    <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
-                      <RNCalendar
-                          onDayPress={(day) => {
-                            onChangeStartDate(day);
-                          }}
-                          markedDates={{
-                            [formData.startDate]: {
-                              selected: true,
-                              selectedColor: colors.primary,
-                            },
-                          }}
-                          theme={{
-                            backgroundColor: "#ffffff",
-                            calendarBackground: "#ffffff",
-                            textSectionTitleColor: colors.text,
-                            selectedDayBackgroundColor: colors.primary,
-                            selectedDayTextColor: "#ffffff",
-                            todayTextColor: colors.primary,
-                            dayTextColor: colors.text,
-                            textDisabledColor: "#d9e1e8",
-                            dotColor: colors.primary,
-                            selectedDotColor: "#ffffff",
-                            arrowColor: colors.text,
-                            monthTextColor: colors.text,
-                            indicatorColor: "blue",
-                            textDayFontFamily: "System",
-                            textMonthFontFamily: "System",
-                            textDayHeaderFontFamily: "System",
-                            textDayFontWeight: "300",
-                            textMonthFontWeight: "bold",
-                            textDayHeaderFontWeight: "300",
-                            textDayFontSize: 16,
-                            textMonthFontSize: 16,
-                            textDayHeaderFontSize: 16,
-                          }}
-                      />
-                    </View>
-                )}
-              </View>
-
-              {/* End Date Input */}
-              <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1">
-                  Date de fin
-                </Text>
-                <TouchableOpacity
-                    onPress={() =>
-                        isEditing && setShowEndDatePicker(!showEndDatePicker)
-                    }
-                    className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12"
-                >
-                  <Calendar
-                      size={20}
-                      color={colors.text}
-                      className="opacity-50"
-                  />
-                  <Text className="flex-1 ml-3 text-gray-700">
-                    {formatDate(formData.endDate)}
-                  </Text>
-                </TouchableOpacity>
-                {showEndDatePicker && (
-                    <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
-                      <RNCalendar
-                          onDayPress={(day) => {
-                            onChangeEndDate(day);
-                          }}
-                          markedDates={{
-                            [formData.endDate]: {
-                              selected: true,
-                              selectedColor: colors.primary,
-                            },
-                          }}
-                          theme={{
-                            backgroundColor: "#ffffff",
-                            calendarBackground: "#ffffff",
-                            textSectionTitleColor: colors.text,
-                            selectedDayBackgroundColor: colors.primary,
-                            selectedDayTextColor: "#ffffff",
-                            todayTextColor: colors.primary,
-                            dayTextColor: colors.text,
-                            textDisabledColor: "#d9e1e8",
-                            dotColor: colors.primary,
-                            selectedDotColor: "#ffffff",
-                            arrowColor: colors.text,
-                            monthTextColor: colors.text,
-                            indicatorColor: "blue",
-                            textDayFontFamily: "System",
-                            textMonthFontFamily: "System",
-                            textDayHeaderFontFamily: "System",
-                            textDayFontWeight: "300",
-                            textMonthFontWeight: "bold",
-                            textDayHeaderFontWeight: "300",
-                            textDayFontSize: 16,
-                            textMonthFontSize: 16,
-                            textDayHeaderFontSize: 16,
-                          }}
-                      />
-                    </View>
-                )}
-              </View>
-
-              {/* Dosage Input */}
-              <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1">
-                  Dosage
-                </Text>
-                <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
-                  <FlaskConical
-                      size={20}
-                      color={colors.text}
-                      className="opacity-50"
-                  />
-                  <TextInput
-                      value={formData.dosage}
-                      onChangeText={(text) =>
-                          setFormData((prev) => ({ ...prev, dosage: text }))
-                      }
-                      placeholder="Ex: 1 comprimé"
-                      placeholderTextColor="#9CA3AF"
-                      className="flex-1 ml-3"
-                      editable={isEditing}
-                  />
-                </View>
-              </View>
-
-              {/* Stock Input */}
-              <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1">
-                  Stock
-                </Text>
-                <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
-                  <Container
-                      size={20}
-                      color={colors.text}
-                      className="opacity-50"
-                  />
-                  <TextInput
-                      value={formData.stock}
-                      onChangeText={(text) =>
-                          setFormData((prev) => ({ ...prev, stock: text }))
-                      }
-                      placeholder="Ex: 30 comprimés"
-                      placeholderTextColor="#9CA3AF"
-                      className="flex-1 ml-3"
-                      editable={isEditing}
-                  />
-                </View>
-              </View>
-
-              {/* Moment de prise Input */}
-              <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1">
-                  Moment de prise
-                </Text>
-                <TouchableOpacity
-                    ref={momentDePriseInputRef}
-                    onPress={() =>
-                        isEditing &&
-                        setShowMomentDePrisePicker(!showMomentDePrisePicker)
-                    }
-                    className="flex-row items-center justify-between bg-white rounded-xl border border-gray-200 px-4 h-12"
-                >
-                  <View className="flex-row items-center">
-                    <Clock size={20} color={colors.text} className="opacity-50" />
-                    <Text className="ml-3 text-gray-700">
-                      {formData.momentDePrise
-                          ? momentDePriseOptions.find(
-                              (option) => option.value === formData.momentDePrise
-                          )?.label
-                          : "Sélectionner le moment"}
-                    </Text>
-                  </View>
-                  <ChevronDown
-                      size={20}
-                      color={colors.text}
-                      className="opacity-50"
-                  />
-                </TouchableOpacity>
-              </View>
-
-              {/* Schedule Selection */}
-              <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1">
-                  Horaire de prise
-                </Text>
-                <View className="bg-white rounded-xl border border-gray-200 p-4">
-                  <View className="flex-row flex-wrap gap-2">
-                    {Object.entries(formData.schedule).map(
-                        ([time, isSelected]) => (
-                            <TouchableOpacity
-                                key={time}
-                                onPress={() =>
-                                    isEditing &&
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      schedule: {
-                                        ...prev.schedule,
-                                        [time]: !isSelected,
-                                      },
-                                    }))
-                                }
-                                className={`px-4 py-2 rounded-full border ${
-                                    isSelected
-                                        ? "bg-indigo-600 border-indigo-600"
-                                        : "border-gray-300"
-                                }`}
-                            >
-                              <Text
-                                  className={`text-sm ${
-                                      isSelected ? "text-white" : "text-gray-700"
-                                  }`}
-                              >
-                                {time.charAt(0).toUpperCase() + time.slice(1)}
-                              </Text>
-                            </TouchableOpacity>
-                        )
-                    )}
-                  </View>
-                </View>
-              </View>
-
-              {/* Notes Input */}
-              <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1">
-                  Notes
-                </Text>
-                <View className="bg-white rounded-xl border border-gray-200 p-4">
-                  <TextInput
-                      value={formData.notes}
-                      onChangeText={(text) =>
-                          setFormData((prev) => ({ ...prev, notes: text }))
-                      }
-                      placeholder="Ajouter des notes..."
-                      placeholderTextColor="#9CA3AF"
-                      multiline
-                      numberOfLines={4}
-                      className="min-h-[100] text-gray-700"
-                      textAlignVertical="top"
-                      editable={isEditing}
-                  />
-                </View>
-              </View>
-
-              {/* File Upload Section */}
-              <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1">
-                  Ordonnance
-                </Text>
-                <View className="bg-white rounded-xl border border-gray-200 p-4">
-                  {formData.file ? (
-                      <View className="flex-row items-center justify-between relative">
-                        <TouchableOpacity
-                            onPress={() => saveFile(formData.file)}
-                            className="flex-1 flex-row items-center  "
-                        >
-                          <FileText size={20} color={colors.text} />
-                          <Text className="ml-2 text-sm text-gray-600">
-                            {formData.file.name}
-                          </Text>
-                          <View className="flex-1 flex-row items-center justify-end">
-                            <Download
-                                size={20}
-                                color={colors.text}
-                                className="opacity-50"
-                            />
-                          </View>
-                        </TouchableOpacity>
-                        {isEditing && (
-                            <TouchableOpacity
-                                onPress={deleteFile}
-                                className="p-1 bg-primary-100 rounded-full absolute right-0 -top-4"
-                            >
-                              <X className="bg-primary-200" size={16}></X>
-                            </TouchableOpacity>
-                        )}
-                      </View>
-                  ) : (
-                      isEditing && (
-                          <TouchableOpacity
-                              onPress={pickDocument}
-                              className="flex-row items-center justify-center py-4 border-2 border-dashed border-gray-300 rounded-lg"
-                          >
-                            <FileUp
-                                size={20}
-                                color={colors.text}
-                                className="opacity-50"
-                            />
-                            <Text className="ml-2 text-sm text-gray-600">
-                              Ajouter une ordonnance
-                            </Text>
-                          </TouchableOpacity>
-                      )
-                  )}
-                </View>
-                <View className="bg-white rounded-xl border border-gray-200 p-4">
-                  {formData.image ? (
-                      <View className="flex-row items-center justify-between relative">
-                        <TouchableOpacity
-                            onPress={() => saveFile(formData.image)}
-                            className="flex-1 flex-row items-center  "
-                        >
-                          <Image size={20} color={colors.text} />
-                          <Text className="ml-2 text-sm text-gray-600">
-                            {formData.image.name}
-                          </Text>
-                          <View className="flex-1 flex-row items-center justify-end">
-                            <Download
-                                size={20}
-                                color={colors.text}
-                                className="opacity-50"
-                            />
-                          </View>
-                        </TouchableOpacity>
-                        {isEditing && (
-                            <TouchableOpacity
-                                onPress={deleteFile}
-                                className="p-1 bg-primary-100 rounded-full absolute right-0 -top-4"
-                            >
-                              <X className="bg-primary-200" size={16}></X>
-                            </TouchableOpacity>
-                        )}
-                      </View>
-                  ) : (
-                      isEditing && (
-                          <TouchableOpacity
-                              onPress={pickDocument}
-                              className="flex-row items-center justify-center py-4 border-2 border-dashed border-gray-300 rounded-lg"
-                          >
-                            <Image
-                                size={20}
-                                color={colors.text}
-                                className="opacity-50"
-                            />
-                            <Text className="ml-2 text-sm text-gray-600">
-                              Ajouter une ordonnance
-                            </Text>
-                          </TouchableOpacity>
-                      )
-                  )}
-                </View>
-              </View>
-            </View>
-          </ScrollView>
-
-          {/* Delete Confirmation Modal */}
-          <Modal
-              visible={showDeleteConfirm}
-              transparent={true}
-              animationType="fade"
-          >
-            <View className="flex-1 bg-black/50 justify-center items-center p-4">
-              <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
-                <Text className="text-xl font-bold text-gray-900 mb-4">
-                  Confirmer la suppression
-                </Text>
-                <Text className="text-gray-600 mb-6">
-                  Êtes-vous sûr de vouloir supprimer ce médicament ? Cette action
-                  est irréversible.
-                </Text>
-                <View className="flex-row justify-end gap-4">
-                  <TouchableOpacity
-                      onPress={() => setShowDeleteConfirm(false)}
-                      className="px-4 py-2 rounded-lg"
-                  >
-                    <Text className="text-gray-600">Annuler</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                      onPress={handleDelete}
-                      className="px-4 py-2 bg-red-600 rounded-lg"
-                  >
-                    <Text className="text-white font-medium">Supprimer</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
-        </View>
-      </TouchableWithoutFeedback>
-  );
+        </ScrollView>
+      </View>
+  )
 }
+
+export default MedicamentDetail
 

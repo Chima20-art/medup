@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import SignInForm from "@/components/SignInForm";
 import Logo from "@/assets/images/logo.svg";
 import Google from "@/assets/images/google.svg";
+import GoogleLoginButton from "@/components/googleLoginButton";
 
 export default function Page() {
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
@@ -80,15 +81,7 @@ export default function Page() {
               <View className="bg-gray-400 h-[1px] w-full mb-4" />
               <Text className="text-center text-gray-500 mb-4">Ou</Text>
 
-              <TouchableOpacity className="flex-row justify-center items-center  space-x-8">
-                <View
-                    className="w-10 h-10 rounded-full shadow-sm items-center justify-center border border-gray-200"
-                >
-                  <Google width={20} height={20} color="#DB4437" />
-
-                </View>
-                <Text> Connexion avec google</Text>
-              </TouchableOpacity>
+              <GoogleLoginButton title=" Connexion avec google" />
             </View>
           </Animated.ScrollView>
         </KeyboardAvoidingView>

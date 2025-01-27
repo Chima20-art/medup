@@ -712,7 +712,7 @@ export default function ConsultationDetails({ consultation: initialConsultation 
                                 <View className="bg-white rounded-xl border border-gray-200 p-4">
                                     {consultation.uploads && consultation.uploads.length > 0 ? (
                                         <View className="mt-4 space-y-2">
-                                            {consultation.uploads.map((file: any, index: any) => (
+                                            {consultation?.uploads?.map((file: any, index: any) => (
                                                 <View key={index} className="flex-row items-center justify-between bg-gray-50 rounded-lg p-3">
                                                     <View className="flex-row items-center flex-1">
                                                         <FileText size={20} color={colors.text} />

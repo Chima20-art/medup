@@ -136,7 +136,7 @@ export default function MedicationCard({ medication }: MedicationCardProps) {
           style={{ fontFamily: "Poppins_500Medium" }}
           className="text-black font-semibold text-md"
         >
-          {medication.frequency} foix/jour, le matin, le soir
+          {medication.frequency} fois/jour
         </Text>
       </View>
 

@@ -148,7 +148,7 @@ export default function RespiratoryRate() {
             }}
             onDateConfirm={(selectedDate: Date) => setDate(selectedDate)}
             onDonePress={handleDone}
-            unit="resp/min"
+            unit="cycles/min"
             onChangeValue={setValue}
             onNumberPress={()=>{}}/>
     );
@@ -201,7 +201,7 @@ export default function RespiratoryRate() {
         >
           <View>
             <Text className="text-lg font-semibold text-gray-800">
-              {item.value} resp/min
+              {item.value} cycles/min
             </Text>
             <Text className="text-sm text-gray-500">
               {new Date(item.date).toLocaleDateString('fr-FR', {
@@ -269,7 +269,7 @@ export default function RespiratoryRate() {
                             <Text className="text-4xl font-bold text-gray-800">
                               {values[0]?.value}
                             </Text>
-                            <Text className="text-xl text-gray-500"> resp/min</Text>
+                            <Text className="text-xl text-gray-500"> cycles/min</Text>
                           </View>
                           <Text className="text-gray-500 mt-2">
                             {new Date(values[0]?.date).toLocaleDateString('fr-FR', {

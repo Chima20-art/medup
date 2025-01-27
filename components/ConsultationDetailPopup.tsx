@@ -161,7 +161,7 @@ const ConsultationDetailPopup: React.FC<ConsultationDetailPopupProps> = ({
             setLoading(true);
             setError(null);
 
-            if (!consultation.uploads || consultation.uploads.length === 0) {
+            if (!consultation.uploads || consultation.uploads?.length === 0) {
                 throw new Error("Aucun fichier disponible pour le téléchargement");
             }
 
@@ -206,7 +206,7 @@ const ConsultationDetailPopup: React.FC<ConsultationDetailPopupProps> = ({
             setLoading(true);
             setError(null);
 
-            if (!consultation.uploads || consultation.uploads.length === 0) {
+            if (!consultation.uploads || consultation.uploads?.length === 0) {
                 throw new Error("Aucun fichier disponible pour la visualisation");
             }
 
@@ -237,7 +237,7 @@ const ConsultationDetailPopup: React.FC<ConsultationDetailPopupProps> = ({
     };
 
     const isCurrentFilePDF = useMemo(() => {
-        if (!consultation.uploads || consultation.uploads.length === 0) return false;
+        if (!consultation.uploads || consultation.uploads?.length === 0) return false;
         const currentFile = consultation.uploads[currentFileIndex];
         return currentFile.toLowerCase().endsWith(".pdf");
     }, [consultation.uploads, currentFileIndex]);
@@ -291,7 +291,7 @@ const ConsultationDetailPopup: React.FC<ConsultationDetailPopupProps> = ({
                 </PanGestureHandler>
                 {consultation.uploads.length > 1 && (
                     <View className="flex-row justify-center gap-x-1">
-                        {consultation.uploads.map((_: any, index: number) => (
+                        {consultation?.uploads?.map((_: any, index: number) => (
                             <TouchableOpacity
                                 key={index}
                                 onPress={() => setCurrentFileIndex(index)}
@@ -450,7 +450,7 @@ const ConsultationDetailPopup: React.FC<ConsultationDetailPopupProps> = ({
                                     showsHorizontalScrollIndicator={false}
                                     className="flex-row gap-x-3"
                                 >
-                                    {consultation.uploads.map((upload: string, index: number) => (
+                                    {consultation?.uploads?.map((upload: string, index: number) => (
                                         <TouchableOpacity
                                             key={index}
                                             onPress={() => setCurrentFileIndex(index)}

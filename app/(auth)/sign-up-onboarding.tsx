@@ -5,6 +5,7 @@ import Google from "@/assets/images/google.svg";
 import { Mail } from "lucide-react-native";
 import Logo from "@/assets/images/logo.svg";
 import { router } from "expo-router";
+import GoogleLoginButton from "@/components/googleLoginButton";
 
 export default function SignUpOnboarding() {
   return (
@@ -28,19 +29,21 @@ export default function SignUpOnboarding() {
           </View>
 
           {/* Buttons */}
-          <View className="flex flex-column gap-y-2 mb-6">
-            <TouchableOpacity className="w-full h-14 bg-black rounded-xl flex-row items-center justify-center space-x-2">
-              <Google width={20} height={20} />
-              <Text className="text-white text-base font-semibold ml-2">
-                S'inscrire avec google
-              </Text>
-            </TouchableOpacity>
+          <View className="flex flex-column gap-y-2 mb-6 w-full">
+            {/*<TouchableOpacity className="w-full h-14 bg-black rounded-xl flex-row items-center justify-center space-x-2">*/}
+            {/*  <Google width={20} height={20} />*/}
+            {/*  <Text className="text-white text-base font-semibold ml-2">*/}
+            {/*    S'inscrire avec google*/}
+            {/*  </Text>*/}
+            {/*</TouchableOpacity>*/}
+
+            <GoogleLoginButton title="S'inscrire avec google"/>
             <TouchableOpacity
-              className="w-full h-14 bg-white rounded-xl flex-row items-center justify-center"
+              className="w-full h-14 bg-black rounded-xl flex-row items-center justify-center"
               onPress={() => router.push("/sign-up")}
             >
               <Mail width={20} height={20} />
-              <Text className="text-black text-base font-semibold ml-2">
+              <Text className="text-white text-base font-semibold ml-2">
                 S'inscrire avec email
               </Text>
             </TouchableOpacity>

@@ -564,16 +564,16 @@ export default function AddConsultation() {
         let notifaction = scheduleNotification(
           generatedRandomId,
           "Rappel de consultation",
-          "Vous avez une consultation à venir" +
+          "Vous avez une consultation prévue avec Dr " +
             formData.doctorName +
-            " at " +
+            ", le " +
             new Date(formData.date).toLocaleString("fr-FR", {
               day: "2-digit",
               month: "2-digit",
               year: "numeric",
               hour: "2-digit",
               minute: "2-digit",
-            }),
+            })+'. N’oubliez pas de vous y préparer.',
           new Date(formData.nextConsultationDateReminder)
         );
         const { error: updateError } = await supabase

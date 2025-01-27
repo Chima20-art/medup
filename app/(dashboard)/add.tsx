@@ -35,7 +35,7 @@ export default function Add() {
             route: "/add-consultation",
         },
         {
-            title: "\nRapide",
+            title: "Accès\nrapide",
             image: QuickAccess,
             route: '/acces-rapide'
         },

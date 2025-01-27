@@ -396,9 +396,7 @@ export default function AddMedicament() {
             scheduleNotification(
               randomIdString,
               `Rappel: ${formData.name}`,
-              `Il est temps de prendre votre médicament ${formData.name}. ${
-                formData.notes ? `\nNotes: ${formData.notes}` : ""
-              }`,
+              `Il est temps de prendre votre médicament ${formData.name}.`,
               reminderDate
             );
           });
@@ -753,7 +751,7 @@ export default function AddMedicament() {
                   Rappels
                 </Text>
                 <View className="bg-white rounded-xl border border-gray-200 p-4">
-                  {formData.reminders.map((time, index) => (
+                  {formData?.reminders?.map((time, index) => (
                     <View
                       key={index}
                       className="flex-row items-center justify-between mb-2 bg-gray-50 p-3 rounded-lg"

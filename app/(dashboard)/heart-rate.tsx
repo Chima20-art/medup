@@ -264,7 +264,7 @@ export default function HeartRate() {
                             {/* Chart Card */}
                             {values.length > 1 && (
                                 <View className="mx-4 mb-4 p-4 bg-white rounded-2xl shadow-md">
-                                    <Text className="text-lg font-semibold text-gray-800 mb-4">Trend</Text>
+                                    <Text className="text-lg font-semibold text-gray-800 mb-4">Tendances</Text>
                                     <LineChart
                                         data={getChartData()}
                                         width={Dimensions.get("window").width - 48}

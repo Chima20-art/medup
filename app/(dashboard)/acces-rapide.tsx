@@ -24,7 +24,7 @@ const quickAccessItems = [
     icon: Frequence,
     route: "/heart-rate",
     bgColor: "bg-purple-100",
-    iconColor: "#6B46C1",
+    iconColor: "#d9d9da",
   },
 
   {
@@ -33,7 +33,7 @@ const quickAccessItems = [
     icon: Glucose,
     route: "/blood-glucose",
     bgColor: "bg-blue-100",
-    iconColor: "#3B82F6",
+    iconColor: "#d9d9da",
   },
   {
     id: 3,

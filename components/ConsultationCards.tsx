@@ -79,7 +79,28 @@ const ConsultationCards = memo(
 
     useEffect(() => {
       fetchConsultations();
-    }, [fetchConsultations]);
+        const subscription = supabase
+            .channel("consultations_changes")
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "consultations",
+                },
+                async (payload) => {
+                    const { data } = await supabase.from("consultations").select("*");
+                    if (data) {
+                        setConsultations(data);
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            subscription.unsubscribe();
+        };
+    }, []);
 
     const formatDate = (dateString: string) => {
       const date = new Date(dateString);
@@ -169,13 +190,17 @@ const ConsultationCards = memo(
                           </Text>
                         </View>
                         {/*adress*/}
-                        <Text className="text-sm text-gray-600 ml-2">
-                          | {consultation.adress}
-                        </Text>
+
                       </View>
+                        <View className={"mt-3"}>
+                            <Text className="text-sm text-gray-600">
+                                {consultation.adress}
+                            </Text>
+                        </View>
+
                       {/*date consultation*/}
-                      <View className="flex-row items-center mb-2 mt-4">
-                        <Text className="text-sm text-gray-600 ml-2">
+                      <View className="flex-row items-center mb-2">
+                        <Text className="text-sm text-gray-600 ">
                           {formatToFrenchDate(consultation.date)}
                         </Text>
                       </View>
@@ -199,7 +224,7 @@ const ConsultationCards = memo(
                     >
                       <Text className="text-xs font-medium text-secondary">
                         {consultation?.uploads?.length
-                          ? `${consultation.uploads.length} fichier(s)`
+                          ? `${consultation.uploads?.length} fichier(s)`
                           : "Aucun fichier"}
                       </Text>
                     </TouchableOpacity>

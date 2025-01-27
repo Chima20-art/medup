@@ -197,7 +197,7 @@ export default function ListExaminsRadiologiques() {
                     >
                       <Text className="text-xs font-medium text-secondary">
                         {radio?.uploads?.length
-                          ? `${radio.uploads.length} fichier(s)`
+                          ? `${radio.uploads?.length} fichier(s)`
                           : "Aucun fichier"}
                       </Text>
                     </TouchableOpacity>

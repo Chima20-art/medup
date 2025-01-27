@@ -21,19 +21,19 @@ export default function ContactPage() {
     }))
 
     return (
-        <View className="flex-1 bg-primary-300 items-center justify-center">
+        <View className="flex-1 bg-primary-50 items-center justify-center">
             <Pressable>
                 {({ pressed }) => (
                     <Animated.View style={[animatedStyles, { opacity: pressed ? 0.8 : 1 }]} className="overflow-hidden">
                         <View className="bg-gradient-to-br from-blue-500 to-cyan-400 rounded-full p-0.5">
                             <View className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-full px-8 py-4">
                                 <Text
-                                    className="text-3xl font-bold"
+                                    className="text-2xl font-bold"
                                     style={{
-                                        color: '#ffffff',
+                                        color: colors.primary,
                                     }}
                                 >
-                                    Coming Soon
+                                    Prochainement disponible
                                 </Text>
                             </View>
                         </View>
