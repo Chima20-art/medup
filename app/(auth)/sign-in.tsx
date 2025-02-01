@@ -6,7 +6,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
-  StatusBar,
+  StatusBar, SafeAreaView,
 } from "react-native";
 import { Link, Stack } from "expo-router";
 import { useTheme } from "@react-navigation/native";
@@ -32,7 +32,7 @@ export default function Page() {
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={{ flex: 1 }}
-            className="p-10 pt-24"
+            className="p-10 pt-14"
         >
           <StatusBar barStyle="dark-content" />
           <Stack.Screen

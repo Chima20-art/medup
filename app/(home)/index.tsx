@@ -149,7 +149,7 @@ export default function Onboarding() {
                 >
                     <View className="flex-1 content flex flex-col justify-between">
                       <View className="pt-6  px-6 mb-2">
-                        <Text className="text-white text-[46px] font-extrabold leading-tight">
+                        <Text className="text-white text-[42px] font-extrabold leading-tight">
                           {step.title}
                         </Text>
                       </View>

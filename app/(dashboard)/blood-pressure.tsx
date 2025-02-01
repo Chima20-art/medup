@@ -290,7 +290,6 @@ export default function BloodPressure() {
                                 data={getChartData()}
                                 width={Dimensions.get("window").width - 48}
                                 height={180}
-                                yAxisSuffix=" mmHg"
                                 chartConfig={{
                                   backgroundColor: "#ffffff",
                                   backgroundGradientFrom: "#ffffff",
