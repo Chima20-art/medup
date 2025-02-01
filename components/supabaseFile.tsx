@@ -1,31 +1,36 @@
 import React, { useEffect, useState } from "react";
-import {View, Text, Image, Button, TouchableOpacity} from "react-native";
+import { View, Text, Image, TouchableOpacity, Modal, SafeAreaView } from "react-native";
 import { supabase } from "@/utils/supabase";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
-import { FileText } from 'lucide-react-native';
-import Pdf from "@/assets/images/pdf.svg"
-
-// Assuming you have a LoadingSpinner component
+import {FileText, Eye, X, FolderDown, Share2} from 'lucide-react-native';
+import Pdf from "@/assets/images/pdf.svg";
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { WebView } from "react-native-webview";
+import ImageView from "react-native-image-viewing";
 
 export default function SupabaseFile({
                                        path,
                                        bucket = "radiologie",
+                                       compact = false,
                                      }: {
   path: string;
   bucket: string;
+  compact?: boolean;
 }) {
   const [loading, setLoading] = useState(false);
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false);
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
 
   const isFileAnImage = /\.(jpg|jpeg|png|gif)$/i.test(path);
   const isPDF = /\.pdf$/i.test(path);
+  const fileName = path.split("/").pop() || "file";
 
   useEffect(() => {
     getSignedUrl();
-  }, [path]);
+  }, []);
 
   const getSignedUrl = async () => {
     try {
@@ -58,8 +63,6 @@ export default function SupabaseFile({
         throw new Error("No signed URL available");
       }
 
-      const fileName = path.split("/").pop() || "downloaded-file";
-
       const downloadResult = await FileSystem.downloadAsync(
           signedUrl,
           FileSystem.documentDirectory + fileName
@@ -83,6 +86,79 @@ export default function SupabaseFile({
     }
   };
 
+  const handleViewFile = () => {
+    if (signedUrl) {
+      if (isPDF) {
+        setIsPDFViewerOpen(true);
+      } else if (isFileAnImage) {
+        setImageViewerVisible(true);
+      }
+    }
+  };
+
+  if (compact) {
+    return (
+        <TouchableOpacity
+            className="flex-row items-center p-2 bg-gray-100 rounded-md mb-2"
+            onPress={handleViewFile}
+        >
+          {isPDF ? (
+              <Pdf width={24} height={24} />
+          ) : isFileAnImage ? (
+              <Image
+                  source={{ uri: signedUrl || undefined }}
+                  className="w-6 h-6 rounded"
+              />
+          ) : (
+              <FileText size={24} color="#000" />
+          )}
+          <Text className="ml-2 flex-1">{fileName}</Text>
+          <TouchableOpacity onPress={downloadFile}>
+            <Share2 size={24} color="#000" />
+          </TouchableOpacity>
+
+          <Modal
+              animationType="slide"
+              transparent={true}
+              visible={isPDFViewerOpen}
+              onRequestClose={() => setIsPDFViewerOpen(false)}
+          >
+            {signedUrl && isPDF && (
+                <View className="flex-1 bg-black bg-opacity-50">
+                  <SafeAreaView className="flex-1 m-4 bg-white rounded-lg overflow-hidden">
+                    <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
+                      <Text className="text-lg font-semibold">Visualiseur PDF</Text>
+                      <TouchableOpacity onPress={() => setIsPDFViewerOpen(false)}>
+                        <X size={24} color="#000" />
+                      </TouchableOpacity>
+                    </View>
+                    <View className="flex-1">
+                      {loading && <LoadingSpinner />}
+                      <WebView
+                          source={{
+                            uri: `https://docs.google.com/gview?embedded=true&url=${signedUrl}`,
+                          }}
+                          onLoadEnd={() => setLoading(false)}
+                          style={{ flex: 1 }}
+                      />
+                    </View>
+                  </SafeAreaView>
+                </View>
+            )}
+          </Modal>
+
+          {signedUrl && isFileAnImage && (
+              <ImageView
+                  images={[{ uri: signedUrl }]}
+                  imageIndex={0}
+                  visible={imageViewerVisible}
+                  onRequestClose={() => setImageViewerVisible(false)}
+              />
+          )}
+        </TouchableOpacity>
+    );
+  }
+
   return (
       <View className="w-full h-64 justify-center items-center">
         {loading && <LoadingSpinner />}
@@ -100,12 +176,8 @@ export default function SupabaseFile({
         {!loading && (isPDF || (!isFileAnImage && !isPDF)) && (
             <View className="items-center">
               <Pdf width={200} height={250} />
-              <TouchableOpacity  onPress={downloadFile} className="mt-2">
-                Download File
-              </TouchableOpacity>
             </View>
         )}
       </View>
   );
 }
-

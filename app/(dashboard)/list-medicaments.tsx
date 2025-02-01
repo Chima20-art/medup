@@ -4,7 +4,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
+  ScrollView, ActivityIndicator,
 } from "react-native";
 import { Link, router } from "expo-router";
 import { ChevronLeft, Search } from "lucide-react-native";
@@ -47,29 +47,30 @@ interface Medication {
 export default function ListMedicaments() {
   const [searchQuery, setSearchQuery] = useState("");
   const [medications, setMedications] = useState<Medication[]>([]);
+  const [isLoading, setIsLoading] = useState(true)
+
   const { colors } = useTheme();
 
   useEffect(() => {
     const fetchMedications = async () => {
-      const { data, error } = await supabase
-        .from("medicaments")
-        .select("*")
-        .order("created_at", { ascending: false });
+      setIsLoading(true)
+      const { data, error } = await supabase.from("medicaments").select("*").order("created_at", { ascending: false })
 
       if (error) {
-        console.error("Error fetching medications:", error);
-        return;
+        console.error("Error fetching medications:", error)
+        setIsLoading(false)
+        return
       }
 
       if (data) {
-        // Transform the data to match your component's needs
         const transformedData = data.map((med) => ({
           ...med,
-          isActive: new Date(med.endDate) > new Date(), // Check if medication is still active
-        }));
-        setMedications(transformedData);
+          isActive: new Date(med.endDate) > new Date(),
+        }))
+        setMedications(transformedData)
       }
-    };
+      setIsLoading(false)
+    }
 
     fetchMedications();
 
@@ -147,7 +148,11 @@ export default function ListMedicaments() {
 
       {/* Medication List */}
       <ScrollView className="flex-1 px-4 pt-8">
-        {filteredMedications.length === 0 ? (
+        {isLoading ? (
+            <View className="flex-1 items-center justify-center py-8">
+              <ActivityIndicator size="large" color="#4F46E5" />
+            </View>
+        ) : filteredMedications.length === 0 ? (
           <View className="flex-1 items-center justify-center py-8">
             <Text className="text-gray-500 text-lg font-medium">
               Aucun médicament trouvé

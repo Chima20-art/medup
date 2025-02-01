@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, Modal, ScrollView, Dimensions } from 'rea
 import { X } from 'lucide-react-native';
 import { useTheme } from '@react-navigation/native';
 import { avatars, DefaultAvatar } from '@/constants/avatars';
+import MedupHand from "@/assets/images/MedupHand.svg";
+
 
 interface AvatarSelectionModalProps {
     visible: boolean;
@@ -58,9 +60,13 @@ export function AvatarSelectionModal({
                                 avatars[selectedId]({ width: 80, height: 80 })
                             )}
                         </View>
-                        <Text className="text-xl font-bold">
-                            Bienvenue, {username} 👋
-                        </Text>
+                        <View className="flex flex-row justify-end items-end gap-x-2">
+                            <Text className="text-xl font-bold">
+                                Bienvenue, {username}
+                            </Text>
+                            <MedupHand height={36} width={36}/>
+                        </View>
+
                     </View>
 
                     {/* Avatar Selection List */}

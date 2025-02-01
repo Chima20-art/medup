@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "expo-router"
 import MetricInputTemplate from "@/components/metricInputLayout"
 import { supabase } from "@/utils/supabase"
@@ -60,7 +60,7 @@ export default function HeartRate() {
             setValues(data || [])
         } catch (error) {
             console.error("Error fetching heart rate values:", error)
-            Alert.alert("Error", "Failed to fetch heart rate values. Please try again.")
+            Alert.alert("Erreur", "Impossible de récupérer les valeurs de fréquence cardiaque. Veuillez réessayer.")
         } finally {
             setIsLoading(false)
         }
@@ -72,7 +72,7 @@ export default function HeartRate() {
 
     const handleDone = async () => {
         if (!value) {
-            Alert.alert("Error", "Please enter a valid heart rate value.")
+            Alert.alert("Erreur", "Veuillez entrer une valeur de fréquence cardiaque valide.")
             return
         }
         try {
@@ -83,15 +83,15 @@ export default function HeartRate() {
             setShowAddValue(false)
         } catch (error) {
             console.error("Error saving heart rate value:", error)
-            Alert.alert("Error", "Failed to save heart rate value. Please try again.")
+            Alert.alert("Erreur", "Impossible d'enregistrer la valeur de fréquence cardiaque. Veuillez réessayer.")
         }
     }
 
     const handleDelete = async (id: number) => {
-        Alert.alert("Delete Reading", "Are you sure you want to delete this reading?", [
-            { text: "Cancel", style: "cancel" },
+        Alert.alert("Supprimer la mesure", "Êtes-vous sûr de vouloir supprimer cette mesure ?", [
+            { text: "Annuler", style: "cancel" },
             {
-                text: "Delete",
+                text: "Supprimer",
                 style: "destructive",
                 onPress: async () => {
                     try {
@@ -100,7 +100,7 @@ export default function HeartRate() {
                         await fetchValues()
                     } catch (error) {
                         console.error("Error deleting heart rate value:", error)
-                        Alert.alert("Error", "Failed to delete heart rate value. Please try again.")
+                        Alert.alert("Erreur", "Impossible de supprimer la valeur de fréquence cardiaque. Veuillez réessayer.")
                     }
                 },
             },
@@ -143,16 +143,16 @@ export default function HeartRate() {
             <Animated.View style={{ transform: [{ scale: heartbeatAnimation }] }}>
                 <Heart size={64} color="#6366f1" />
             </Animated.View>
-            <Text className="text-xl font-semibold text-gray-800 mt-6 text-center">No heart rate readings yet</Text>
+            <Text className="text-xl font-semibold text-gray-800 mt-6 text-center">Aucune mesure de fréquence cardiaque</Text>
             <Text className="text-gray-500 text-center mt-2 mb-6">
-                Start tracking your heart rate by adding your first measurement
+                Commencez à suivre votre fréquence cardiaque en ajoutant votre première mesure
             </Text>
             <TouchableOpacity
                 onPress={() => setShowAddValue(true)}
                 className="bg-primary-500 px-6 py-3 rounded-full flex-row items-center"
             >
                 <Plus size={20} color="white" />
-                <Text className="text-white font-semibold ml-2">Add First Reading</Text>
+                <Text className="text-white font-semibold ml-2">Ajouter une mesure</Text>
             </TouchableOpacity>
         </View>
     )

@@ -546,7 +546,7 @@ export default function MergedExamensRadiologiques() {
             {/* File Upload Section */}
             <View>
               <Text className="text-sm font-medium text-gray-700 mb-1">
-                Ajouter l'analyse
+                Ajouter l'examen
               </Text>
               <View className="bg-white rounded-xl border border-gray-200 p-4">
                 <View className="flex-row justify-around mb-4">

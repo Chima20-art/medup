@@ -29,6 +29,7 @@ import { WebView } from "react-native-webview";
 
 import Notes from "@/assets/images/notes-icon.svg";
 import SupabaseAudioPlayer from "./supabaseAudioPlayer";
+import EmptyImage from "@/assets/images/EmptyImage.svg";
 
 const { height, width } = Dimensions.get("window");
 
@@ -349,9 +350,6 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
           >
             <Eye size={20} color="#5b7bf6" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={downloadFile} className="p-2">
-            <Download size={20} color="#5b7bf6" />
-          </TouchableOpacity>
           <TouchableOpacity onPress={shareFile} className="p-2">
             <Share2 size={20} color="#5b7bf6" />
           </TouchableOpacity>
@@ -359,7 +357,7 @@ const ExamenDetailPopup: React.FC<ExamenDetailPopupProps> = ({
 
         <ScrollView className="flex-1 px-4">
           <View className="border border-gray-200 rounded-xl p-2 mx-auto w-[80%]">
-            {examen.uploads && examen.uploads.length > 0 && MemoizedFileView}
+            {examen.uploads && examen.uploads.length > 0  ? MemoizedFileView :  <View className={"mx-auto mb-2"}><EmptyImage width={200} height={200} /></View>}
 
             <View className="flex flex-col gap-y-3">
               <Text className="text-gray-700">

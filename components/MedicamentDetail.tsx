@@ -1,6 +1,6 @@
 import type React from "react"
 import { useState, useCallback } from "react"
-import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, Switch, Image } from "react-native"
+import {View, Text, ScrollView, TouchableOpacity, Alert, TextInput, Switch, Image, Modal} from "react-native"
 import { useTheme } from "@react-navigation/native"
 import { supabase } from "@/utils/supabase"
 import { useRouter } from "expo-router"
@@ -18,7 +18,7 @@ import {
   Download,
   Container,
   Timer,
-  ArrowLeft,
+  ArrowLeft, ChevronLeft,
 } from "lucide-react-native"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
@@ -27,6 +27,7 @@ import * as Sharing from "expo-sharing"
 import Medicine from "@/assets/images/medicine.svg"
 import SupabaseAudioPlayer from "@/components/SupabaseAudioPlayer"
 import DateTimePicker from "@react-native-community/datetimepicker"
+import SupabaseFile from "@/components/supabaseFile";
 
 interface MedicamentDetailProps {
   initialData: {
@@ -47,7 +48,7 @@ interface MedicamentDetailProps {
     }
     isActive: boolean
     reminders: string[]
-    uploads: { uri: string; name: string; type: string }[]
+    uploads:string[]
     momentDePrise: string
   }
 }
@@ -57,9 +58,13 @@ const MedicamentDetail: React.FC<MedicamentDetailProps> = ({ initialData }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState(initialData)
   const [showStartDatePicker, setShowStartDatePicker] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false)
   const { colors } = useTheme()
   const router = useRouter()
+
+
+  console.log('uploads ',formData.uploads)
 
   const handleUpdate = async () => {
     setIsLoading(true)
@@ -156,11 +161,28 @@ const MedicamentDetail: React.FC<MedicamentDetailProps> = ({ initialData }) => {
 
   return (
       <View className="flex-1 bg-gray-50">
-        <View className="bg-white p-4 mb-4 flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <ArrowLeft size={24} color={colors.text} />
-          </TouchableOpacity>
-          <Text className="text-xl font-bold">Détail du médicament</Text>
+        <View className="px-6 pt-14 pb-6 bg-white">
+          <View className="flex-row items-center justify-between pt-4">
+            <View className="flex-row items-center">
+              <TouchableOpacity
+                  onPress={() => router.back()}
+                  className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
+              >
+                <ChevronLeft size={24} color={colors.primary} />
+              </TouchableOpacity>
+              <Text className="font-bold text-xl text-primary-500 ml-2">
+                Détails du médicament
+              </Text>
+            </View>
+            <View className="flex-row gap-2">
+                    <TouchableOpacity
+                        onPress={() => setShowDeleteConfirm(true)}
+                        className="w-10 h-10 items-center justify-center rounded-full bg-red-100"
+                    >
+                      <Trash2 size={20} color="rgb(220 38 38)" />
+                    </TouchableOpacity>
+            </View>
+          </View>
         </View>
         <ScrollView className="flex-1 px-4">
           <View className="space-y-4 pb-10">
@@ -364,40 +386,45 @@ const MedicamentDetail: React.FC<MedicamentDetailProps> = ({ initialData }) => {
               <Text className="text-sm font-medium text-gray-700 mb-1">Ordonnance</Text>
               <View className="bg-white rounded-xl border border-gray-200 p-4">
                 {formData?.uploads?.map((file, index) => (
-                    <View key={index} className="flex-row items-center justify-between mb-2">
-                      <Text className="text-gray-600">{file.name}</Text>
-                      <TouchableOpacity onPress={() => downloadFile(file)}>
-                        <FileText size={20} color={colors.primary} />
-                      </TouchableOpacity>
-                    </View>
+                    <SupabaseFile path={file} bucket='medicaments' key={file} compact={true} />
                 ))}
                 {formData?.uploads?.length === 0 && <Text className="text-gray-500">Aucun fichier joint</Text>}
               </View>
             </View>
-
-            {/* Action Buttons */}
-            <View className="flex-row justify-between mt-6">
-              {!isEditing ? (
-                  <>
-                    <TouchableOpacity onPress={() => setIsEditing(true)} className="bg-primary-500 px-4 py-2 rounded-xl">
-                      <Text className="text-white">Modifier</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={handleDelete} className="bg-red-500 px-4 py-2 rounded-xl">
-                      <Text className="text-white">Supprimer</Text>
-                    </TouchableOpacity>
-                  </>
-              ) : (
-                  <TouchableOpacity
-                      onPress={handleUpdate}
-                      disabled={isLoading}
-                      className="bg-primary-500 px-4 py-2 rounded-xl"
-                  >
-                    <Text className="text-white">{isLoading ? "Mise à jour..." : "Enregistrer"}</Text>
-                  </TouchableOpacity>
-              )}
-            </View>
           </View>
+          <Modal
+              visible={showDeleteConfirm}
+              transparent={true}
+              animationType="fade"
+          >
+            <View className="flex-1 bg-black/50 justify-center items-center p-4">
+              <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+                <Text className="text-xl font-bold text-gray-900 mb-4">
+                  Confirmer la suppression
+                </Text>
+                <Text className="text-gray-600 mb-6">
+                  Êtes-vous sûr de vouloir supprimer ce médicament ? Cette action
+                  est irréversible.
+                </Text>
+                <View className="flex-row justify-end gap-4">
+                  <TouchableOpacity
+                      onPress={() => setShowDeleteConfirm(false)}
+                      className="px-4 py-2 rounded-lg"
+                  >
+                    <Text className="text-gray-600">Annuler</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                      onPress={handleDelete}
+                      className="px-4 py-2 bg-red-600 rounded-lg"
+                  >
+                    <Text className="text-white font-medium">Supprimer</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
         </ScrollView>
+
       </View>
   )
 }

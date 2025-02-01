@@ -13,6 +13,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { useState, useRef, useEffect } from "react";
+import {LinearGradient} from "expo-linear-gradient";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -32,7 +33,7 @@ const onboardingData = [
     title: "Gardez un œil \nsur vos examens",
     description: (
       <Text
-        className="font-semibold text-right"
+        className="font-semibold "
         style={{ fontFamily: "Poppins-Regular" }}
       >
         "Suivez vos{" "}
@@ -117,76 +118,79 @@ export default function Onboarding() {
   };
 
   return (
-    <SafeAreaView className="flex-1">
-      <ScrollView
-        ref={scrollViewRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}
-        onMomentumScrollEnd={handleMomentumScrollEnd}
-        scrollEventThrottle={16}
-        decelerationRate="fast"
-        snapToInterval={SCREEN_WIDTH}
-        snapToAlignment="center"
-        contentContainerStyle={{
-          width: SCREEN_WIDTH * (onboardingData.length + 1),
-        }}
+      <LinearGradient
+          colors={["#407BFF", "#264A99"]} // Light blue to dark blue
+          className="flex-1"
       >
-        {onboardingData.map((step, index) => (
-          <View
-            key={index}
-            style={{
-              width: SCREEN_WIDTH,
-              //height: SCREEN_HEIGHT,
-              backgroundColor: step.backgroundColor,
-            }}
-            className="flex-1 h-full  "
+        <SafeAreaView>
+          <ScrollView
+              ref={scrollViewRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onScroll={handleScroll}
+              onMomentumScrollEnd={handleMomentumScrollEnd}
+              scrollEventThrottle={16}
+              decelerationRate="fast"
+              snapToInterval={SCREEN_WIDTH}
+              snapToAlignment="center"
+              contentContainerStyle={{
+                width: SCREEN_WIDTH * (onboardingData.length + 1),
+              }}
           >
-            <View className="flex-1 justify-between flex-col">
-              <View className="pt-16 px-6 mb-2">
-                <Text className="text-primary-500 text-[46px] font-extrabold leading-tight">
-                  {step.title}
-                </Text>
-              </View>
+            {onboardingData.map((step, index) => (
+                <View
+                    key={index}
+                    style={{
+                      width: SCREEN_WIDTH,
+                      //height: SCREEN_HEIGHT,
+                    }}
+                    className=" h-full"
+                >
+                    <View className="flex-1 content flex flex-col justify-between">
+                      <View className="pt-6  px-6 mb-2">
+                        <Text className="text-white text-[46px] font-extrabold leading-tight">
+                          {step.title}
+                        </Text>
+                      </View>
 
-              <View className="items-center justify-center mb-6">
-                <step.Image
-                  width={SCREEN_WIDTH * 0.87}
-                  height={SCREEN_HEIGHT * 0.4}
-                />
-              </View>
-            </View>
+                      <View className="items-center justify-center mb-6 ">
+                        <step.Image
+                            width={SCREEN_WIDTH * 0.8}
+                            height={SCREEN_HEIGHT * 0.4}
+                        />
+                      </View>
 
-            <View className="px-6 pl-8 mb-20">
-              <Text className="text-primary-500 text-2xl w-[90%] flex-col justify-end justify-items-end text-end opacity-90 leading-9">
-                {step.description}
-              </Text>
-            </View>
+                      <View className="px-6 pl-8 ">
+                        <Text className="text-white text-2xl w-[90%] flex-col justify-end justify-items-end text-end opacity-90 leading-9">
+                          {step.description}
+                        </Text>
+                      </View>
+                    </View>
 
-            <View className="absolute bottom-10 left-0 right-0">
-              <View className="flex-row justify-center gap-x-3">
-                {onboardingData.map((_, dotIndex) => (
-                  <TouchableOpacity
-                    key={dotIndex}
-                    onPress={() => handleDotPress(dotIndex)}
-                  >
-                    <View
-                      className={`h-3 w-3 rounded-full ${
-                        currentIndex === dotIndex
-                          ? "bg-blue-800"
-                          : "bg-gray-600/30"
-                      }`}
-                    />
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          </View>
-        ))}
-        {/* Empty view for detecting scroll past last slide */}
-        <View style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }} />
-      </ScrollView>
-    </SafeAreaView>
+                    <View className="flex-row justify-center gap-x-3 my-5">
+                      {onboardingData.map((_, dotIndex) => (
+                          <TouchableOpacity
+                              key={dotIndex}
+                              onPress={() => handleDotPress(dotIndex)}
+                          >
+                            <View
+                                className={`h-3 w-3 rounded-full ${
+                                    currentIndex === dotIndex
+                                        ? "bg-white"
+                                        : "bg-gray-100/30"
+                                }`}
+                            />
+                          </TouchableOpacity>
+                      ))}
+                    </View>
+                </View>
+            ))}
+            {/* Empty view for detecting scroll past last slide */}
+            <View style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }} />
+          </ScrollView>
+        </SafeAreaView>
+
+      </LinearGradient>
   );
 }

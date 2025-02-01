@@ -557,7 +557,7 @@ function Dashboard() {
                           <Text className="text-indigo-200">
                             {isConsultation
                               ? consultations?.specialties?.name
-                              : consultations.frequency + "\npendant " + consultations.duration }
+                              : consultations.frequency + " fois/jour" + "\nPendant " + consultations.duration }
                           </Text>
                           <View className="flex-row items-center">
                             <Text className="text-white mr-1">
