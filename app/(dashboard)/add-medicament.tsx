@@ -43,43 +43,8 @@ import BioCategory from "@/assets/images/bioCategory.svg"
 import { scheduleNotification } from "@/utils/notifcations"
 import { decode as atob } from "base-64";
 
-// Configure French locale
-LocaleConfig.locales["fr"] = {
-  monthNames: [
-    "Janvier",
-    "Février",
-    "Mars",
-    "Avril",
-    "Mai",
-    "Juin",
-    "Juillet",
-    "Août",
-    "Septembre",
-    "Octobre",
-    "Novembre",
-    "Décembre",
-  ],
-  monthNamesShort: ["Janv.", "Févr.", "Mars", "Avril", "Mai", "Juin", "Juil.", "Août", "Sept.", "Oct.", "Nov.", "Déc."],
-  dayNames: ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"],
-  dayNamesShort: ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."],
-  today: "Aujourd'hui",
-}
-LocaleConfig.defaultLocale = "fr"
-
-interface UploadedFile {
-  uri: string
-  type: "image" | "document"
-  name: string
-}
-
-const momentDePriseOptions = [
-  { label: "Avant le repas", value: "avant_le_repas" },
-  { label: "Pendant le repas", value: "pendant_le_repas" },
-  { label: "Après le repas", value: "apres_le_repas" },
-  { label: "Non précisé", value: "non_precise" },
-]
-
-interface MedicationFormData {
+// Define types for formData and UploadedFile
+type MedicationFormData = {
   name: string
   startDate: string
   endDate: string
@@ -97,6 +62,570 @@ interface MedicationFormData {
   reminders: string[]
   files: UploadedFile[]
   momentDePrise: string
+}
+
+type UploadedFile = {
+  uri: string
+  type: "image" | "document"
+  name: string
+}
+
+const momentDePriseOptions = [
+  { label: "Sélectionner le moment", value: "" },
+  { label: "Matin", value: "matin" },
+  { label: "Midi", value: "midi" },
+  { label: "Soir", value: "soir" },
+  { label: "Nuit", value: "nuit" },
+]
+
+const AddMedicament = ({ navigation }) => {
+  const router = useRouter()
+  const { colors } = useTheme()
+  const [isLoading, setIsLoading] = useState(false)
+  const [formData, setFormData] = useState<MedicationFormData>({
+    name: "",
+    startDate: "",
+    endDate: "",
+    dosage: "",
+    stock: "",
+    duration: "",
+    frequency: "",
+    notes: "",
+    schedule: {
+      matin: false,
+      apres_midi: false,
+      soir: false,
+      nuit: false,
+    },
+    reminders: [],
+    files: [] as UploadedFile[],
+    momentDePrise: "",
+  })
+
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false)
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false)
+  const [showMomentDePrisePicker, setShowMomentDePrisePicker] = useState(false)
+  const [showReminderModal, setShowReminderModal] = useState(false)
+
+  const addReminder = (time: string) => {
+    if (!/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
+      Alert.alert("Erreur", "Format d'heure invalide. Utilisez le format HH:mm")
+      return
+    }
+    setFormData((prev) => ({
+      ...prev,
+      reminders: [...(prev.reminders || []), time],
+    }))
+  }
+
+  const removeReminder = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      reminders: prev.reminders.filter((_, i) => i !== index),
+    }))
+  }
+
+  const pickImage = async () => {
+    const result = await ImagePickerAsync.launchImageLibraryAsync({
+      mediaTypes: ImagePickerAsync.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    })
+
+    if (!result.canceled && result.assets[0]) {
+      const newFile: UploadedFile = {
+        uri: result.assets[0].uri,
+        type: "image",
+        name: result.assets[0].uri.split("/").pop() || "image",
+      }
+      setFormData((prev) => ({
+        ...prev,
+        files: [...prev.files, newFile],
+      }))
+    }
+  }
+
+  const pickDocument = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: "application/pdf",
+    })
+
+    if (!result.canceled && result.assets[0]) {
+      const newFile: UploadedFile = {
+        uri: result.assets[0].uri,
+        type: "document",
+        name: result.assets[0].name,
+      }
+      setFormData((prev) => ({
+        ...prev,
+        files: [...prev.files, newFile],
+      }))
+    }
+  }
+
+  const takePicture = async () => {
+    const permission = await ImagePickerAsync.requestCameraPermissionsAsync()
+
+    if (permission.granted) {
+      const result = await ImagePickerAsync.launchCameraAsync({
+        allowsEditing: true,
+        quality: 1,
+      })
+
+      if (!result.canceled) {
+        const newFile: UploadedFile = {
+          uri: result.assets[0].uri,
+          type: "image",
+          name: result.assets[0].uri.split("/").pop() || "image",
+        }
+        setFormData((prev) => ({
+          ...prev,
+          files: [...prev.files, newFile],
+        }))
+      }
+    }
+  }
+
+  const deleteFile = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      files: prev.files.filter((_, i) => i !== index),
+    }))
+  }
+
+  const handleSubmit = async () => {
+    // ... (keep the existing handleSubmit function)
+    setIsLoading(true)
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      console.log("Data submitted:", formData)
+      setIsLoading(false)
+      router.back()
+    } catch (error) {
+      console.error("Error submitting data:", error)
+      setIsLoading(false)
+      Alert.alert("Erreur", "Une erreur s'est produite lors de l'enregistrement.")
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "Sélectionner une date"
+    const [year, month, day] = dateString.split("-")
+    return `${day}-${month}-${year}`
+  }
+
+  const onChangeStartDate = (date: any) => {
+    setFormData((prev) => ({ ...prev, startDate: date.dateString }))
+    setShowStartDatePicker(false)
+  }
+
+  const onChangeEndDate = (date: any) => {
+    setFormData((prev) => ({ ...prev, endDate: date.dateString }))
+    setShowEndDatePicker(false)
+  }
+
+  const fadeAnim = useRef(new Animated.Value(0)).current
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start()
+  }, [fadeAnim]) // Added fadeAnim to dependencies
+
+  return (
+    <SafeAreaView className="flex-1 bg-gray-50 pt-4">
+      <TouchableWithoutFeedback
+        onPress={() => {
+          setShowStartDatePicker(false)
+          setShowEndDatePicker(false)
+          setShowMomentDePrisePicker(false)
+          setShowReminderModal(false)
+        }}
+      >
+        <View className="flex-1 bg-gray-50">
+          {/* Header */}
+          <View className="flex-row justify-between items-start px-6 pt-2 pb-2 bg-white">
+            <View className="flex-row items-center">
+              <TouchableOpacity
+                onPress={() => router.back()}
+                className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
+              >
+                <ChevronLeft size={34} color={colors.primary} />
+              </TouchableOpacity>
+              <Text className="text-primary-500 text-2xl font-extrabold ml-4">Ajouter un médicament</Text>
+            </View>
+          </View>
+
+          <ScrollView className="flex-1 px-6">
+            <View className=" flex flex-col gap-y-6 py-6">
+              {/* Basic Information */}
+              <View className="rounded-xl p-4 shadow-lg bg-primary-50">
+                <Text className="text-lg font-semibold text-gray-800 mb-4">Informations de base</Text>
+                <View className="space-y-4">
+                  {/* Nom du médicament */}
+                  <View>
+                    <Text className="text-sm font-medium text-gray-700 mb-1">Nom du médicament</Text>
+                    <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
+                      <Pill size={20} color={colors.primary} className="opacity-70" />
+                      <TextInput
+                        value={formData.name}
+                        onChangeText={(text) => setFormData((prev) => ({ ...prev, name: text }))}
+                        placeholder="Nom du médicament"
+                        placeholderTextColor="#9CA3AF"
+                        className="flex-1 ml-3 text-gray-800"
+                      />
+                    </View>
+                  </View>
+
+                  {/* Dosage */}
+                  <View>
+                    <Text className="text-sm font-medium text-gray-700 mb-1">Dosage</Text>
+                    <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
+                      <Pill size={20} color={colors.primary} className="opacity-70" />
+                      <TextInput
+                        value={formData.dosage}
+                        onChangeText={(text) => setFormData((prev) => ({ ...prev, dosage: text }))}
+                        placeholder="Ex: 50 mg, 50 ml"
+                        placeholderTextColor="#9CA3AF"
+                        className="flex-1 ml-3 text-gray-800"
+                      />
+                    </View>
+                  </View>
+
+                  {/* Stock */}
+                  <View>
+                    <Text className="text-sm font-medium text-gray-700 mb-1">Stock</Text>
+                    <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
+                      <Pill size={20} color={colors.primary} className="opacity-70" />
+                      <TextInput
+                        value={formData.stock}
+                        onChangeText={(text) => setFormData((prev) => ({ ...prev, stock: text }))}
+                        placeholder="Ex: 50 comprimés"
+                        placeholderTextColor="#9CA3AF"
+                        className="flex-1 ml-3 text-gray-800"
+                      />
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              {/* Treatment Period */}
+              <View className="rounded-xl p-4 shadow-lg bg-white">
+                <Text className="text-lg font-semibold text-gray-800 mb-4">Période de traitement</Text>
+                <View className="space-y-4">
+                  {/* Date de début */}
+                  <View>
+                    <Text className="text-sm font-medium text-gray-700 mb-1">Date de début</Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowStartDatePicker(!showStartDatePicker)
+                        setShowEndDatePicker(false)
+                      }}
+                      className="flex-row items-center bg-gray-50 rounded-xl border border-gray-200 px-4 h-12"
+                    >
+                      <LucideCalendar size={20} color={colors.primary} className="opacity-70" />
+                      <Text className="flex-1 ml-3 text-gray-800">{formatDate(formData.startDate)}</Text>
+                    </TouchableOpacity>
+                    {showStartDatePicker && (
+                      <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
+                        <RNCalendar
+                          onDayPress={onChangeStartDate}
+                          markedDates={{
+                            [formData.startDate]: {
+                              selected: true,
+                              selectedColor: colors.primary,
+                            },
+                          }}
+                          theme={{
+                            backgroundColor: "#ffffff",
+                            calendarBackground: "#ffffff",
+                            textSectionTitleColor: colors.text,
+                            selectedDayBackgroundColor: colors.primary,
+                            selectedDayTextColor: "#ffffff",
+                            todayTextColor: colors.primary,
+                            dayTextColor: colors.text,
+                            textDisabledColor: "#d9e1e8",
+                            dotColor: colors.primary,
+                            selectedDotColor: "#ffffff",
+                            arrowColor: colors.text,
+                            monthTextColor: colors.text,
+                            indicatorColor: "blue",
+                            textDayFontFamily: "System",
+                            textMonthFontFamily: "System",
+                            textDayHeaderFontFamily: "System",
+                            textDayFontWeight: "300",
+                            textMonthFontWeight: "bold",
+                            textDayHeaderFontWeight: "300",
+                            textDayFontSize: 16,
+                            textMonthFontSize: 16,
+                            textDayHeaderFontSize: 16,
+                          }}
+                        />
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Date de fin */}
+                  <View>
+                    <Text className="text-sm font-medium text-gray-700 mb-1">Date de fin</Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowEndDatePicker(!showEndDatePicker)
+                        setShowStartDatePicker(false)
+                      }}
+                      className="flex-row items-center bg-gray-50 rounded-xl border border-gray-200 px-4 h-12"
+                    >
+                      <LucideCalendar size={20} color={colors.primary} className="opacity-70" />
+                      <Text className="flex-1 ml-3 text-gray-800">{formatDate(formData.endDate)}</Text>
+                    </TouchableOpacity>
+                    {showEndDatePicker && (
+                      <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
+                        <RNCalendar
+                          onDayPress={onChangeEndDate}
+                          markedDates={{
+                            [formData.endDate]: {
+                              selected: true,
+                              selectedColor: colors.primary,
+                            },
+                          }}
+                          theme={{
+                            backgroundColor: "#ffffff",
+                            calendarBackground: "#ffffff",
+                            textSectionTitleColor: colors.text,
+                            selectedDayBackgroundColor: colors.primary,
+                            selectedDayTextColor: "#ffffff",
+                            todayTextColor: colors.primary,
+                            dayTextColor: colors.text,
+                            textDisabledColor: "#d9e1e8",
+                            dotColor: colors.primary,
+                            selectedDotColor: "#ffffff",
+                            arrowColor: colors.text,
+                            monthTextColor: colors.text,
+                            indicatorColor: "blue",
+                            textDayFontFamily: "System",
+                            textMonthFontFamily: "System",
+                            textDayHeaderFontFamily: "System",
+                            textDayFontWeight: "300",
+                            textMonthFontWeight: "bold",
+                            textDayHeaderFontWeight: "300",
+                            textDayFontSize: 16,
+                            textMonthFontSize: 16,
+                            textDayHeaderFontSize: 16,
+                          }}
+                        />
+                      </View>
+                    )}
+                  </View>
+
+                </View>
+              </View>
+
+              {/* Administration */}
+              <View className="bg-primary-50 rounded-xl p-4 shadow-lg">
+                <Text className="text-lg font-semibold text-gray-800 mb-4">Administration</Text>
+                <View className="space-y-4">
+                  {/* Fréquence */}
+                  <View>
+                    <Text className="text-sm font-medium text-gray-700 mb-1">Fréquence</Text>
+                    <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
+                      <Pill size={20} color={colors.primary} className="opacity-70" />
+                      <TextInput
+                        value={formData.frequency}
+                        onChangeText={(text) => setFormData((prev) => ({ ...prev, frequency: text }))}
+                        placeholder="Ex: X fois/jours, tous les jours"
+                        placeholderTextColor="#9CA3AF"
+                        className="flex-1 ml-3 text-gray-800"
+                      />
+                      <Text>fois/jour</Text>
+                    </View>
+                  </View>
+
+                  {/* Moment de prise */}
+                  <View>
+                    <Text className="text-sm font-medium text-gray-700 mb-1">Moment de prise</Text>
+                    <TouchableOpacity
+                      onPress={() => setShowMomentDePrisePicker(!showMomentDePrisePicker)}
+                      className="flex-row items-center justify-between bg-gray-50 rounded-xl border border-gray-200 px-4 h-12"
+                    >
+                      <View className="flex-row items-center">
+                        <Clock size={20} color={colors.primary} className="opacity-70" />
+                        <Text className="ml-3 text-gray-800">
+                          {formData.momentDePrise
+                            ? momentDePriseOptions.find((option) => option.value === formData.momentDePrise)?.label
+                            : "Sélectionner le moment"}
+                        </Text>
+                      </View>
+                      <ChevronDown size={20} color={colors.text} className="opacity-50" />
+                    </TouchableOpacity>
+                    {showMomentDePrisePicker && (
+                      <View className="bg-white rounded-xl border border-gray-200 mt-1">
+                        {momentDePriseOptions.map((option) => (
+                          <TouchableOpacity
+                            key={option.value}
+                            onPress={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                momentDePrise: option.value,
+                              }))
+                              setShowMomentDePrisePicker(false)
+                            }}
+                            className="p-3 border-b border-gray-200"
+                          >
+                            <Text>{option.label}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Rappels */}
+                  <View>
+                    <Text className="text-sm font-medium text-gray-700 mb-1">Rappels</Text>
+                    <View className="bg-gray-50 rounded-xl border border-gray-200 p-4">
+                      {formData?.reminders?.map((time, index) => (
+                        <View
+                          key={index}
+                          className="flex-row items-center justify-between mb-2 bg-white p-3 rounded-lg shadow-sm"
+                        >
+                          <View className="flex-row items-center">
+                            <Clock size={20} color={colors.primary} className="opacity-70" />
+                            <Text className="ml-3 text-gray-800">{time}</Text>
+                          </View>
+                          <TouchableOpacity
+                            onPress={() => removeReminder(index)}
+                            className="bg-gray-200 rounded-full p-2"
+                          >
+                            <X size={16} color={colors.text} />
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                      <TouchableOpacity
+                        onPress={() => setShowReminderModal(true)}
+                        className="flex-row items-center justify-center py-3 mt-2 border-t border-gray-200"
+                      >
+                        <Plus size={20} color={colors.primary} />
+                        <Text className="ml-2 text-primary-500 font-medium">Ajouter un rappel</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              {/* Additional Information */}
+              <View className="bg-white rounded-xl p-4 shadow-lg">
+                <Text className="text-lg font-semibold text-gray-800 mb-4">Informations supplémentaires</Text>
+                <View className="space-y-4">
+                  {/* Notes */}
+                  <View>
+                    <Text className="text-sm font-medium text-gray-700 mb-1">Notes</Text>
+                    <View className="bg-gray-50 rounded-xl border border-gray-200 p-4">
+                      <TextInput
+                        value={formData.notes}
+                        onChangeText={(text) => setFormData((prev) => ({ ...prev, notes: text }))}
+                        placeholder="Ajouter des notes..."
+                        placeholderTextColor="#9CA3AF"
+                        multiline
+                        numberOfLines={4}
+                        className="min-h-[100] text-gray-800"
+                        textAlignVertical="top"
+                      />
+                    </View>
+                  </View>
+
+                  {/* Ordonnance */}
+                  <View>
+                    <Text className="text-sm font-medium text-gray-700 mb-1">Ordonnance</Text>
+                    <View className="bg-gray-50 rounded-xl border border-gray-200 p-4">
+                      <View className="flex-row justify-around mb-4">
+                        <TouchableOpacity onPress={pickImage} className="items-center">
+                          <View className="w-16 h-16 rounded-full bg-white shadow-md items-center justify-center mb-2">
+                            <ImageIcon size={28} color={colors.primary} />
+                          </View>
+                          <Text className="text-sm text-gray-600">Galerie</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={takePicture} className="items-center">
+                          <View className="w-16 h-16 rounded-full bg-white shadow-md items-center justify-center mb-2">
+                            <Upload size={28} color={colors.primary} />
+                          </View>
+                          <Text className="text-sm text-gray-600">Camera</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={pickDocument} className="items-center">
+                          <View className="w-16 h-16 rounded-full bg-white shadow-md items-center justify-center mb-2">
+                            <FileText size={28} color={colors.primary} />
+                          </View>
+                          <Text className="text-sm text-gray-600">Document</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      {formData.files.length > 0 && (
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2">
+                          {formData.files.map((file, index) => (
+                            <View key={index} className="relative">
+                              {file.type === "image" ? (
+                                <Image source={{ uri: file.uri }} className="w-20 h-20 rounded-lg" />
+                              ) : (
+                                <View className="w-20 h-20 bg-gray-200 rounded-lg items-center justify-center">
+                                  <FileText size={24} color={colors.primary} />
+                                  <Text className="text-xs text-gray-600 mt-1" numberOfLines={1}>
+                                    {file.name}
+                                  </Text>
+                                </View>
+                              )}
+                              <TouchableOpacity
+                                onPress={() => deleteFile(index)}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full items-center justify-center"
+                                hitSlop={{
+                                  top: 10,
+                                  right: 10,
+                                  bottom: 10,
+                                  left: 10,
+                                }}
+                              >
+                                <X size={12} color="white" />
+                              </TouchableOpacity>
+                            </View>
+                          ))}
+                        </ScrollView>
+                      )}
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </ScrollView>
+
+          {/* Submit Button */}
+          <View className="p-6 bg-white border-t border-gray-200">
+            <TouchableOpacity
+              onPress={handleSubmit}
+              disabled={isLoading}
+              className={`w-full rounded-xl py-3 items-center ${isLoading ? "bg-gray-400" : "bg-primary-500"}`}
+            >
+              <Text className="text-white font-semibold text-lg">{isLoading ? "Chargement..." : "Enregistrer"}</Text>
+            </TouchableOpacity>
+          </View>
+          <ReminderModal
+            visible={showReminderModal}
+            onClose={() => setShowReminderModal(false)}
+            onSave={(time) => {
+              if (time.length === 5) {
+                // Only save if proper format (HH:mm)
+                addReminder(time)
+                setShowReminderModal(false)
+              } else {
+                Alert.alert("Erreur", "Veuillez entrer une heure valide")
+              }
+            }}
+          />
+        </View>
+      </TouchableWithoutFeedback>
+    </SafeAreaView>
+  )
 }
 
 const ReminderModal = ({
@@ -206,652 +735,4 @@ const styles = StyleSheet.create({
   },
 })
 
-export default function AddMedicament() {
-  const router = useRouter()
-  const { colors } = useTheme()
-  const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState<MedicationFormData>({
-    name: "",
-    startDate: "",
-    endDate: "",
-    dosage: "",
-    stock: "",
-    duration: "",
-    frequency: "",
-    notes: "",
-    schedule: {
-      matin: false,
-      apres_midi: false,
-      soir: false,
-      nuit: false,
-    },
-    reminders: [],
-    files: [] as UploadedFile[],
-    momentDePrise: "",
-  })
-
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false)
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false)
-  const [showMomentDePrisePicker, setShowMomentDePrisePicker] = useState(false)
-  const [showReminderModal, setShowReminderModal] = useState(false)
-
-  const addReminder = (time: string) => {
-    // Validate time format (HH:mm)
-    if (!/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
-      Alert.alert("Erreur", "Format d'heure invalide. Utilisez le format HH:mm")
-      return
-    }
-
-    // Add the reminder to state
-    setFormData((prev) => ({
-      ...prev,
-      reminders: [...(prev.reminders || []), time],
-    }))
-
-    // Log for debugging
-    console.log("Added reminder:", time)
-    console.log("Current reminders:", formData.reminders)
-  }
-
-  const removeReminder = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      reminders: prev.reminders.filter((_, i) => i !== index),
-    }))
-  }
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    })
-
-    if (!result.canceled && result.assets[0]) {
-      const newFile: UploadedFile = {
-        uri: result.assets[0].uri,
-        type: "image",
-        name: result.assets[0].uri.split("/").pop() || "image",
-      }
-      setFormData((prev) => ({
-        ...prev,
-        files: [...prev.files, newFile],
-      }))
-    }
-  }
-
-  const pickDocument = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: "application/pdf",
-    })
-
-    if (!result.canceled && result.assets[0]) {
-      const newFile: UploadedFile = {
-        uri: result.assets[0].uri,
-        type: "document",
-        name: result.assets[0].name,
-      }
-      setFormData((prev) => ({
-        ...prev,
-        files: [...prev.files, newFile],
-      }))
-    }
-  }
-
-  const takePicture = async () => {
-    const permission = await ImagePicker.requestCameraPermissionsAsync()
-
-    if (permission.granted) {
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        quality: 1,
-      })
-
-      if (!result.canceled) {
-        const newFile: UploadedFile = {
-          uri: result.assets[0].uri,
-          type: "image",
-          name: result.assets[0].uri.split("/").pop() || "image",
-        }
-        setFormData((prev) => ({
-          ...prev,
-          files: [...prev.files, newFile],
-        }))
-      }
-    }
-  }
-
-  const deleteFile = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      files: prev.files.filter((_, i) => i !== index),
-    }))
-  }
-
-  const handleSubmit = async () => {
-    setIsLoading(true);
-    try {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-
-      // First create the medication record
-      const { data: medicamentData, error: medicamentError } = await supabase
-          .from("medicaments")
-          .insert({
-            name: formData.name,
-            startDate: formData.startDate,
-            endDate: formData.endDate,
-            dosage: formData.dosage,
-            notes: formData.notes,
-            schedule: formData.schedule,
-            momentDePrise: formData.momentDePrise,
-            stock: formData.stock,
-            duration: formData.duration,
-            frequency: formData.frequency,
-            rappel: formData.reminders.length > 0,
-            reminders: formData.reminders,
-            user_id: userData.user?.id,
-            created_at: new Date(),
-          })
-          .select();
-
-      if (medicamentError) throw medicamentError;
-
-      // Handle file uploads
-      const uploadedFiles = [];
-      for (const file of formData.files) {
-        try {
-          const fileName = file.uri.split("/").pop();
-          if (!fileName) {
-            console.error("Could not generate filename");
-            continue;
-          }
-
-          const filePath = `${userData.user?.id}/${Date.now()}_${fileName}`;
-          console.log("Uploading to path:", filePath);
-
-          const response = await fetch(file.uri);
-          const blob = await response.blob();
-
-          const reader = new FileReader();
-          const base64Promise = new Promise((resolve) => {
-            reader.onload = () => resolve(reader.result);
-          });
-          reader.readAsDataURL(blob);
-
-          const base64Data = await base64Promise;
-          const base64String = String(base64Data).split(",")[1];
-
-          const { data: uploadData, error: uploadError } = await supabase.storage
-              .from("medicaments")
-              .upload(filePath, decode(base64String), {
-                contentType: blob.type,
-                upsert: false,
-              });
-
-          if (uploadError) throw uploadError;
-          uploadedFiles.push(uploadData?.path);
-        } catch (err) {
-          console.error("Error uploading file:", err);
-        }
-      }
-
-      // Update medication record with file paths
-      if (medicamentData && uploadedFiles.length > 0) {
-        console.log('update uplaoded documents')
-        const { error: updateError } = await supabase
-            .from("medicaments")
-            .update({ uploads: uploadedFiles })
-            .eq("id", medicamentData[0].id);
-
-
-        console.log("update Error ")
-
-        if (updateError) throw updateError;
-      }
-
-      // Create reminders
-      if (formData.reminders.length > 0 && formData.startDate && formData.endDate) {
-        const start = new Date(formData.startDate);
-        const end = new Date(formData.endDate);
-        const notificationIds: string[] = [];
-
-        for (let date = start; date <= end; date.setDate(date.getDate() + 1)) {
-          formData.reminders.forEach((reminderTime) => {
-            const [hours, minutes] = reminderTime.split(":");
-            const reminderDate = new Date(date);
-            reminderDate.setHours(Number(hours), Number(minutes), 0, 0);
-            const randomIdString = Math.random().toString(36).substring(2, 15) +
-                Math.random().toString(36).substring(2, 15);
-            notificationIds.push(randomIdString);
-
-            scheduleNotification(
-                randomIdString,
-                `Rappel: ${formData.name}`,
-                `Il est temps de prendre votre médicament ${formData.name}.`,
-                reminderDate,
-            );
-          });
-        }
-
-        // Update medication with notification IDs
-        const { error: updateError } = await supabase
-            .from("medicaments")
-            .update({ notificationId: notificationIds })
-            .eq("id", medicamentData[0].id);
-
-        if (updateError) throw updateError;
-      }
-
-      Alert.alert("Succès", "Médicament ajouté avec succès");
-      router.push("/list-medicaments");
-    } catch (error) {
-      console.error("Error:", error);
-      Alert.alert("Erreur", "Échec de l'enregistrement. Veuillez réessayer.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "Sélectionner une date"
-    const [year, month, day] = dateString.split("-")
-    return `${day}-${month}-${year}`
-  }
-
-  const onChangeStartDate = (date: any) => {
-    setFormData((prev) => ({ ...prev, startDate: date.dateString }))
-    setShowStartDatePicker(false)
-  }
-
-  const onChangeEndDate = (date: any) => {
-    setFormData((prev) => ({ ...prev, endDate: date.dateString }))
-    setShowEndDatePicker(false)
-  }
-
-  return (
-      <SafeAreaView className="flex-1 bg-gray-50 pt-4">
-        <TouchableWithoutFeedback
-            onPress={() => {
-              setShowStartDatePicker(false)
-              setShowEndDatePicker(false)
-              setShowMomentDePrisePicker(false)
-              setShowReminderModal(false)
-            }}
-        >
-          <View className="flex-1 bg-gray-50">
-            {/* Header */}
-
-            <View className=" flex-row justify-between  items-start px-6 pt-2 pb-2 bg-white">
-              <View className="flex-row items-center">
-                <TouchableOpacity
-                    onPress={() => router.back()}
-                    className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
-                >
-                  <ChevronLeft size={34} color={colors.primary} />
-                </TouchableOpacity>
-                <Text className="text-primary-500 text-2xl font-extrabold ml-4">Ajouter un médicament</Text>
-              </View>
-            </View>
-
-            <ScrollView className="flex-1 p-6">
-              <View className="space-y-4 pb-10">
-                {/* Nom du médicament */}
-                <View>
-                  <Text className="text-sm font-medium text-gray-700 mb-1">Nom du médicament</Text>
-                  <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
-                    <Pill size={20} color={colors.text} className="opacity-50" />
-                    <TextInput
-                        value={formData.name}
-                        onChangeText={(text) => setFormData((prev) => ({ ...prev, name: text }))}
-                        placeholder="Nom du médicament"
-                        placeholderTextColor="#9CA3AF"
-                        className="flex-1 ml-3"
-                    />
-                  </View>
-                </View>
-
-                {/* Date de début */}
-                <View>
-                  <Text className="text-sm font-medium text-gray-700 mb-1">Date de début</Text>
-                  <TouchableOpacity
-                      onPress={() => {
-                        setShowStartDatePicker(!showStartDatePicker)
-                        setShowEndDatePicker(false)
-                      }}
-                      className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12"
-                  >
-                    <LucideCalendar size={20} color={colors.text} className="opacity-50" />
-                    <Text className="flex-1 ml-3 text-gray-700">{formatDate(formData.startDate)}</Text>
-                  </TouchableOpacity>
-                  {showStartDatePicker && (
-                      <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
-                        <RNCalendar
-                            onDayPress={onChangeStartDate}
-                            markedDates={{
-                              [formData.startDate]: {
-                                selected: true,
-                                selectedColor: colors.primary,
-                              },
-                            }}
-                            theme={{
-                              backgroundColor: "#ffffff",
-                              calendarBackground: "#ffffff",
-                              textSectionTitleColor: colors.text,
-                              selectedDayBackgroundColor: colors.primary,
-                              selectedDayTextColor: "#ffffff",
-                              todayTextColor: colors.primary,
-                              dayTextColor: colors.text,
-                              textDisabledColor: "#d9e1e8",
-                              dotColor: colors.primary,
-                              selectedDotColor: "#ffffff",
-                              arrowColor: colors.text,
-                              monthTextColor: colors.text,
-                              indicatorColor: "blue",
-                              textDayFontFamily: "System",
-                              textMonthFontFamily: "System",
-                              textDayHeaderFontFamily: "System",
-                              textDayFontWeight: "300",
-                              textMonthFontWeight: "bold",
-                              textDayHeaderFontWeight: "300",
-                              textDayFontSize: 16,
-                              textMonthFontSize: 16,
-                              textDayHeaderFontSize: 16,
-                            }}
-                        />
-                      </View>
-                  )}
-                </View>
-
-                {/* Date de fin */}
-                <View>
-                  <Text className="text-sm font-medium text-gray-700 mb-1">Date de fin</Text>
-                  <TouchableOpacity
-                      onPress={() => {
-                        setShowEndDatePicker(!showEndDatePicker)
-                        setShowStartDatePicker(false)
-                      }}
-                      className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12"
-                  >
-                    <LucideCalendar size={20} color={colors.text} className="opacity-50" />
-                    <Text className="flex-1 ml-3 text-gray-700">{formatDate(formData.endDate)}</Text>
-                  </TouchableOpacity>
-                  {showEndDatePicker && (
-                      <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
-                        <RNCalendar
-                            onDayPress={onChangeEndDate}
-                            markedDates={{
-                              [formData.endDate]: {
-                                selected: true,
-                                selectedColor: colors.primary,
-                              },
-                            }}
-                            theme={{
-                              backgroundColor: "#ffffff",
-                              calendarBackground: "#ffffff",
-                              textSectionTitleColor: colors.text,
-                              selectedDayBackgroundColor: colors.primary,
-                              selectedDayTextColor: "#ffffff",
-                              todayTextColor: colors.primary,
-                              dayTextColor: colors.text,
-                              textDisabledColor: "#d9e1e8",
-                              dotColor: colors.primary,
-                              selectedDotColor: "#ffffff",
-                              arrowColor: colors.text,
-                              monthTextColor: colors.text,
-                              indicatorColor: "blue",
-                              textDayFontFamily: "System",
-                              textMonthFontFamily: "System",
-                              textDayHeaderFontFamily: "System",
-                              textDayFontWeight: "300",
-                              textMonthFontWeight: "bold",
-                              textDayHeaderFontWeight: "300",
-                              textDayFontSize: 16,
-                              textMonthFontSize: 16,
-                              textDayHeaderFontSize: 16,
-                            }}
-                        />
-                      </View>
-                  )}
-                </View>
-
-                {/* Dosage */}
-                <View>
-                  <Text className="text-sm font-medium text-gray-700 mb-1">Dosage</Text>
-                  <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
-                    <FlaskConical size={20} color={colors.text} className="opacity-50" />
-                    <TextInput
-                        value={formData.dosage}
-                        onChangeText={(text) => setFormData((prev) => ({ ...prev, dosage: text }))}
-                        placeholder="Ex: 50 mg, 50 ml"
-                        placeholderTextColor="#9CA3AF"
-                        className="flex-1 ml-3"
-                    />
-                  </View>
-                </View>
-
-                {/* Stock */}
-                <View>
-                  <Text className="text-sm font-medium text-gray-700 mb-1">Stock</Text>
-                  <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
-                    <Container size={20} color={colors.text} className="opacity-50" />
-                    <TextInput
-                        value={formData.stock}
-                        onChangeText={(text) => setFormData((prev) => ({ ...prev, stock: text }))}
-                        placeholder="Ex: 50 comprimés"
-                        placeholderTextColor="#9CA3AF"
-                        className="flex-1 ml-3"
-                    />
-                  </View>
-                </View>
-
-                {/* Durée */}
-                <View>
-                  <Text className="text-sm font-medium text-gray-700 mb-1">Durée</Text>
-                  <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
-                    <Timer size={20} color={colors.text} className="opacity-50" />
-                    <TextInput
-                        value={formData.duration}
-                        onChangeText={(text) => setFormData((prev) => ({ ...prev, duration: text }))}
-                        placeholder="Ex: 10 jours"
-                        placeholderTextColor="#9CA3AF"
-                        className="flex-1 ml-3"
-                    />
-                  </View>
-                </View>
-
-                {/* Fréquence */}
-                <View>
-                  <Text className="text-sm font-medium text-gray-700 mb-1">Fréquence</Text>
-                  <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 h-12">
-                    <Repeat size={20} color={colors.text} className="opacity-50" />
-                    <TextInput
-                        value={formData.frequency}
-                        onChangeText={(text) => setFormData((prev) => ({ ...prev, frequency: text }))}
-                        placeholder="Ex: X fois/jours, tous les jours"
-                        placeholderTextColor="#9CA3AF"
-                        className="flex-1 ml-3"
-                    />
-                  </View>
-                </View>
-
-                {/* Moment de prise */}
-                <View>
-                  <Text className="text-sm font-medium text-gray-700 mb-1">Moment de prise</Text>
-                  <TouchableOpacity
-                      onPress={() => setShowMomentDePrisePicker(!showMomentDePrisePicker)}
-                      className="flex-row items-center justify-between bg-white rounded-xl border border-gray-200 px-4 h-12"
-                  >
-                    <View className="flex-row items-center">
-                      <Clock size={20} color={colors.text} className="opacity-50" />
-                      <Text className="ml-3 text-gray-700">
-                        {formData.momentDePrise
-                            ? momentDePriseOptions.find((option) => option.value === formData.momentDePrise)?.label
-                            : "Sélectionner le moment"}
-                      </Text>
-                    </View>
-                    <ChevronDown size={20} color={colors.text} className="opacity-50" />
-                  </TouchableOpacity>
-                </View>
-
-                {showMomentDePrisePicker && (
-                    <View className="bg-white rounded-xl border border-gray-200 mt-1">
-                      {momentDePriseOptions.map((option) => (
-                          <TouchableOpacity
-                              key={option.value}
-                              onPress={() => {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  momentDePrise: option.value,
-                                }))
-                                setShowMomentDePrisePicker(false)
-                              }}
-                              className="p-3 border-b border-gray-200"
-                          >
-                            <Text>{option.label}</Text>
-                          </TouchableOpacity>
-                      ))}
-                    </View>
-                )}
-
-                {/* Rappels */}
-                <View>
-                  <Text className="text-sm font-medium text-gray-700 mb-1">Rappels</Text>
-                  <View className="bg-white rounded-xl border border-gray-200 p-4">
-                    {formData?.reminders?.map((time, index) => (
-                        <View key={index} className="flex-row items-center justify-between mb-2 bg-gray-50 p-3 rounded-lg">
-                          <View className="flex-row items-center">
-                            <Clock size={20} color={colors.text} className="opacity-50" />
-                            <Text className="ml-3">{time}</Text>
-                          </View>
-                          <TouchableOpacity onPress={() => removeReminder(index)} className="bg-gray-200 rounded-full p-2">
-                            <X size={16} color={colors.text} />
-                          </TouchableOpacity>
-                        </View>
-                    ))}
-                    <TouchableOpacity
-                        onPress={() => setShowReminderModal(true)}
-                        className="flex-row items-center justify-center py-3 mt-2 border-t border-gray-200"
-                    >
-                      <Plus size={20} color="#8B5CF6" />
-                      <Text className="ml-2 text-primary-500 font-medium">Ajouter un rappel</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* Notes */}
-                <View>
-                  <Text className="text-sm font-medium text-gray-700 mb-1">Notes</Text>
-                  <View className="bg-white rounded-xl border border-gray-200 p-4">
-                    <TextInput
-                        value={formData.notes}
-                        onChangeText={(text) => setFormData((prev) => ({ ...prev, notes: text }))}
-                        placeholder="Ajouter des notes..."
-                        placeholderTextColor="#9CA3AF"
-                        multiline
-                        numberOfLines={4}
-                        className="min-h-[100] text-gray-700"
-                        textAlignVertical="top"
-                    />
-                  </View>
-                </View>
-
-                {/* Ordonnance */}
-                <View>
-                  <Text className="text-sm font-medium text-gray-700 mb-1">Ordonnance</Text>
-                  <View className="bg-white rounded-xl border border-gray-200 p-4">
-                    <View className="flex-row justify-around mb-4">
-                      <TouchableOpacity onPress={pickImage} className="items-center">
-                        <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
-                          <ImageIcon size={24} color={colors.primary} />
-                        </View>
-                        <Text className="text-sm text-gray-600">Galerie</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity onPress={takePicture} className="items-center">
-                        <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
-                          <Upload size={24} color={colors.primary} />
-                        </View>
-                        <Text className="text-sm text-gray-600">Camera</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity onPress={pickDocument} className="items-center">
-                        <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-2">
-                          <FileText size={24} color={colors.primary} />
-                        </View>
-                        <Text className="text-sm text-gray-600">Document</Text>
-                      </TouchableOpacity>
-                    </View>
-
-                    {formData.files.length > 0 && (
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2">
-                          {formData.files.map((file, index) => (
-                              <View key={index} className="relative">
-                                {file.type === "image" ? (
-                                    <RNImage source={{ uri: file.uri }} className="w-20 h-20 rounded-lg" />
-                                ) : (
-                                    <View className="w-20 h-20 bg-gray-200 rounded-lg items-center justify-center">
-                                      <FileText size={24} color={colors.primary} />
-                                      <Text className="text-xs text-gray-600 mt-1" numberOfLines={1}>
-                                        {file.name}
-                                      </Text>
-                                    </View>
-                                )}
-                                <TouchableOpacity
-                                    onPress={() => deleteFile(index)}
-                                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full items-center justify-center"
-                                    hitSlop={{
-                                      top: 10,
-                                      right: 10,
-                                      bottom: 10,
-                                      left: 10,
-                                    }}
-                                >
-                                  <X size={12} color="white" />
-                                </TouchableOpacity>
-                              </View>
-                          ))}
-                        </ScrollView>
-                    )}
-                  </View>
-                </View>
-              </View>
-            </ScrollView>
-
-            {/* Submit Button */}
-            <View className="p-6 bg-white border-t border-gray-200">
-              <TouchableOpacity
-                  onPress={handleSubmit}
-                  disabled={isLoading}
-                  className={`w-full rounded-xl py-3 items-center ${isLoading ? "bg-primary-500" : "bg-primary-500"}`}
-              >
-                <Text className="text-white font-semibold text-lg">{isLoading ? "Chargement..." : "Enregistrer"}</Text>
-              </TouchableOpacity>
-            </View>
-            <ReminderModal
-                visible={showReminderModal}
-                onClose={() => setShowReminderModal(false)}
-                onSave={(time) => {
-                  if (time.length === 5) {
-                    // Only save if proper format (HH:mm)
-                    addReminder(time)
-                    setShowReminderModal(false)
-                  } else {
-                    Alert.alert("Erreur", "Veuillez entrer une heure valide")
-                  }
-                }}
-            />
-          </View>
-        </TouchableWithoutFeedback>
-      </SafeAreaView>
-  )
-}
-function decode(base64String: string) {
-  const byteCharacters = atob(base64String);
-  const byteNumbers = new Array(byteCharacters.length);
-  for (let i = 0; i < byteCharacters.length; i++) {
-    byteNumbers[i] = byteCharacters.charCodeAt(i);
-  }
-  const byteArray = new Uint8Array(byteNumbers);
-  return byteArray;
-}
+export default AddMedicament

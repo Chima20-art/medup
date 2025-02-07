@@ -1,7 +1,7 @@
+import { differenceInDays, format } from "date-fns"
 import React, { useState } from "react";
 import { Switch, Text, View } from "react-native";
 import PillIcon from "@/assets/images/pillIcon.svg";
-import { differenceInDays } from "date-fns";
 import { scheduleNotification } from "@/utils/notifcations";
 import { useTheme } from "@react-navigation/native";
 
@@ -36,6 +36,7 @@ interface MedicationCardProps {
 
 export default function MedicationCard({ medication }: MedicationCardProps) {
   const [isEnabled, setIsEnabled] = useState(medication.isActive);
+  const daysLeft = differenceInDays(new Date(medication.endDate), new Date())
 
   const toggleSwitch = () => {
     setIsEnabled((previousState) => !previousState);
@@ -80,7 +81,7 @@ export default function MedicationCard({ medication }: MedicationCardProps) {
 
     const days = differenceInDays(end, start) + 1; // Include start date
 
-    return `pendant ${days} jour${days > 1 ? "s" : ""}`;
+    return `Pendant ${days} jour${days > 1 ? "s" : ""}`;
   };
   return (
     <View className="bg-primary-50 rounded-3xl p-6 mt-4 mb-6 relative">
@@ -101,12 +102,9 @@ export default function MedicationCard({ medication }: MedicationCardProps) {
       </View>
 
       <View className="mb-4 flex flex-col gap-y-2">
-        <Text
-          style={{ fontFamily: "Poppins_400Regular" }}
-          className="text-gray-600 font-bold"
-        >
-          • début: {new Date(medication.startDate).toLocaleDateString()}, fin:{" "}
-          {new Date(medication.endDate).toLocaleDateString()}
+        <Text style={{ fontFamily: "Poppins_400Regular" }} className="text-gray-600 font-bold">
+                • début: {format(new Date(medication.startDate), "dd/MM/yyyy")}, fin:{" "}
+                {format(new Date(medication.endDate), "dd/MM/yyyy")}
         </Text>
 
         <Text
@@ -128,7 +126,7 @@ export default function MedicationCard({ medication }: MedicationCardProps) {
       <View className="relative bg-secondary rounded-xl py-2 pt-4 px-4">
         <View className="bg-primary-500 text-xs absolute -right-1 -top-6 p-2 rounded-xl">
           <Text className="text-secondary">
-            Pendant {medication.duration}
+          {calculateDuration(medication.startDate, medication.endDate)}
           </Text>
         </View>
 
