@@ -50,7 +50,7 @@ export default function Add() {
                 >
                     <ChevronLeft size={34} color={colors.primary} />
                 </TouchableOpacity>
-                <Text className="text-primary-500 text-3xl font-extrabold">
+                <Text className="text-primary-500 text-2xl font-extrabold">
                     Que souhaitez-vous ajouter ?
                 </Text>
             </View>

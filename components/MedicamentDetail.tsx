@@ -56,7 +56,11 @@ interface MedicamentDetailProps {
 const MedicamentDetail: React.FC<MedicamentDetailProps> = ({ initialData }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState(initialData)
+  const [formData, setFormData] = useState({
+    ...initialData,
+    startDate: initialData.startDate ? new Date(initialData.startDate).toISOString() : new Date().toISOString(),
+    endDate: initialData.endDate ? new Date(initialData.endDate).toISOString() : new Date().toISOString(),
+  });
   const [showStartDatePicker, setShowStartDatePicker] = useState(false)
   const [showEndDatePicker, setShowEndDatePicker] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -130,15 +134,19 @@ const MedicamentDetail: React.FC<MedicamentDetailProps> = ({ initialData }) => {
   }
 
   const handleDateChange = (event: any, selectedDate: Date | undefined, dateType: "start" | "end") => {
-    if (selectedDate) {
+    if (selectedDate && !isNaN(selectedDate.getTime())) {
       setFormData((prev) => ({
         ...prev,
-        [dateType === "start" ? "startDate" : "endDate"]: selectedDate.toISOString().split("T")[0],
-      }))
+        [dateType === "start" ? "startDate" : "endDate"]: selectedDate.toISOString(),
+      }));
     }
-    setShowStartDatePicker(false)
-    setShowEndDatePicker(false)
-  }
+    if (dateType === "start") {
+      setShowStartDatePicker(false);
+    } else {
+      setShowEndDatePicker(false);
+    }
+  };
+
 
   const downloadFile = async (file: { uri: string; name: string }) => {
     try {
@@ -413,7 +421,8 @@ const MedicamentDetail: React.FC<MedicamentDetailProps> = ({ initialData }) => {
                   {formData?.uploads?.map((file, index) => (
                       <SupabaseFile path={file} bucket="medicaments" key={file} compact={true} />
                   ))}
-                  {formData?.uploads?.length === 0 && <Text className="text-gray-500">Aucun fichier joint</Text>}
+                  {(formData?.uploads?.length === 0 || formData?.uploads === null)
+                      && <Text className="text-gray-500">Aucun fichier joint</Text>}
                 </View>
               </View>
               <Modal visible={showDeleteConfirm} transparent={true} animationType="fade">

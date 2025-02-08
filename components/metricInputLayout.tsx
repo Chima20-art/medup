@@ -77,25 +77,19 @@ export default function MetricInputTemplate({
                         <Text className="text-gray-700">{pickedDate.toLocaleDateString("fr-FR")}</Text>
                     </TouchableOpacity>
                     {showDatePicker && (
-                        <Modal transparent={true} animationType="slide">
-                            <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
-                                <View className="bg-white rounded-lg p-4">
-                                    <DateTimePicker
-                                        value={pickedDate}
-                                        onChange={(event, selectedDate) => {
-                                            setShowDatePicker(Platform.OS === "ios");
-                                            if (selectedDate) {
-                                                setPickedDate(selectedDate);
-                                                onDateConfirm(selectedDate);
-                                            }
-                                        }}
-                                        mode="date"
-                                        display={Platform.OS === "ios" ? "spinner" : "default"}
-                                        textColor="black"
-                                    />
-                                </View>
-                            </View>
-                        </Modal>
+                        <DateTimePicker
+                            value={pickedDate}
+                            onChange={(event, selectedDate) => {
+                                setShowDatePicker(Platform.OS === "ios");
+                                if (selectedDate) {
+                                    setPickedDate(selectedDate);
+                                    onDateConfirm(selectedDate);
+                                }
+                            }}
+                            mode="date"
+                            display={Platform.OS === "ios" ? "spinner" : "default"}
+                            textColor="black"
+                        />
                     )}
                 </View>
 

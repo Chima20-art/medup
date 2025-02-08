@@ -318,7 +318,6 @@ const AddMedicament = ({ navigation }) => {
     }
   }
 
-
   const formatDate = (dateString: string) => {
     if (!dateString) return "Sélectionner une date"
     const [year, month, day] = dateString.split("-")
@@ -365,7 +364,7 @@ const AddMedicament = ({ navigation }) => {
               >
                 <ChevronLeft size={34} color={colors.primary} />
               </TouchableOpacity>
-              <Text className="text-primary-500 text-2xl font-extrabold ml-4">Ajouter un médicament</Text>
+              <Text className="text-primary-500 text-xl font-extrabold ml-4">Ajouter un médicament</Text>
             </View>
           </View>
 
@@ -436,17 +435,9 @@ const AddMedicament = ({ navigation }) => {
                       }}
                       className="flex-row items-center bg-gray-50 rounded-xl border border-gray-200 px-4 h-12"
                     >
-                      <Calendar size={20} color={colors.text} className="opacity-50" />
+                      <Calendar size={20} color={colors.primary} className="opacity-50" />
                       <Text className="flex-1 ml-3 text-gray-800">{formatDate(formData.startDate)}</Text>
                     </TouchableOpacity>
-                    {showStartDatePicker && (
-                        <DateTimePicker
-                            value={new Date(formData.startDate)}
-                            mode="date"
-                            display="default"
-                            onChange={onChangeStartDate}
-                        />
-                    )}
                     {showStartDatePicker && (
                       <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-sm">
                         <RNCalendar
@@ -853,4 +844,14 @@ const styles = StyleSheet.create({
   },
 })
 
-export default AddMedicament
+export default AddMedicament;
+
+function decode(base64String: string) {
+  const byteCharacters = atob(base64String);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  return byteArray;
+}
