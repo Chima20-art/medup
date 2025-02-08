@@ -13,14 +13,3 @@ export const LightTheme: Theme = {
   },
 };
 
-export const DarkkTheme: Theme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    primary: "#2720ff",
-    background: "#1A1A1A",
-    text: "#535353",
-    border: "#afacac",
-    card: "#2A2A2A",
-  },
-};
