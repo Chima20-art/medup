@@ -35,6 +35,7 @@ import { supabase } from "@/utils/supabase";
 import { decode as atob } from "base-64";
 import { Calendar as RNCalendar } from "react-native-calendars";
 import RadioCategory from "@/assets/images/radioCategory.svg";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 interface AudioNote {
   id: string;
@@ -457,47 +458,19 @@ export default function MergedExamensRadiologiques() {
                 </Text>
               </TouchableOpacity>
               {showDatePicker && (
-                <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
-                  <RNCalendar
-                    onDayPress={(day) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        date: day.dateString,
-                      }));
-                      setShowDatePicker(false);
-                    }}
-                    markedDates={{
-                      [formData.date]: {
-                        selected: true,
-                        selectedColor: colors.primary,
-                      },
-                    }}
-                    theme={{
-                      backgroundColor: "#ffffff",
-                      calendarBackground: "#ffffff",
-                      textSectionTitleColor: colors.text,
-                      selectedDayBackgroundColor: colors.primary,
-                      selectedDayTextColor: "#ffffff",
-                      todayTextColor: colors.primary,
-                      dayTextColor: colors.text,
-                      textDisabledColor: "#d9e1e8",
-                      dotColor: colors.primary,
-                      selectedDotColor: "#ffffff",
-                      arrowColor: colors.text,
-                      monthTextColor: colors.text,
-                      indicatorColor: "blue",
-                      textDayFontFamily: "System",
-                      textMonthFontFamily: "System",
-                      textDayHeaderFontFamily: "System",
-                      textDayFontWeight: "300",
-                      textMonthFontWeight: "bold",
-                      textDayHeaderFontWeight: "300",
-                      textDayFontSize: 16,
-                      textMonthFontSize: 16,
-                      textDayHeaderFontSize: 16,
-                    }}
+                  <DateTimePicker
+                      value={formData.date ? new Date(formData.date) : new Date()}
+                      mode="date"
+                      display="default"
+                      onChange={(event, selectedDate) => {
+                        if (selectedDate) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            date: selectedDate.toISOString().split("T")[0], // Format as YYYY-MM-DD
+                          }));
+                        }
+                      }}
                   />
-                </View>
               )}
             </View>
 

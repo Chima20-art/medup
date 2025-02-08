@@ -101,7 +101,7 @@ export default function ListExaminsBiologiques() {
                   <ChevronLeft size={24} color="#4F46E5" />
                 </TouchableOpacity>
                 <View className="flex flex-col items-start h-full  mr-2 flex-1">
-                  <Text className="text-primary-500 text-[24px] font-extrabold">Mes examens {"\n"} biologiques</Text>
+                  <Text className="text-primary-500 text-[20px] font-extrabold">Mes examens {"\n"} biologiques</Text>
                 </View>
               </View>
               {/* Search Bar */}

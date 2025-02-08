@@ -124,7 +124,7 @@ export default function ListMedicaments() {
                   <ChevronLeft size={24} color="#4F46E5" />
                 </TouchableOpacity>
                 <View className="flex-col items-start flex-1">
-                  <Text className="text-primary-500 text-[24px] w-full pt-1 font-extrabold">
+                  <Text className="text-primary-500 text-[20px] w-full pt-1 font-extrabold">
                     Mes Medicaments
                   </Text>
                 </View>

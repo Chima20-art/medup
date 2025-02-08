@@ -79,7 +79,7 @@ export default function ListConsultations() {
                   <ChevronLeft size={24} color="#4F46E5" />
                 </TouchableOpacity>
                 <View className="flex-col items-startflex-1">
-                  <Text className="text-primary-500 text-[24px] font-extrabold">
+                  <Text className="text-primary-500 text-[20px] font-extrabold">
                     Mes {"\n"} Consultations
                   </Text>
                 </View>

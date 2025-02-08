@@ -67,7 +67,7 @@ export default function More() {
                         <ChevronLeft size={34} color={colors.primary} />
                     </TouchableOpacity>
                     <View className="flex-col items-center">
-                        <Text className="text-[24px] mx-auto font-bold text-primary-500">Mon Profil</Text>
+                        <Text className="text-[20px] mx-auto font-bold text-primary-500">Mon Profil</Text>
                         {/* Avatar and Name */}
                         <View className="items-center mt-6 mb-6">
                             <View className="bg-white p-1 rounded-full shadow-lg">

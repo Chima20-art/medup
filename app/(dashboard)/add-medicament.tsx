@@ -32,7 +32,7 @@ import {
   Repeat,
   Plus,
   Upload,
-  ImageIcon,
+  ImageIcon, Calendar,
 } from "lucide-react-native"
 import * as ImagePicker from "expo-image-picker"
 import * as DocumentPicker from "expo-document-picker"
@@ -42,6 +42,7 @@ import { Calendar as LucideCalendar } from "lucide-react-native"
 import BioCategory from "@/assets/images/bioCategory.svg"
 import { scheduleNotification } from "@/utils/notifcations"
 import { decode as atob } from "base-64";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 // Define types for formData and UploadedFile
 type MedicationFormData = {
@@ -71,13 +72,11 @@ type UploadedFile = {
 }
 
 const momentDePriseOptions = [
-  { label: "Sélectionner le moment", value: "" },
-  { label: "Matin", value: "matin" },
-  { label: "Midi", value: "midi" },
-  { label: "Soir", value: "soir" },
-  { label: "Nuit", value: "nuit" },
+  { label: "Avant le repas", value: "avant_le_repas" },
+  { label: "Pendant le repas", value: "pendant_le_repas" },
+  { label: "Après le repas", value: "apres_le_repas" },
+  { label: "Non précisé", value: "non_precise" },
 ]
-
 const AddMedicament = ({ navigation }) => {
   const router = useRouter()
   const { colors } = useTheme()
@@ -126,8 +125,8 @@ const AddMedicament = ({ navigation }) => {
   }
 
   const pickImage = async () => {
-    const result = await ImagePickerAsync.launchImageLibraryAsync({
-      mediaTypes: ImagePickerAsync.MediaTypeOptions.Images,
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
     })
@@ -164,10 +163,10 @@ const AddMedicament = ({ navigation }) => {
   }
 
   const takePicture = async () => {
-    const permission = await ImagePickerAsync.requestCameraPermissionsAsync()
+    const permission = await ImagePicker.requestCameraPermissionsAsync()
 
     if (permission.granted) {
-      const result = await ImagePickerAsync.launchCameraAsync({
+      const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         quality: 1,
       })
@@ -186,6 +185,7 @@ const AddMedicament = ({ navigation }) => {
     }
   }
 
+
   const deleteFile = (index: number) => {
     setFormData((prev) => ({
       ...prev,
@@ -194,20 +194,130 @@ const AddMedicament = ({ navigation }) => {
   }
 
   const handleSubmit = async () => {
-    // ... (keep the existing handleSubmit function)
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log("Data submitted:", formData)
-      setIsLoading(false)
-      router.back()
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      // First create the medication record
+      const { data: medicamentData, error: medicamentError } = await supabase
+          .from("medicaments")
+          .insert({
+            name: formData.name,
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+            dosage: formData.dosage,
+            notes: formData.notes,
+            schedule: formData.schedule,
+            momentDePrise: formData.momentDePrise,
+            stock: formData.stock,
+            duration: formData.duration,
+            frequency: formData.frequency,
+            rappel: formData.reminders.length > 0,
+            reminders: formData.reminders,
+            user_id: userData.user?.id,
+            created_at: new Date(),
+          })
+          .select();
+
+      if (medicamentError) throw medicamentError;
+
+      // Handle file uploads
+      const uploadedFiles = [];
+      for (const file of formData.files) {
+        try {
+          const fileName = file.uri.split("/").pop();
+          if (!fileName) {
+            console.error("Could not generate filename");
+            continue;
+          }
+
+          const filePath = `${userData.user?.id}/${Date.now()}_${fileName}`;
+          console.log("Uploading to path:", filePath);
+
+          const response = await fetch(file.uri);
+          const blob = await response.blob();
+
+          const reader = new FileReader();
+          const base64Promise = new Promise((resolve) => {
+            reader.onload = () => resolve(reader.result);
+          });
+          reader.readAsDataURL(blob);
+
+          const base64Data = await base64Promise;
+          const base64String = String(base64Data).split(",")[1];
+
+          const { data: uploadData, error: uploadError } = await supabase.storage
+              .from("medicaments")
+              .upload(filePath, decode(base64String), {
+                contentType: blob.type,
+                upsert: false,
+              });
+
+          if (uploadError) throw uploadError;
+          uploadedFiles.push(uploadData?.path);
+        } catch (err) {
+          console.error("Error uploading file:", err);
+        }
+      }
+
+      // Update medication record with file paths
+      if (medicamentData && uploadedFiles.length > 0) {
+        console.log('update uplaoded documents')
+        const { error: updateError } = await supabase
+            .from("medicaments")
+            .update({ uploads: uploadedFiles })
+            .eq("id", medicamentData[0].id);
+
+
+        console.log("update Error ")
+
+        if (updateError) throw updateError;
+      }
+
+      // Create reminders
+      if (formData.reminders.length > 0 && formData.startDate && formData.endDate) {
+        const start = new Date(formData.startDate);
+        const end = new Date(formData.endDate);
+        const notificationIds: string[] = [];
+
+        for (let date = start; date <= end; date.setDate(date.getDate() + 1)) {
+          formData.reminders.forEach((reminderTime) => {
+            const [hours, minutes] = reminderTime.split(":");
+            const reminderDate = new Date(date);
+            reminderDate.setHours(Number(hours), Number(minutes), 0, 0);
+            const randomIdString = Math.random().toString(36).substring(2, 15) +
+                Math.random().toString(36).substring(2, 15);
+            notificationIds.push(randomIdString);
+
+            scheduleNotification(
+                randomIdString,
+                `Rappel: ${formData.name}`,
+                `Il est temps de prendre votre médicament ${formData.name}.`,
+                reminderDate,
+            );
+          });
+        }
+
+        // Update medication with notification IDs
+        const { error: updateError } = await supabase
+            .from("medicaments")
+            .update({ notificationId: notificationIds })
+            .eq("id", medicamentData[0].id);
+
+        if (updateError) throw updateError;
+      }
+
+      Alert.alert("Succès", "Médicament ajouté avec succès");
+      router.push("/list-medicaments");
     } catch (error) {
-      console.error("Error submitting data:", error)
-      setIsLoading(false)
-      Alert.alert("Erreur", "Une erreur s'est produite lors de l'enregistrement.")
+      console.error("Error:", error);
+      Alert.alert("Erreur", "Échec de l'enregistrement. Veuillez réessayer.");
+    } finally {
+      setIsLoading(false);
     }
   }
+
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "Sélectionner une date"
@@ -237,14 +347,14 @@ const AddMedicament = ({ navigation }) => {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50 pt-4">
-      <TouchableWithoutFeedback
-        onPress={() => {
-          setShowStartDatePicker(false)
-          setShowEndDatePicker(false)
-          setShowMomentDePrisePicker(false)
-          setShowReminderModal(false)
-        }}
-      >
+      {/*<TouchableWithoutFeedback*/}
+      {/*  onPress={() => {*/}
+      {/*    setShowStartDatePicker(false)*/}
+      {/*    setShowEndDatePicker(false)*/}
+      {/*    setShowMomentDePrisePicker(false)*/}
+      {/*    setShowReminderModal(false)*/}
+      {/*  }}*/}
+      {/*>*/}
         <View className="flex-1 bg-gray-50">
           {/* Header */}
           <View className="flex-row justify-between items-start px-6 pt-2 pb-2 bg-white">
@@ -259,10 +369,10 @@ const AddMedicament = ({ navigation }) => {
             </View>
           </View>
 
-          <ScrollView className="flex-1 px-6">
-            <View className=" flex flex-col gap-y-6 py-6">
+          <ScrollView className="flex-1 px-4">
+            <View className="flex flex-col gap-y-6 py-6">
               {/* Basic Information */}
-              <View className="rounded-xl p-4 shadow-lg bg-primary-50">
+              <View className="rounded-xl p-4 shadow-sm bg-primary-50">
                 <Text className="text-lg font-semibold text-gray-800 mb-4">Informations de base</Text>
                 <View className="space-y-4">
                   {/* Nom du médicament */}
@@ -313,7 +423,7 @@ const AddMedicament = ({ navigation }) => {
               </View>
 
               {/* Treatment Period */}
-              <View className="rounded-xl p-4 shadow-lg bg-white">
+              <View className="rounded-xl p-4 shadow-sm bg-white">
                 <Text className="text-lg font-semibold text-gray-800 mb-4">Période de traitement</Text>
                 <View className="space-y-4">
                   {/* Date de début */}
@@ -326,11 +436,19 @@ const AddMedicament = ({ navigation }) => {
                       }}
                       className="flex-row items-center bg-gray-50 rounded-xl border border-gray-200 px-4 h-12"
                     >
-                      <LucideCalendar size={20} color={colors.primary} className="opacity-70" />
+                      <Calendar size={20} color={colors.text} className="opacity-50" />
                       <Text className="flex-1 ml-3 text-gray-800">{formatDate(formData.startDate)}</Text>
                     </TouchableOpacity>
                     {showStartDatePicker && (
-                      <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
+                        <DateTimePicker
+                            value={new Date(formData.startDate)}
+                            mode="date"
+                            display="default"
+                            onChange={onChangeStartDate}
+                        />
+                    )}
+                    {showStartDatePicker && (
+                      <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-sm">
                         <RNCalendar
                           onDayPress={onChangeStartDate}
                           markedDates={{
@@ -382,7 +500,7 @@ const AddMedicament = ({ navigation }) => {
                       <Text className="flex-1 ml-3 text-gray-800">{formatDate(formData.endDate)}</Text>
                     </TouchableOpacity>
                     {showEndDatePicker && (
-                      <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-lg">
+                      <View className="z-10 mt-1 w-full bg-white rounded-xl shadow-sm">
                         <RNCalendar
                           onDayPress={onChangeEndDate}
                           markedDates={{
@@ -424,7 +542,7 @@ const AddMedicament = ({ navigation }) => {
               </View>
 
               {/* Administration */}
-              <View className="bg-primary-50 rounded-xl p-4 shadow-lg">
+              <View className="bg-primary-50 rounded-xl p-4 shadow-sm">
                 <Text className="text-lg font-semibold text-gray-800 mb-4">Administration</Text>
                 <View className="space-y-4">
                   {/* Fréquence */}
@@ -515,7 +633,7 @@ const AddMedicament = ({ navigation }) => {
               </View>
 
               {/* Additional Information */}
-              <View className="bg-white rounded-xl p-4 shadow-lg">
+              <View className="bg-white rounded-xl p-4 shadow-sm">
                 <Text className="text-lg font-semibold text-gray-800 mb-4">Informations supplémentaires</Text>
                 <View className="space-y-4">
                   {/* Notes */}
@@ -563,34 +681,34 @@ const AddMedicament = ({ navigation }) => {
                       </View>
 
                       {formData.files.length > 0 && (
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2">
-                          {formData.files.map((file, index) => (
-                            <View key={index} className="relative">
-                              {file.type === "image" ? (
-                                <Image source={{ uri: file.uri }} className="w-20 h-20 rounded-lg" />
-                              ) : (
-                                <View className="w-20 h-20 bg-gray-200 rounded-lg items-center justify-center">
-                                  <FileText size={24} color={colors.primary} />
-                                  <Text className="text-xs text-gray-600 mt-1" numberOfLines={1}>
-                                    {file.name}
-                                  </Text>
+                          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2">
+                            {formData.files.map((file, index) => (
+                                <View key={index} className="relative p-2">
+                                  {file.type === "image" ? (
+                                      <RNImage source={{ uri: file.uri }} className="w-20 h-20 rounded-lg" />
+                                  ) : (
+                                      <View className="w-20 h-20 bg-gray-200 rounded-lg items-center justify-center">
+                                        <FileText size={24} color={colors.primary} />
+                                        <Text className="text-xs text-gray-600 mt-1" numberOfLines={1}>
+                                          {file.name}
+                                        </Text>
+                                      </View>
+                                  )}
+                                  <TouchableOpacity
+                                      onPress={() => deleteFile(index)}
+                                      className="absolute top-0 right-0 w-6 h-6 bg-red-500 rounded-full items-center justify-center"
+                                      hitSlop={{
+                                        top: 10,
+                                        right: 10,
+                                        bottom: 10,
+                                        left: 10,
+                                      }}
+                                  >
+                                    <X size={12} color="white" />
+                                  </TouchableOpacity>
                                 </View>
-                              )}
-                              <TouchableOpacity
-                                onPress={() => deleteFile(index)}
-                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full items-center justify-center"
-                                hitSlop={{
-                                  top: 10,
-                                  right: 10,
-                                  bottom: 10,
-                                  left: 10,
-                                }}
-                              >
-                                <X size={12} color="white" />
-                              </TouchableOpacity>
-                            </View>
-                          ))}
-                        </ScrollView>
+                            ))}
+                          </ScrollView>
                       )}
                     </View>
                   </View>
@@ -623,7 +741,7 @@ const AddMedicament = ({ navigation }) => {
             }}
           />
         </View>
-      </TouchableWithoutFeedback>
+      {/*</TouchableWithoutFeedback>*/}
     </SafeAreaView>
   )
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react"
-import { View, Text, TouchableOpacity, SafeAreaView, Platform, TextInput } from "react-native"
+import {View, Text, TouchableOpacity, SafeAreaView, Platform, TextInput, Modal} from "react-native"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { useRouter } from "expo-router"
 import { Calendar, ChevronLeft } from "lucide-react-native"
@@ -51,8 +51,8 @@ export default function MetricInputTemplate({
     return (
         <SafeAreaView className="flex-1 bg-white">
             {/* Header */}
-            <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-200">
-                <View className="flex-row items-center">
+            <View className="flex-col  px-4 py-4 border-b border-gray-200">
+                <View className="flex-row items-start">
                     <TouchableOpacity
                         onPress={() => router.back()}
                         className="w-10 h-10 justify-items-start rounded-full bg-gray-100"
@@ -61,7 +61,7 @@ export default function MetricInputTemplate({
                     </TouchableOpacity>
                     <Text className="text-2xl font-bold text-primary-500 ml-2">{title}</Text>
                 </View>
-                <TouchableOpacity onPress={onDonePress} className="p-2">
+                <TouchableOpacity onPress={onDonePress} className="pt-3 flex flex-row justify-end items-end">
                     <Text className="text-primary font-semibold">Terminé</Text>
                 </TouchableOpacity>
             </View>
@@ -77,18 +77,25 @@ export default function MetricInputTemplate({
                         <Text className="text-gray-700">{pickedDate.toLocaleDateString("fr-FR")}</Text>
                     </TouchableOpacity>
                     {showDatePicker && (
-                        <DateTimePicker
-                            value={pickedDate}
-                            onChange={(event, selectedDate) => {
-                                setShowDatePicker(Platform.OS === "ios")
-                                if (selectedDate) {
-                                    setPickedDate(selectedDate)
-                                    onDateConfirm(selectedDate)
-                                }
-                            }}
-                            mode="date"
-                            display={Platform.OS === "ios" ? "spinner" : "default"}
-                        />
+                        <Modal transparent={true} animationType="slide">
+                            <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
+                                <View className="bg-white rounded-lg p-4">
+                                    <DateTimePicker
+                                        value={pickedDate}
+                                        onChange={(event, selectedDate) => {
+                                            setShowDatePicker(Platform.OS === "ios");
+                                            if (selectedDate) {
+                                                setPickedDate(selectedDate);
+                                                onDateConfirm(selectedDate);
+                                            }
+                                        }}
+                                        mode="date"
+                                        display={Platform.OS === "ios" ? "spinner" : "default"}
+                                        textColor="black"
+                                    />
+                                </View>
+                            </View>
+                        </Modal>
                     )}
                 </View>
 
