@@ -82,9 +82,8 @@ export default function Page() {
         <View className="space-y-4">
           <View className="bg-gray-400 h-[1px] w-full mb-4" />
           <Text className="text-center text-gray-500 mb-4">Ou</Text>
-
-          <GoogleLoginButton title=" Connexion avec google" />
           <AppleLoginButton />
+          <GoogleLoginButton title=" Connexion avec google" />
         </View>
       </Animated.ScrollView>
     </KeyboardAvoidingView>
