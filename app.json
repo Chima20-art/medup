@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "MedUP",
-    "slug": "MedUP",
-    "version": "1.0.6",
+    "name": "Mediphia",
+    "slug": "Mediphia",
+    "version": "1.2",
     "orientation": "portrait",
     "icon": "./assets/appImages/logo.png",
     "scheme": "myapp",
@@ -13,8 +13,13 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.talbi.MEDUP"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.talbi.MEDUP",
+      "infoPlist": {
+          "NSCameraUsageDescription": "Nous utilisons la caméra pour permettre aux utilisateurs de prendre des photos et de les sauvegarder afin d’organiser leurs documents personnels.",
+          "NSMicrophoneUsageDescription": "Nous utilisons le microphone pour permettre aux utilisateurs d'enregistrer des notes audio liées à leurs documents ou consultations"
+        }
+
     },
     "android": {
       "adaptiveIcon": {

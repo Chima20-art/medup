@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Animated } from "react-native";
+import { View, Text, TextInput, Animated, Image } from "react-native";
 import { useTheme } from "@react-navigation/native";
-import Logo from "@/assets/images/logo.svg";
 import { CircularButton } from "@/components/Cicular-button";
 import { UserIcon } from "lucide-react-native";
 import { Colors } from "@/constants/Colors";
@@ -64,7 +63,7 @@ export default function NameStep({
   return (
     <View className="flex-1 pt-16">
       <View className="mx-auto">
-        <Logo />
+        <Image source={require("../assets/images/Logo.png")}  />
       </View>
 
       <View className="h-16 flex-row items-center justify-center px-5">

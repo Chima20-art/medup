@@ -1,10 +1,9 @@
 import React, {useState} from "react";
 import {
-    View, Text, TextInput, TouchableOpacity, ActivityIndicator,
+    View, Text, TextInput, TouchableOpacity, ActivityIndicator, Image,
 } from "react-native";
 import {useTheme} from "@react-navigation/native";
 import Signup3 from "@/assets/images/signup-3.svg";
-import Logo from "@/assets/images/logo.svg";
 
 interface VerificationStepProps {
     code: string;
@@ -58,7 +57,7 @@ export default function VerificationStep({
 
     return (<View className="flex-1 pt-16">
             <View className="mx-auto">
-                <Logo/>
+                <Image source={require("../assets/images/Logo.png")}  />
             </View>
             <View className="h-16 flex-row items-center justify-center px-5">
                 <View className="flex flex-row gap-x-0.5">

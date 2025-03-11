@@ -4,7 +4,6 @@ import { useTheme } from "@react-navigation/native";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import Logo from "@/assets/images/logo.svg";
 import { CircularButton } from "@/components/Cicular-button";
 
 export default function DateOfBirthStep({
@@ -33,7 +32,7 @@ export default function DateOfBirthStep({
   return (
     <View className="flex-1 pt-16">
       <View className="mx-auto">
-        <Logo />
+        <Image source={require("../assets/images/Logo.png")}  />
       </View>
       <View className="h-16 flex-row items-center justify-center px-5">
         <View className="flex flex-row gap-x-0.5">

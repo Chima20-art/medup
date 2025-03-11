@@ -1,4 +1,6 @@
 import React from "react";
+import { Image } from "react-native";
+
 import {
   View,
   Text,
@@ -13,8 +15,6 @@ import { Link, Stack } from "expo-router";
 import { useTheme } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import SignInForm from "@/components/SignInForm";
-import Logo from "@/assets/images/logo.svg";
-import Google from "@/assets/images/google.svg";
 import GoogleLoginButton from "@/components/googleLoginButton";
 import AppleLoginButton from "@/components/appleLoginButton";
 
@@ -49,7 +49,7 @@ export default function Page() {
         showsVerticalScrollIndicator={false}
       >
         <View style={{ marginHorizontal: "auto" }}>
-          <Logo width={250} height={250} />
+          <Image source={require("../../assets/images/Logo.png")}  />
         </View>
 
         <View className="flex-row items-end justify-between mb-4 mt-10">

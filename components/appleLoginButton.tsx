@@ -35,11 +35,14 @@ export default function AppleLoginButton() {
               provider: "apple",
               token: credential.identityToken,
             });
-            console.log(JSON.stringify({ error, user }, null, 2));
+            console.log('user ',JSON.stringify({ error, user }, null, 2));
             if (!error) {
               // User is signed in.
+              router.replace("/dashboard");
+
+            }else{
+              console.log('error singIN ',error)
             }
-            router.replace("/dashboard");
           } else {
             throw new Error("No identityToken.");
           }

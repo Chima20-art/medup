@@ -1,8 +1,10 @@
+"use client"
+
 import React, { useEffect, useState } from "react"
 import { View, Text, TouchableOpacity, ScrollView, Alert, SafeAreaView } from "react-native"
 import { useRouter } from "expo-router"
 import { supabase } from "@/utils/supabase"
-import { ChevronLeft, LogOut, User, Mail, Phone, Edit, ChevronRight } from "lucide-react-native"
+import { ChevronLeft, LogOut, User, Mail, Phone, Trash2 } from "lucide-react-native"
 import { avatars, DefaultAvatar, type AvatarType } from "@/constants/avatars"
 import { useTheme } from "@react-navigation/native"
 
@@ -12,6 +14,7 @@ export default function More() {
     const [email, setEmail] = useState<string>("")
     const [phone, setPhone] = useState<string>("")
     const [currentAvatarId, setCurrentAvatarId] = useState<number | null>(null)
+    const [userId, setUserId] = useState<string | null>(null)
     const { colors } = useTheme()
 
     useEffect(() => {
@@ -27,6 +30,7 @@ export default function More() {
             if (error) throw error
 
             if (user) {
+                setUserId(user.id)
                 setEmail(user.email || "")
                 if (user.user_metadata?.displayName) {
                     setUsername(user.user_metadata.displayName)
@@ -50,6 +54,54 @@ export default function More() {
             console.error("Error signing out:", error)
             Alert.alert("Erreur", "Impossible de se déconnecter")
         }
+    }
+
+    const deleteUser = async () => {
+        if (!userId) {
+            Alert.alert("Erreur", "ID utilisateur non disponible")
+            return
+        }
+
+        Alert.alert(
+            "Supprimer le compte",
+            "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.",
+            [
+                {
+                    text: "Annuler",
+                    style: "cancel"
+                },
+                {
+                    text: "Supprimer",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            // Call your backend API to delete the user
+                            const response = await fetch('https://your-backend-api.com/delete-user', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ userId }),
+                            });
+
+                            if (!response.ok) {
+                                throw new Error('Failed to delete user');
+                            }
+
+                            await supabase.auth.signOut()
+                            router.replace("/sign-in")
+                        } catch (error) {
+                            console.error("Error deleting user:", error)
+                            Alert.alert(
+                                "Erreur",
+                                "Impossible de supprimer le compte. Veuillez réessayer plus tard ou contacter le support.",
+                                [{ text: "OK" }]
+                            )
+                        }
+                    }
+                }
+            ]
+        )
     }
 
     const AvatarComponent: AvatarType =
@@ -119,7 +171,16 @@ export default function More() {
                     </TouchableOpacity>
                 </View>
 
-
+                {/* Delete User Button */}
+                <View className="px-6 mb-4">
+                    <TouchableOpacity
+                        className="border-2 border-red-500 py-3 px-6 rounded-full flex-row gap-x-2 justify-center items-center"
+                        onPress={deleteUser}
+                    >
+                        <Trash2 size={20} color="red" />
+                        <Text className="text-red-500 font-semibold text-lg">Supprimer le compte</Text>
+                    </TouchableOpacity>
+                </View>
 
                 {/* Sign Out Button */}
                 <View className="px-6">
@@ -135,4 +196,3 @@ export default function More() {
         </SafeAreaView>
     )
 }
-

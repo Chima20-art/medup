@@ -1,8 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import {View, Text, TouchableOpacity, Image} from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import Signup6 from "@/assets/images/signup-6.svg";
-import Logo from "@/assets/images/logo.svg";
 import {Home} from "lucide-react-native";
 
 interface ConfirmationStepProps {
@@ -16,7 +15,7 @@ export default function ConfirmationStep({ onContinue }: ConfirmationStepProps) 
         <View className="flex-1 pt-16">
 
             <View style={{ marginHorizontal: 'auto' }}>
-                <Logo width={250} height={150}/>
+                <Image source={require("../assets/images/Logo.png")}  />
             </View>
 
             <View className="flex-1 px-2">

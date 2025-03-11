@@ -151,13 +151,13 @@ export default function ListMedicaments() {
       </View>
 
       {/* Medication List */}
-      <ScrollView className="flex-1 px-4 pt-8">
+      <ScrollView className="flex-1 px-4 pt-4">
         {isLoading ? (
             <View className="flex-1 items-center justify-center py-8">
               <ActivityIndicator size="large" color="#4F46E5" />
             </View>
         ) : filteredMedications.length === 0 ? (
-          <View className="flex-1 items-center justify-center py-8">
+          <View className="flex-1 items-center justify-center py-8 px-3">
             <Text className="text-gray-500 text-lg font-medium">
               Aucun médicament trouvé
             </Text>

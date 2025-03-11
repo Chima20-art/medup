@@ -15,7 +15,7 @@ export default function SignUpOnboarding() {
           {/* Header */}
           <Text className="text-white text-[45px] font-bold mb-2">
             Bienvenue sur{"\n"}
-            <Text className="text-[#A5B4FC]">Medup.</Text>
+            <Text className="text-[#A5B4FC]">Mediphia</Text>
           </Text>
 
           {/* Main Image and Cards */}
@@ -23,9 +23,9 @@ export default function SignUpOnboarding() {
             <View className="w-fit h-fit p-4 pt-10 justify-center items-center aspect-square rounded-3xl overflow-hidden bg-white">
               <Image source={require("@/assets/images/categories.png")} />
             </View>
-            <View className="absolute -top-2 right-0 bg-white rounded-2xl shadow-xl">
-              <Logo width={200} height={100} />
-            </View>
+            {/*<View className="absolute -top-2 right-0 bg-white rounded-2xl shadow-xl">*/}
+            {/*  <Logo width={200} height={100} />*/}
+            {/*</View>*/}
           </View>
 
           {/* Buttons */}
