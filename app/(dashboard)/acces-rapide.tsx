@@ -105,7 +105,7 @@ export default function AccesRapide() {
                 onPress={() => router.push(item.route as any)}
                 className={`w-[48%] aspect-square mb-4 rounded-3xl ${item.bgColor} p-4 justify-between`}
               >
-                <Text className="text-gray-900 text-[26px] font-extrabold">
+                <Text className="text-gray-900 text-[18px] font-extrabold">
                   {item.title}
                 </Text>
                 <View className="flex-row justify-end">

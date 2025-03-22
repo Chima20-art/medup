@@ -8,9 +8,12 @@ import { Alert, StyleSheet, View, AppState } from "react-native";
 import { supabase } from "@/utils/supabase";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { router } from "expo-router";
+import { Appearance } from "react-native";
 
 import * as Notifications from "expo-notifications";
 import { useEffect } from "react";
+
+
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -75,6 +78,9 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   useNotificationObserver();
 
+  useEffect(() => {
+    Appearance.setColorScheme("light"); // Force light mode globally
+  }, []);
   return (
     <ThemeProvider value={colorScheme === "dark" ? LightTheme : LightTheme}>
       <TailwindProvider>

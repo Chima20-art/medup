@@ -15,6 +15,8 @@ import PillIcon from "@/assets/images/pillIcon.svg";
 import Medicine from "@/assets/images/medicine.svg";
 import MedicationCard from "@/components/MedicationCard";
 import BioCategory from "@/assets/images/bioCategory.svg";
+import {page} from "react-native-calendars/src/dateutils";
+import limit from "ajv-formats/src/limit";
 
 interface UploadedFile {
   uri: string;
@@ -50,27 +52,29 @@ export default function ListMedicaments() {
   const [isLoading, setIsLoading] = useState(true)
 
   const { colors } = useTheme();
+  const fetchMedications = async () => {
+    const { data, error } = await supabase
+        .from("medicaments")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching medications:", error);
+      setIsLoading(false);
+      return;
+    }
+
+    if (data) {
+      const transformedData = data.map((med) => ({
+        ...med,
+        isActive: new Date(med.endDate) > new Date(),
+      }));
+      setMedications((prev) => [...prev, ...transformedData]); // Append new data
+    }
+    setIsLoading(false);
+  };
 
   useEffect(() => {
-    const fetchMedications = async () => {
-      setIsLoading(true)
-      const { data, error } = await supabase.from("medicaments").select("*").order("created_at", { ascending: false })
-
-      if (error) {
-        console.error("Error fetching medications:", error)
-        setIsLoading(false)
-        return
-      }
-
-      if (data) {
-        const transformedData = data.map((med) => ({
-          ...med,
-          isActive: new Date(med.endDate) > new Date(),
-        }))
-        setMedications(transformedData)
-      }
-      setIsLoading(false)
-    }
 
     fetchMedications();
 
@@ -124,7 +128,7 @@ export default function ListMedicaments() {
                   <ChevronLeft size={24} color="#4F46E5" />
                 </TouchableOpacity>
                 <View className="flex-col items-start flex-1">
-                  <Text className="text-primary-500 text-[24px] w-full pt-1 font-extrabold">
+                  <Text className="text-primary-500 text-[20px] w-full pt-1 font-extrabold">
                     Mes Medicaments
                   </Text>
                 </View>

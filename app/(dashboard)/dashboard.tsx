@@ -455,7 +455,7 @@ function Dashboard() {
       categories.map((category, index) => (
         <TouchableOpacity
           key={index}
-          className="w-[30%] aspect-square bg-white rounded-3xl p-4 mb-4 items-center justify-between"
+          className="w-[30%] aspect-square bg-white rounded-3xl py-4 px-1 mb-4 items-center justify-between"
           style={categoryCardStyle}
           onPress={() => router.push(category.route as any)}
         >
@@ -478,7 +478,7 @@ function Dashboard() {
     <SafeAreaView className="flex-1  bg-gray-50">
       {/* Header */}
       <View className="px-6 pt-2.5  bg-white">
-        <View className="flex-row items-center justify-between mb-4">
+        <View className="flex-row items-center justify-between mb-4 ">
           <View className="flex-row items-center space-x-3">
             <TouchableOpacity
               onPress={() => setIsAvatarModalVisible(true)}
@@ -490,12 +490,11 @@ function Dashboard() {
               </View>
             </TouchableOpacity>
             <View>
-              <View className="flex-row items-end ml-2">
+              <View className="flex flex-col items-start ml-2 mt-2">
                 <Text className="text-primary-500 text-3xl font-extrabold">
                   Bonjour,
                 </Text>
                 <Text className="text-primary-500 text-2xl font-bold">
-                  {" "}
                   {username}
                 </Text>
               </View>
@@ -519,109 +518,112 @@ function Dashboard() {
 
       {/* Main Content */}
       <ScrollView
-        className="flex-1 pb-10 "
+        className="flex-1 pb-1 "
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
         }
       >
-        {/* Medical Planning Section */}
-        <View className="ml-6 py-6">
-          <Text className="text-2xl font-extrabold text-primary-500 mb-4">
-            Mon planning médical
-          </Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="flex flex-row gap-4"
-          >
-            {monPlanningItems.length > 0 ? (
-              monPlanningItems.map((consultations: any) => {
-                let isConsultation = !!consultations?.nextConsultationDate;
-                return (
-                  <View
-                    key={consultations.id}
-                    className={`w-64 bg-primary-500 rounded-3xl flex-col justify-between p-4 pb-5 mr-4`}
-                  >
-                    <View className="flex-row items-center justify-between mb-6">
-                      <View className="flex flex-row items-start gap-x-3">
-                        <View className="bg-gray-100 rounded-full h-12 w-12 justify-center items-center">
-                          <Doctor width={24} height={24} />
-                        </View>
-                        <View>
-                          <Text className="text-white font-medium">
-                            {isConsultation
-                              ? consultations?.doctorName
-                              : consultations.name}
-                          </Text>
-                          <Text className="text-indigo-200">
-                            {isConsultation
-                              ? consultations?.specialties?.name
-                              : consultations.frequency + " fois/jour" + "\nPendant " + consultations.duration }
-                          </Text>
-                          <View className="flex-row items-center">
-                            <Text className="text-white mr-1">
-                              {isConsultation ? "Consultation" : "Medicament"}
-                            </Text>
-                            <Star size={16} color="#FCD34D" fill="#FCD34D" />
+        <View className="pb-40">
+          {/* Medical Planning Section */}
+          <View className="ml-6 py-6">
+            <Text className="text-2xl font-extrabold text-primary-500 mb-4">
+              Mon planning médical
+            </Text>
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                className="flex flex-row gap-4"
+            >
+              {monPlanningItems.length > 0 ? (
+                  monPlanningItems.map((consultations: any) => {
+                    let isConsultation = !!consultations?.nextConsultationDate;
+                    return (
+                        <View
+                            key={consultations.id}
+                            className={`w-64 bg-primary-500 rounded-3xl flex-col justify-between p-4 pb-5 mr-4`}
+                        >
+                          <View className="flex-row items-center justify-between mb-6">
+                            <View className="flex flex-row items-start gap-x-3">
+                              <View className="bg-gray-100 rounded-full h-12 w-12 justify-center items-center">
+                                <Doctor width={24} height={24} />
+                              </View>
+                              <View>
+                                <Text className="text-white font-medium">
+                                  {isConsultation
+                                      ? consultations?.doctorName
+                                      : consultations.name}
+                                </Text>
+                                <Text className="text-indigo-200">
+                                  {isConsultation
+                                      ? consultations?.specialties?.name
+                                      : consultations.frequency + " fois/jour" + "\nPendant " + consultations.duration }
+                                </Text>
+                                <View className="flex-row items-center">
+                                  <Text className="text-white mr-1">
+                                    {isConsultation ? "Consultation" : "Medicament"}
+                                  </Text>
+                                  <Star size={16} color="#FCD34D" fill="#FCD34D" />
+                                </View>
+                              </View>
+                            </View>
+                          </View>
+                          <View className="flex flex-row items-center gap-x-4 mt-2">
+                            <View className="flex-row items-center gap-x-2">
+                              {isConsultation ?
+                                  <Calendar size={16} color="#E0E7FF" className="mr-2" />
+                                  : <Text className="text-indigo-100" >Jusqu'au: </Text>  }
+                              <Text className="text-indigo-100">
+                                {isConsultation
+                                    ? new Date(
+                                        consultations.nextConsultationDate
+                                    ).toLocaleDateString("fr-FR")
+                                    : new Date(
+                                        consultations.endDate
+                                    ).toLocaleDateString("fr-FR")}
+                              </Text>
+                            </View>
+                            {/*time*/}
+                            {isConsultation &&
+                                <View className="flex-row items-center gap-x-2">
+                                  <Clock size={16} color="#E0E7FF" className="mr-2" />
+                                  <Text className="text-indigo-100">
+                                    {
+                                      new Date(
+                                          consultations.nextConsultationDate
+                                      ).toLocaleTimeString("fr-FR", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })
+                                    }
+                                  </Text>
+                                </View>
+                            }
                           </View>
                         </View>
-                      </View>
-                    </View>
-                    <View className="flex flex-row items-center gap-x-4 mt-2">
-                      <View className="flex-row items-center gap-x-2">
-                        {isConsultation ?
-                            <Calendar size={16} color="#E0E7FF" className="mr-2" />
-                            : <Text className="text-indigo-100" >Jusqu'au: </Text>  }
-                        <Text className="text-indigo-100">
-                          {isConsultation
-                            ? new Date(
-                                consultations.nextConsultationDate
-                              ).toLocaleDateString("fr-FR")
-                            : new Date(
-                                consultations.endDate
-                              ).toLocaleDateString("fr-FR")}
-                        </Text>
-                      </View>
-                      {/*time*/}
-                      {isConsultation &&
-                          <View className="flex-row items-center gap-x-2">
-                            <Clock size={16} color="#E0E7FF" className="mr-2" />
-                            <Text className="text-indigo-100">
-                              {
-                                new Date(
-                                    consultations.nextConsultationDate
-                                ).toLocaleTimeString("fr-FR", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                              }
-                            </Text>
-                          </View>
-                      }
-                    </View>
-                  </View>
-                );
-              })
-            ) : (
-              <>
-                {[1, 2].map((key) => (
-                  <View key={key}>{renderSkeletonCard()}</View>
-                ))}
-              </>
-            )}
-          </ScrollView>
-        </View>
+                    );
+                  })
+              ) : (
+                  <>
+                    {[1, 2].map((key) => (
+                        <View key={key}>{renderSkeletonCard()}</View>
+                    ))}
+                  </>
+              )}
+            </ScrollView>
+          </View>
 
-        {/* Categories Section */}
-        <View className="px-6 mb-6 h-full">
-          <Text className="text-2xl font-extrabold text-primary-500 mb-4">
-            Categories
-          </Text>
-          <View className="flex flex-row flex-wrap justify-start gap-x-4 gap-y-0">
-            {categoryItems}
+          {/* Categories Section */}
+          <View className="px-6 mb-6 h-full">
+            <Text className="text-2xl font-extrabold text-primary-500 mb-4">
+              Categories
+            </Text>
+            <View className="flex flex-row flex-wrap justify-start gap-x-4 gap-y-0">
+              {categoryItems}
+            </View>
           </View>
         </View>
+
       </ScrollView>
 
       {/* Avatar Selection Modal */}

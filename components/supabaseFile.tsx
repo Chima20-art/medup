@@ -112,7 +112,7 @@ export default function SupabaseFile({
           ) : (
               <FileText size={24} color="#000" />
           )}
-          <Text className="ml-2 flex-1">{fileName}</Text>
+          <Text className="ml-2 flex-1 text-xs">{fileName}</Text>
           <TouchableOpacity onPress={downloadFile}>
             <Share2 size={24} color="#000" />
           </TouchableOpacity>

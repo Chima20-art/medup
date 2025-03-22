@@ -108,7 +108,7 @@ export default function ListExaminsRadiologiques() {
                 <ChevronLeft size={26} color="#4F46E5" />
               </TouchableOpacity>
               <View className="w-full flex flex-col items-start flex-1">
-                <Text className="w-full text-primary-500 text-[24px] font-extrabold">
+                <Text className="w-full text-primary-500 text-[20px] font-extrabold">
                   Mes examens {"\n"} radiologiques
                 </Text>
               </View>

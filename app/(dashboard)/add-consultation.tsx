@@ -640,7 +640,7 @@ export default function AddConsultation() {
           >
             <ChevronLeft size={34} color={colors.primary} />
           </TouchableOpacity>
-          <Text className="text-primary-500 text-2xl font-extrabold ml-4">
+          <Text className="text-primary-500 text-[20px] font-extrabold ml-4">
             Ajouter une consultation
           </Text>
         </View>
