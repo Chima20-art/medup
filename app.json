@@ -21,7 +21,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.talbi.MEDUP"
+      "package": "com.talbi.MEDIPHIA"
     },
     "web": {
       "bundler": "metro",

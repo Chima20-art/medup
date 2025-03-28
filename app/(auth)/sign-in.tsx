@@ -1,27 +1,32 @@
-"use client"
+import React from "react";
+import { Image } from "react-native";
 
-import React from "react"
-import { Image } from "react-native"
-
-import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, Animated, StatusBar } from "react-native"
-import { Link, Stack } from "expo-router"
-import { useTheme } from "@react-navigation/native"
-import SignInForm from "@/components/SignInForm"
-import AppleLoginButton from "@/components/appleLoginButton"
-// Uncomment this when you want to restore Google login
-// import GoogleLoginButton from "@/components/googleLoginButton";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  Animated,
+  StatusBar,
+} from "react-native";
+import { Link, Stack } from "expo-router";
+import { useTheme } from "@react-navigation/native";
+import SignInForm from "@/components/SignInForm";
+import GoogleLoginButton from "@/components/googleLoginButton";
+import AppleLoginButton from "@/components/appleLoginButton";
 
 export default function Page() {
-  const fadeAnim = React.useRef(new Animated.Value(0)).current
-  const { colors } = useTheme()
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const { colors } = useTheme();
 
   React.useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 1000,
       useNativeDriver: true,
-    }).start()
-  }, [])
+    }).start();
+  }, []);
 
   return (
       <KeyboardAvoidingView
@@ -42,11 +47,14 @@ export default function Page() {
             showsVerticalScrollIndicator={false}
         >
           <View style={{ marginHorizontal: "auto" }}>
-            <Image source={require("../../assets/images/Logo.png")} />
+            <Image source={require("../../assets/images/Logo.png")}  />
           </View>
 
           <View className="flex-row items-end justify-between mb-4 mt-10">
-            <Text className="font-extrabold text-3xl" style={{ color: colors.text }}>
+            <Text
+                className="font-extrabold text-3xl"
+                style={{ color: colors.text }}
+            >
               Connexion
             </Text>
           </View>
@@ -71,12 +79,11 @@ export default function Page() {
           </View>
           <View className="space-y-4">
             <View className="bg-gray-400 h-[1px] w-full mb-4" />
-            <Text className="text-center text-gray-500 mb-4">Ou</Text>
+            {/*<Text className="text-center text-gray-500 mb-4">Ou</Text>*/}
             <AppleLoginButton />
             {/*<GoogleLoginButton title=" Connexion avec google" />*/}
           </View>
         </Animated.ScrollView>
       </KeyboardAvoidingView>
-  )
+  );
 }
-

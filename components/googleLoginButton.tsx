@@ -1,39 +1,60 @@
-import { TouchableOpacity, Text, StyleSheet } from "react-native"
-import Google from "@/assets/images/google.svg"
-// Comment out the problematic imports
-// import * as WebBrowser from 'expo-web-browser';
-// import * as Google from 'expo-auth-session/providers/google';
+import React from 'react';
+import { TouchableOpacity, Text, View } from 'react-native';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { supabase } from '@/utils/supabase';
+import Google from '@/assets/images/google.svg';
+import {router} from "expo-router"; // Assuming you have a Google icon
 
-export default function GoogleLoginButton({ title = "Connexion avec Google" }) {
-    // Placeholder function instead of actual Google authentication
-    const handleGoogleLogin = () => {
-        alert("Google login temporarily disabled for recording purposes")
-    }
+GoogleSignin.configure({
+    webClientId: '131047050129-jso8d15n7cfploeo8p5irsua0a54k2u5.apps.googleusercontent.com',
+    offlineAccess: true,
+    iosClientId: '131047050129-c09od72q6va2145dgsf3pn9m9nrpb8e5.apps.googleusercontent.com',
+});
+
+const GoogleLoginButton = ({title}: {title: string}) => {
+    const handleGoogleLogin = async () => {
+        try {
+            console.log("handleGoogleSignin")
+            await GoogleSignin.hasPlayServices();
+            console.log("hasPlayServices passed!")
+            const userInfo = await GoogleSignin.signIn();
+            console.log('userInfo', userInfo)
+            if (userInfo.data?.idToken) {
+
+                const { data, error } = await supabase.auth.signInWithIdToken({
+                    provider: 'google',
+                    token: userInfo.data?.idToken,
+                });
+                router.replace("/dashboard");
+                console.log(error, data);
+            } else {
+                throw new Error('No ID token present!');
+            }
+        } catch (error: any) {
+            console.log('error login', error)
+            if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+                // User cancelled the login flow
+            } else if (error.code === statusCodes.IN_PROGRESS) {
+                // Operation (e.g., sign-in) is in progress already
+            } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+                // Play services not available or outdated
+            } else {
+                // Some other error happened
+            }
+        }
+    };
 
     return (
-        <TouchableOpacity style={styles.button} onPress={handleGoogleLogin}>
+        <TouchableOpacity
+            className="w-full h-14 bg-white  rounded-xl flex-row items-center justify-center space-x-2"
+            onPress={handleGoogleLogin}
+        >
             <Google width={20} height={20} />
-            <Text style={styles.buttonText}>{title}</Text>
+            <Text className="text-black text-base font-semibold ml-2">
+                {title}
+            </Text>
         </TouchableOpacity>
-    )
-}
+    );
+};
 
-const styles = StyleSheet.create({
-    button: {
-        width: "100%",
-        height: 56,
-        backgroundColor: "#000",
-        borderRadius: 12,
-        justifyContent: "center",
-        alignItems: "center",
-        flexDirection: "row",
-        marginBottom: 8,
-    },
-    buttonText: {
-        color: "#FFFFFF",
-        fontSize: 16,
-        fontWeight: "600",
-        marginLeft: 8,
-    },
-})
-
+export default GoogleLoginButton;

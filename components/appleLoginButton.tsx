@@ -1,39 +1,67 @@
-"use client"
-import { TouchableOpacity, Text, StyleSheet } from "react-native"
-import { useTheme } from "@react-navigation/native"
-// Comment out the problematic import
-// import * as AppleAuthentication from 'expo-apple-authentication';
+import React from "react";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { View, StyleSheet } from "react-native";
+import { Platform } from "react-native";
+import { useRouter } from "expo-router";
+import { supabase } from "@/utils/supabase";
 
 export default function AppleLoginButton() {
-  const { colors } = useTheme()
+  const router = useRouter();
 
-  // Placeholder function instead of actual Apple authentication
-  const handleAppleLogin = () => {
-    alert("Apple login temporarily disabled for recording purposes")
+  if (Platform.OS != "ios") {
+    return null;
   }
 
   return (
-      <TouchableOpacity style={styles.button} onPress={handleAppleLogin}>
-        <Text style={styles.buttonText}>Connexion avec Apple</Text>
-      </TouchableOpacity>
-  )
+      <AppleAuthentication.AppleAuthenticationButton
+          buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+          buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+          cornerRadius={5}
+          style={styles.button}
+          onPress={async () => {
+            try {
+              const credential = await AppleAuthentication.signInAsync({
+                requestedScopes: [
+                  AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+                  AppleAuthentication.AppleAuthenticationScope.EMAIL,
+                ],
+              });
+              // signed in
+              if (credential.identityToken) {
+                const {
+                  error,
+                  data: { user },
+                } = await supabase.auth.signInWithIdToken({
+                  provider: "apple",
+                  token: credential.identityToken,
+                });
+                console.log('user ',JSON.stringify({ error, user }, null, 2));
+                if (!error) {
+                  // User is signed in.
+                  router.replace("/dashboard");
+
+                }else{
+                  console.log('error singIN ',error)
+                }
+              } else {
+                throw new Error("No identityToken.");
+              }
+            } catch (e: any) {
+              if (e.code === "ERR_REQUEST_CANCELED") {
+                // handle that the user canceled the sign-in flow
+              } else {
+                // handle other errors
+              }
+            }
+          }}
+      />
+  );
 }
 
 const styles = StyleSheet.create({
   button: {
     width: "100%",
-    height: 56,
-    backgroundColor: "#000",
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "row",
+    height: 44,
+    marginTop: 10,
   },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-    marginLeft: 8,
-  },
-})
-
+});
