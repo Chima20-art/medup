@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "200792291874",
+    "project_id": "medup-c84a5",
+    "storage_bucket": "medup-c84a5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:200792291874:android:bc60e76780e7ce3beaa87b",
+        "android_client_info": {
+          "package_name": "com.talbi.MEDUP"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "200792291874-ofljkcgqagn3kh4assd3rtauf48v1sum.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.talbi.MEDUP",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "200792291874-jhqs5qjs9q2thivc7s6msc7bguhtj79r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwkjL4f5LVKjoWBVlAwTQeD8hPy68vqSk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "200792291874-jhqs5qjs9q2thivc7s6msc7bguhtj79r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

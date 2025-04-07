@@ -14,14 +14,16 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.talbi.MEDUP"
+      "bundleIdentifier": "com.talbi.MEDUP",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.talbi.MEDUP"
+      "package": "com.talbi.MEDUP",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -33,12 +35,7 @@
     },
     "plugins": [
       "expo-font",
-      [
-        "@react-native-google-signin/google-signin",
-        {
-          "iosUrlScheme": "com.googleusercontent.apps.131047050129-c09od72q6va2145dgsf3pn9m9nrpb8e5"
-        }
-      ],
+      "@react-native-google-signin/google-signin",
       "expo-router",
       [
         "expo-notifications",
