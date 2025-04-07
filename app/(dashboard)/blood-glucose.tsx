@@ -21,11 +21,13 @@ export default function BloodGlucose() {
     const router = useRouter()
     const [date, setDate] = useState(new Date())
     const [value, setValue] = useState("")
+    const [unit, setUnit] = useState("mmol/L") // Store the selected unit
     const [values, setValues] = useState<
         {
             id: number
             date: Date
             value: string
+            unit: string
             createdAt: string
         }[]
     >([])
@@ -57,7 +59,13 @@ export default function BloodGlucose() {
         try {
             const { data, error } = await supabase.from("blood glucose").select().order("date", { ascending: false })
             if (error) throw error
-            setValues(data || [])
+            // Map the data to include unit (if it doesn't already have it)
+            const mappedData = (data || []).map((item) => ({
+                ...item,
+                unit: item.unit || "mmol/L", // Default to mmol/L for existing data
+            }))
+
+            setValues(mappedData)
         } catch (error) {
             console.error("Error fetching blood glucose values:", error)
             Alert.alert("Error", "Failed to fetch blood glucose values. Please try again.")
@@ -70,13 +78,24 @@ export default function BloodGlucose() {
         fetchValues()
     }, [])
 
+
+    const handleUnitChange = (newUnit: string) => {
+        setUnit(newUnit)
+    }
+
+
     const handleDone = async () => {
         if (!value) {
             Alert.alert("Error", "Please enter a valid blood glucose value.")
             return
         }
         try {
-            const { error } = await supabase.from("blood glucose").insert({ date, value: Number.parseFloat(value) })
+            const { error } = await supabase.from("blood glucose").insert({
+                date,
+                value: Number.parseFloat(value),
+                unit: unit, // Save the unit with the value
+            })
+
             if (error) throw error
             await fetchValues()
             setValue("")
@@ -86,6 +105,7 @@ export default function BloodGlucose() {
             Alert.alert("Error", "Failed to save blood glucose value. Please try again.")
         }
     }
+
 
     const handleDelete = async (id: number) => {
         Alert.alert("Supprimer la mesure", "Êtes-vous sûr de vouloir supprimer cette mesure ?", [
@@ -107,15 +127,42 @@ export default function BloodGlucose() {
         ])
     }
 
+
     const getChartData = () => {
         const sortedValues = [...values].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+        // Get the data for the chart
+        const chartData = sortedValues.slice(-5).map((v) => Number(v.value))
+
+        // Calculate min and max for better y-axis scaling
+        const maxValue = Math.max(...chartData)
+        const minValue = Math.min(...chartData)
+
+        // Calculate a good step size for the y-axis
+        const range = maxValue - minValue
+        const stepSize = Math.max(1, Math.ceil(range / 5))
+
+        // Create y-axis segments
+        const segments = 5
+
         return {
             labels: sortedValues
                 .slice(-5)
                 .map((v) => new Date(v.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })),
             datasets: [
                 {
-                    data: sortedValues.slice(-5).map((v) => Number(v.value)),
+                    data: chartData,
+                    // Add invisible min/max points to force y-axis scale
+                    // Only add if we have actual data points
+                    ...(chartData.length > 0
+                        ? {
+                            data: [
+                                Math.max(0, minValue - stepSize), // Lower bound
+                                ...chartData,
+                                maxValue + stepSize, // Upper bound
+                            ],
+                        }
+                        : { data: [0, 5] }), // Default if no data
                 },
             ],
         }
@@ -132,11 +179,15 @@ export default function BloodGlucose() {
                 }}
                 onDateConfirm={(selectedDate: Date) => setDate(selectedDate)}
                 onDonePress={handleDone}
-                unit="mmol/L"
+                isGlucose={true}
+                unit={unit} // Use the current unit state
                 onChangeValue={setValue}
+                onUnitChange={handleUnitChange} // Add the unit change handler
+                onChangeSecondaryValue={() => {}} // Add this required prop
             />
         )
     }
+
 
     const EmptyState = () => (
         <View className="flex-1 items-center justify-center p-6">
@@ -157,7 +208,7 @@ export default function BloodGlucose() {
         </View>
     )
 
-    const renderItem = ({ item }: { item: { id: number; value: string; date: string } }) => (
+    const renderItem = ({ item }: { item: { id: number; value: string; unit:string; date: string } }) => (
         <Swipeable
             renderRightActions={(progress, dragX) => {
                 const scale = dragX.interpolate({
@@ -182,7 +233,7 @@ export default function BloodGlucose() {
                 onPress={() => {}}
             >
                 <View>
-                    <Text className="text-lg font-semibold text-gray-800">{item.value} mmol/L</Text>
+                    <Text className="text-lg font-semibold text-gray-800">{item.value} {item.unit || 'mmol/l'}</Text>
                     <Text className="text-sm text-gray-500">
                         {new Date(item.date).toLocaleDateString("fr-FR", {
                             year: "numeric",
@@ -247,7 +298,7 @@ export default function BloodGlucose() {
                                 <View className="items-center mt-6 py-6">
                                     <View className="flex-row items-end">
                                         <Text className="text-4xl font-bold text-gray-800">{values[0]?.value}</Text>
-                                        <Text className="text-xl text-gray-500"> mmol/L</Text>
+                                        <Text className="text-xl text-gray-500"> {values[0]?.unit || "mmol/L"}</Text>
                                     </View>
                                     <Text className="text-gray-500 mt-2">
                                         {new Date(values[0]?.date).toLocaleDateString("fr-FR", {
@@ -269,7 +320,7 @@ export default function BloodGlucose() {
                                         data={getChartData()}
                                         width={Dimensions.get("window").width - 48}
                                         height={180}
-                                        yAxisSuffix=" mmol/L"
+                                        yAxisSuffix={` ${values[0]?.unit || "mmol/L"}`}
                                         chartConfig={{
                                             backgroundColor: "#ffffff",
                                             backgroundGradientFrom: "#ffffff",

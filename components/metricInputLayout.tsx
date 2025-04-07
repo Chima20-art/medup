@@ -14,10 +14,13 @@ interface MetricInputTemplateProps {
     secondaryValue?: string
     secondaryUnit?: string
     isBloodPressure?: boolean
+    isGlucose?: boolean // New prop to identify glucose measurement
     isEnteringSystolic?: boolean
     onDateConfirm: (date: Date) => void
     onChangeValue: (value: string) => void
     onChangeSecondaryValue: (value: string) => void
+    onUnitChange?: (unit: string) => void // New prop for unit change handler
+
 }
 
 export default function MetricInputTemplate({
@@ -30,14 +33,17 @@ export default function MetricInputTemplate({
                                                 secondaryValue,
                                                 secondaryUnit,
                                                 isBloodPressure,
+                                                isGlucose,
                                                 isEnteringSystolic,
                                                 onDateConfirm,
                                                 onChangeValue,
                                                 onChangeSecondaryValue,
+                                                onUnitChange,
                                             }: MetricInputTemplateProps) {
     const router = useRouter()
     const [pickedDate, setPickedDate] = useState(new Date())
     const [showDatePicker, setShowDatePicker] = useState(false)
+    const [selectedUnit, setSelectedUnit] = useState(unit || "mg/dL")
     const inputRef = useRef<TextInput>(null)
 
     useEffect(() => {
@@ -47,6 +53,13 @@ export default function MetricInputTemplate({
     useEffect(() => {
         inputRef.current?.focus()
     }, [])
+
+    const handleUnitChange = (newUnit: string) => {
+        setSelectedUnit(newUnit)
+        if (onUnitChange) {
+            onUnitChange(newUnit)
+        }
+    }
 
     return (
         <SafeAreaView className="flex-1 bg-white">
@@ -141,7 +154,12 @@ export default function MetricInputTemplate({
                                     keyboardType="numeric"
                                     onChangeText={onChangeValue}
                                 />
-                                {unit && <Text className="text-2xl text-gray-600 mb-2 ml-2">{unit}</Text>}
+                                {unit &&
+                                    (isGlucose ? (
+                                        <Text className="text-2xl text-gray-600 mb-2 ml-2">{selectedUnit}</Text>
+                                    ) : (
+                                        <Text className="text-2xl text-gray-600 mb-2 ml-2">{unit}</Text>
+                                    ))}
                             </View>
                             {secondaryValue && (
                                 <View className="flex-row items-end mt-4">
@@ -154,6 +172,24 @@ export default function MetricInputTemplate({
                                         onChangeText={onChangeSecondaryValue}
                                     />
                                     {secondaryUnit && <Text className="text-xl text-gray-500 mb-1 ml-2">{secondaryUnit}</Text>}
+                                </View>
+                            )}
+
+                            {/* Unit Selector for Glucose */}
+                            {isGlucose && (
+                                <View className="flex-row mt-6 bg-gray-100 rounded-full p-1">
+                                    <TouchableOpacity
+                                        onPress={() => handleUnitChange("mg/dL")}
+                                        className={`px-4 py-2 rounded-full ${selectedUnit === "mg/dL" ? "bg-primary-500" : ""}`}
+                                    >
+                                        <Text className={`${selectedUnit === "mg/dL" ? "text-white" : "text-gray-700"}`}>mg/dL</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => handleUnitChange("mmol/L")}
+                                        className={`px-4 py-2 rounded-full ${selectedUnit === "mmol/L" ? "bg-primary-500" : ""}`}
+                                    >
+                                        <Text className={`${selectedUnit === "mmol/L" ? "text-white" : "text-gray-700"}`}>mmol/L</Text>
+                                    </TouchableOpacity>
                                 </View>
                             )}
                         </View>
