@@ -1,10 +1,9 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Modal, ScrollView, Image } from 'react-native';
 import { X } from 'lucide-react-native';
 import { useTheme } from '@react-navigation/native';
 import { avatars, DefaultAvatar } from '@/constants/avatars';
 import MedupHand from "@/assets/images/MedupHand.svg";
-
 
 interface AvatarSelectionModalProps {
     visible: boolean;
@@ -15,9 +14,6 @@ interface AvatarSelectionModalProps {
 }
 
 const AVATAR_SIZE = 60;
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const SCREEN_HEIGHT = Dimensions.get('window').height;
-const AVATAR_SPACING = 20;
 
 export function AvatarSelectionModal({
                                          visible,
@@ -27,12 +23,77 @@ export function AvatarSelectionModal({
                                          currentAvatarId
                                      }: AvatarSelectionModalProps) {
     const { colors } = useTheme();
-    const scrollViewRef = useRef<ScrollView>(null);
     const [selectedId, setSelectedId] = useState<number>(currentAvatarId);
+    // State to force re-renders of individual avatars
+    const [renderedAvatars, setRenderedAvatars] = useState<{[key: number]: boolean}>({});
+
+    // Force re-render of all avatars when modal becomes visible
+    useEffect(() => {
+        if (visible) {
+            // Reset rendered state
+            setRenderedAvatars({});
+
+            // Force render each avatar with a delay
+            Object.keys(avatars).forEach((id, index) => {
+                const numId = Number(id);
+                setTimeout(() => {
+                    setRenderedAvatars(prev => ({
+                        ...prev,
+                        [numId]: true
+                    }));
+                }, index * 100); // 100ms delay between each avatar
+            });
+        }
+    }, [visible]);
 
     const handleSelect = (id: number) => {
         setSelectedId(id);
         onSelectAvatar(id);
+    };
+
+    // Create individual avatar components
+    const renderAvatar = (id: number, isSelected: boolean) => {
+        const avatarSource = avatars[id];
+        const shouldRender = renderedAvatars[id] || id <= 2; // Always render first two
+
+        return (
+            <TouchableOpacity
+                key={id}
+                onPress={() => handleSelect(id)}
+                style={{
+                    width: AVATAR_SIZE,
+                    height: AVATAR_SIZE,
+                    marginHorizontal: 10,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+            >
+                <View
+                    style={{
+                        width: AVATAR_SIZE,
+                        height: AVATAR_SIZE,
+                        borderRadius: AVATAR_SIZE / 2,
+                        borderWidth: isSelected ? 2 : 0,
+                        borderColor: '#3b82f6',
+                        overflow: 'hidden',
+                        backgroundColor: '#f3f4f6',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    {shouldRender && (
+                        <Image
+                            source={avatarSource}
+                            style={{
+                                width: AVATAR_SIZE,
+                                height: AVATAR_SIZE,
+                            }}
+                            key={`avatar-${id}-${visible}-${shouldRender}`}
+                        />
+                    )}
+                </View>
+            </TouchableOpacity>
+        );
     };
 
     return (
@@ -42,70 +103,82 @@ export function AvatarSelectionModal({
             animationType="slide"
             onRequestClose={onClose}
         >
-            <View className="flex-1 bg-black/50 justify-center items-center">
-                <View className="w-[90%] max-w-md bg-white rounded-3xl p-6">
+            <View style={{
+                flex: 1,
+                backgroundColor: 'rgba(0,0,0,0.5)',
+                justifyContent: 'center',
+                alignItems: 'center'
+            }}>
+                <View style={{
+                    width: '90%',
+                    maxWidth: 400,
+                    backgroundColor: 'white',
+                    borderRadius: 24,
+                    padding: 24
+                }}>
                     <TouchableOpacity
                         onPress={onClose}
-                        className="absolute right-4 top-4 z-10"
+                        style={{
+                            position: 'absolute',
+                            right: 16,
+                            top: 16,
+                            zIndex: 10
+                        }}
                     >
                         <X size={24} color={colors.text} />
                     </TouchableOpacity>
 
                     {/* Default Avatar Section */}
-                    <View className="items-center mb-6">
-                        <View className="w-20 h-20 mb-4">
-                            {selectedId === 13 ? (
-                                <DefaultAvatar width={80} height={80} />
-                            ) : (
-                                avatars[selectedId]({ width: 80, height: 80 })
-                            )}
+                    <View style={{ alignItems: 'center', marginBottom: 24 }}>
+                        <View style={{
+                            width: 80,
+                            height: 80,
+                            marginBottom: 16,
+                            backgroundColor: '#f3f4f6',
+                            borderRadius: 40,
+                            overflow: 'hidden',
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                        }}>
+                            <Image
+                                source={selectedId === 13 ? DefaultAvatar : avatars[selectedId]}
+                                style={{
+                                    width: 80,
+                                    height: 80,
+                                }}
+                                key={`selected-avatar-${selectedId}-${visible}`}
+                            />
                         </View>
-                        <View className="flex flex-row justify-end items-end gap-x-2">
-                            <Text className="text-xl font-bold">
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'flex-end',
+                            gap: 8
+                        }}>
+                            <Text style={{ fontSize: 20, fontWeight: 'bold' }}>
                                 Bienvenue, {username}
                             </Text>
                             <MedupHand height={36} width={36}/>
                         </View>
-
                     </View>
 
                     {/* Avatar Selection List */}
-                    <ScrollView
-                        ref={scrollViewRef}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{
-                            paddingHorizontal: SCREEN_WIDTH * 0.005,
-                            paddingVertical:  SCREEN_HEIGHT * 0.02,
-                            alignItems: 'center',
-                        }}
-                        snapToInterval={AVATAR_SIZE + AVATAR_SPACING}
-                        decelerationRate="fast"
-                    >
-                        {Object.entries(avatars).map(([id, Avatar]) => {
-                            const avatarId = Number(id);
-                            const isSelected = selectedId === avatarId;
-                            return (
-                                <TouchableOpacity
-                                    key={id}
-                                    onPress={() => handleSelect(avatarId)}
-                                    className={`mx-2.5 items-center justify-center`}
-                                    style={{
-                                        width: AVATAR_SIZE,
-                                        height: AVATAR_SIZE,
-                                    }}
-                                >
-                                    <View
-                                        className={`rounded-full overflow-hidden ${
-                                            isSelected ? 'border-2 border-blue-500' : ''
-                                        }`}
-                                    >
-                                        <Avatar width={AVATAR_SIZE} height={AVATAR_SIZE} />
-                                    </View>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </ScrollView>
+                    <View style={{ height: 80 }}>
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{
+                                paddingVertical: 10,
+                                alignItems: 'center',
+                                paddingHorizontal: 10,
+                            }}
+                        >
+                            {Object.keys(avatars).map((id) => {
+                                const avatarId = Number(id);
+                                const isSelected = selectedId === avatarId;
+                                return renderAvatar(avatarId, isSelected);
+                            })}
+                        </ScrollView>
+                    </View>
                 </View>
             </View>
         </Modal>

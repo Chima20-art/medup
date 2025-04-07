@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { View, Text, TouchableOpacity, ScrollView, Alert, SafeAreaView } from "react-native"
+import {View, Text, TouchableOpacity, ScrollView, Alert, SafeAreaView, Image} from "react-native"
 import { useRouter } from "expo-router"
 import { supabase } from "@/utils/supabase"
 import { ChevronLeft, LogOut, User, Mail, Phone, Trash2 } from "lucide-react-native"
@@ -123,7 +123,10 @@ export default function More() {
                         {/* Avatar and Name */}
                         <View className="items-center mt-6 mb-6">
                             <View className="bg-white p-1 rounded-full shadow-lg">
-                                <AvatarComponent width={120} height={120} />
+                                <Image
+                                    source={avatars[currentAvatarId!]}
+                                    style={{ width: 120, height: 120 }}
+                                />
                             </View>
                         </View>
                     </View>

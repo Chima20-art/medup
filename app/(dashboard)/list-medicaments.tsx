@@ -4,7 +4,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView, ActivityIndicator,
+  ScrollView, ActivityIndicator, SafeAreaView,
 } from "react-native";
 import { Link, router } from "expo-router";
 import { ChevronLeft, Search } from "lucide-react-native";
@@ -113,13 +113,12 @@ export default function ListMedicaments() {
   );
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="pt-10 px-4">
         {/*header*/}
-        <View className="bg-white px-2 ">
-          <View className="flex-row items-center justify-between ">
-            <View className="flex-col flex-1 ">
+        <View className="bg-white px-2">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-col flex-1">
               <View className="flex-row items-start gap-x-2">
                 <TouchableOpacity
                   onPress={() => router.back()}
@@ -148,7 +147,6 @@ export default function ListMedicaments() {
             <Medicine width={116} height={160} />
           </View>
         </View>
-      </View>
 
       {/* Medication List */}
       <ScrollView className="flex-1 px-4 pt-4">
@@ -173,6 +171,6 @@ export default function ListMedicaments() {
           ))
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

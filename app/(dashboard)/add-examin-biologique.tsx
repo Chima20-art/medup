@@ -462,6 +462,7 @@ export default function MergedExamensRadiologiques() {
                       mode="date"
                       display="default"
                       onChange={(event, selectedDate) => {
+                        setShowDatePicker(false);
                         if (selectedDate) {
                           setFormData((prev) => ({
                             ...prev,

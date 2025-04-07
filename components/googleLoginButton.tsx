@@ -6,9 +6,10 @@ import Google from '@/assets/images/google.svg';
 import {router} from "expo-router"; // Assuming you have a Google icon
 
 GoogleSignin.configure({
-    webClientId: '131047050129-jso8d15n7cfploeo8p5irsua0a54k2u5.apps.googleusercontent.com',
+    webClientId: '131047050129-3lbp68k4m1vh5u6ednbtjc6k473ib8p4.apps.googleusercontent.com',
     offlineAccess: true,
     iosClientId: '131047050129-c09od72q6va2145dgsf3pn9m9nrpb8e5.apps.googleusercontent.com',
+
 });
 
 const GoogleLoginButton = ({title}: {title: string}) => {

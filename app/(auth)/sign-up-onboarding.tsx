@@ -37,7 +37,7 @@ export default function SignUpOnboarding() {
               {/*  </Text>*/}
               {/*</TouchableOpacity>*/}
 
-              {/*<GoogleLoginButton title="S'inscrire avec google"/>*/}
+              <GoogleLoginButton title="S'inscrire avec google"/>
               <TouchableOpacity
                   className="w-full h-14 bg-black rounded-xl flex-row items-center justify-center"
                   onPress={() => router.push("/sign-up")}

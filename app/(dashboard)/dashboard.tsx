@@ -27,6 +27,7 @@ import { AvatarSelectionModal } from "@/components/avatar-selection-modal";
 import { avatars, DefaultAvatar, type AvatarType } from "@/constants/avatars";
 import { notificationStore$ } from "@/store/notification";
 import Doctor from "@/assets/images/doctor.svg";
+import {id} from "date-fns/locale";
 
 // Constants
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -484,8 +485,11 @@ function Dashboard() {
               onPress={() => setIsAvatarModalVisible(true)}
               className="relative"
             >
-              <AvatarComponent width={56} height={56} />
-              <View className="absolute -bottom-1 -right-1 bg-white rounded-full p-1">
+              <Image
+                  source={avatars[currentAvatarId!]}
+                  style={{ width: 40, height: 40 }}
+              />
+                 <View className="absolute -bottom-1 -right-1 bg-white rounded-full p-1">
                 <Plus size={16} color="#CBCBCB" />
               </View>
             </TouchableOpacity>
