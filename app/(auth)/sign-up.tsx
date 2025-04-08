@@ -162,7 +162,6 @@ export default function SignUpScreen() {
             <DateOfBirthStep
                 onContinue={(date: Date) => {
                   setDateOfBirth(date);
-                  console.log("onSignUpPress");
                   signUserUp();
                   setStep(6);
                 }}

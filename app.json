@@ -2,7 +2,7 @@
   "expo": {
     "name": "MedUP",
     "slug": "MedUP",
-    "version": "1.0.6",
+    "version": "2.0.1",
     "orientation": "portrait",
     "icon": "./assets/appImages/logo.png",
     "scheme": "myapp",
@@ -19,11 +19,12 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/appImages/logo.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.talbi.MEDUP",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "versionCode": 3
     },
     "web": {
       "bundler": "metro",
